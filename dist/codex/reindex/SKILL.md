@@ -16,8 +16,8 @@ lines cannot guarantee determinism, the script can.
 1. Scope. One artifact (`decisions`, `risks`, or `tasks`) or all three,
    at project- or feature-level. Each artifact has **two** indexes —
    `<artifact>/INDEX.md` (active records) and `<artifact>/archive/INDEX.md`
-   (archived records) — and `reindex` rebuilds both. `/reindex` with no
-   argument rebuilds every index in the current scope. Retrospectives have
+   (archived records) — and `reindex` rebuilds both. Invoked with no
+   argument, it rebuilds every index in the current scope. Retrospectives have
    an INDEX too (no archive) — rebuild it the same way when asked.
 
 2. Run the projector against the scope's docs root:
@@ -70,8 +70,8 @@ lines cannot guarantee determinism, the script can.
 
 6. Do not modify record bodies, statuses, dispositions, or links. Do
    not mint, archive, or promote. If a record looks wrong, report it;
-   fixing the body is the owning skill's job. Recommend `/audit-artifacts`
-   afterward to confirm zero Blockers.
+   fixing the body is the owning skill's job. Recommend the `audit-artifacts`
+   skill afterward to confirm zero Blockers.
 
 7. Conventions. Reference `docs/CONVENTIONS-SPEC.md` for the exact line
    formats and the "INDEX projection" section.

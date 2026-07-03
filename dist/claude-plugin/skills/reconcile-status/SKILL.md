@@ -71,15 +71,15 @@ searching and two runs could disagree.
      code merely moved.
    - **Silent reversal**: an `accepted` decision whose implementing tasks
      all `dropped` → it likely wants `superseded`/`deprecated` via
-     `/challenge-me`.
+     the `challenge-me` skill.
    - **Uncovered**: an `accepted` decision with zero implementing tasks —
      already built? environmental? planning gap?
    - **Orphan task**: no `Implements` and no `Mitigates`.
    - **Mitigation notional**: a `mitigate` risk whose tasks are all dropped
      — no longer mitigated in practice though the disposition still claims
-     it is. Re-triage via `/triage-risks`.
-   - **Smells**: route un-red-teamed → `/red-team-me`, thin defer and
-     mitigation-complete → `/triage-risks`, as the smell pass prints.
+     it is. Re-triage via the `triage-risks` skill.
+   - **Smells**: route un-red-teamed → the `red-team-me` skill, thin defer and
+     mitigation-complete → the `triage-risks` skill, as the smell pass prints.
 
 5. Hand fallback (no `python3`). Build the map yourself: read both
    `tasks/INDEX.md` and `tasks/archive/INDEX.md`, union, group by
