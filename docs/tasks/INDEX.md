@@ -1,7 +1,7 @@
 T-001 | done | S | D-012 | Scaffold the repo layout: skills/, cli/, dist/, docs/ | 2026-07-02
 T-002 | done | M | D-003 | Migrate the 14 skills, _shared, and _templates from ~/.claude/skills into skills/ | 2026-07-02
 T-003 | done | S | D-002 | Add the MIT license | 2026-07-02
-T-004 | in_progress | S | D-001,D-007,R-009 | Publish a placeholder keel-skills 0.0.x to npm |
+T-004 | done | S | D-001,D-007,R-009 | Publish a placeholder keel-skills 0.0.x to npm | 2026-07-03
 T-005 | done | S | D-009,R-010 | Port mint-id.sh to Python so no bash-only scripts remain | 2026-07-02
 T-006 | done | M | D-009,R-010 | Audit _shared scripts for POSIX assumptions and fix Windows portability | 2026-07-02
 T-007 | todo | L | D-005,R-006 | Rewrite the 14 skill bodies to agent-neutral phrasing in tagged, dogfooded batches |
