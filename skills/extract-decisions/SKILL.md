@@ -68,7 +68,7 @@ Orientation flips: decisions must exist on disk before tasks and risks can point
    - **Built-but-not-decided** — the orphans from step 7, the dual finding, each marked forgotten-intent (now a decision) or accretion (report-only / escalated to a risk).
    - Anything deliberately left unrecorded (too speculative, out of scope).
 
-   Then recommend the handoff: `/audit-artifacts` → `/reconcile-status` → `/triage-risks`. State the honest caveat plainly: **at extraction every anchor verifies by construction** — you extracted each decision *from* the code its anchor points at, so there is no possible t0 failure. The verification's value is entirely the **t>0 drift tripwire**: a maintainer reading `implemented (verified)` should read it as "the invariant is still present in the tree," not "the decision is faithfully realized." Go-forward decisions use `/challenge-me` from here.
+   Then recommend the handoff: the `audit-artifacts` → `reconcile-status` → `triage-risks` skills, in that order. State the honest caveat plainly: **at extraction every anchor verifies by construction** — you extracted each decision *from* the code its anchor points at, so there is no possible t0 failure. The verification's value is entirely the **t>0 drift tripwire**: a maintainer reading `implemented (verified)` should read it as "the invariant is still present in the tree," not "the decision is faithfully realized." Go-forward decisions use the `challenge-me` skill from here.
 
 ---
 
@@ -80,4 +80,4 @@ Orientation flips: decisions must exist on disk before tasks and risks can point
 
 ## Conventions
 
-Reference `docs/CONVENTIONS-SPEC.md` for exact field order, header format (`## <ID>: <Title>`), anchor grammar, and INDEX line formats. The per-record body is authoritative; INDEX is a pure projection — when in doubt, `/reindex <scope>`.
+Reference `docs/CONVENTIONS-SPEC.md` for exact field order, header format (`## <ID>: <Title>`), anchor grammar, and INDEX line formats. The per-record body is authoritative; INDEX is a pure projection — when in doubt, run the `reindex` skill on the scope.

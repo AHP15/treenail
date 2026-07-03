@@ -33,6 +33,6 @@ Take a feature-level D-NNN or R-NNN and execute the cross-scope promotion. One r
 
 7. Tasks do not migrate. Existing tasks keep their feature-level `Implements`/`Mitigates` references; the cross-scope chain resolves them. New tasks should target the project-level ID.
 
-8. Recommend running `/audit-artifacts` after the promotion to verify symmetric links.
+8. Recommend running the `audit-artifacts` skill after the promotion to verify symmetric links.
 
 9. Conventions. Reference `docs/CONVENTIONS-SPEC.md`.

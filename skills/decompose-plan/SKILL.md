@@ -5,7 +5,7 @@ description: Break the hardened decisions and mitigation list into atomic, indiv
 
 Load `decisions/INDEX.md` and `risks/INDEX.md`. Produce tasks per accepted decision and per mitigate risk. Write per-record files; update indices.
 
-1. Coverage pass. Every `accepted` decision (read INDEX status) and every `mitigate` risk maps to ≥1 task. If something doesn't produce a task, say so explicitly — it's already built (covered by existing `done` tasks; `/reconcile-status` will derive the decision as implemented — implementation is never a stored Status), environmental, or a planning gap.
+1. Coverage pass. Every `accepted` decision (read INDEX status) and every `mitigate` risk maps to ≥1 task. If something doesn't produce a task, say so explicitly — it's already built (covered by existing `done` tasks; the `reconcile-status` skill will derive the decision as implemented — implementation is never a stored Status), environmental, or a planning gap.
 
 2. Atomicity. Each task must:
    - Acceptance fits in one sentence and is checkable against a diff.
