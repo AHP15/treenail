@@ -22,7 +22,7 @@ T-021 | todo | S | D-009,R-015 | Scripted-write skills preflight the Python inte
 T-022 | todo | M | D-010,R-012 | Stamp a spec-version marker into project-copied conventions; scripts refuse unknown versions |
 T-023 | done | M | D-012 | CI runs the _shared script tests and verifies dist/ is in sync with source | 2026-07-03
 T-024 | in_progress | M | D-009,D-015,R-010 | Windows CI runner: _shared script tests plus installer smoke test, green gates v1 |
-T-025 | todo | M | R-004 | Spike: run the flagship interactive skills end-to-end on opencode and Codex and record what degrades |
+T-025 | done | M | R-004 | Spike: run the flagship interactive skills end-to-end on opencode and Codex and record what degrades | 2026-07-03
 T-026 | todo | S | D-005,R-004 | Build injects per-provider notes adapting interview phrasing to each agent's capabilities |
 T-027 | todo | M | D-007,D-013,D-015,R-004 | README: quickstart, manual copy, per-agent support-tier matrix, optional Graphiti setup, pipeline guide |
 T-028 | todo | M | D-015,R-005 | Define and pass the three-agent release-gate smoke checklist |
