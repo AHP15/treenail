@@ -31,4 +31,4 @@ Read prior retrospective + current artifact state. Write a new retrospective fil
 
 9. Do not modify decisions/risks/tasks. Recommendations live in Watch-for; supersessions still flow through `challenge-me`, re-triages through `triage-risks`.
 
-10. After writing, recommend running `/archive-cycle` — now that this retro has harvested them, it will compact the records that became terminal during this cycle (and reap any newly-terminal ones still in the active dir).
+10. After writing, recommend running the `archive-cycle` skill — now that this retro has harvested them, it will compact the records that became terminal during this cycle (and reap any newly-terminal ones still in the active dir).

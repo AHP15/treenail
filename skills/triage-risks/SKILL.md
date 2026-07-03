@@ -25,7 +25,7 @@ Read `risks/INDEX.md` and `decisions/INDEX.md`. For each risk with `Disposition:
    - Mint D-MMM by running `python3 ~/.claude/skills/_shared/scripts/mint_id.py <decisions-dir> D` (the **ID reservation protocol**: filesystem-arbitrated max over active + archive, atomic no-clobber claim, retry on collision — not from INDEX). It prints the claimed `D-MMM` and its file path. Write the body into `decisions/D-MMM.md` per CONVENTIONS-SPEC.md with `Supersedes: D-NNN`. (Fall back to the protocol by hand if `python3` is unavailable.)
    - Add D-MMM's INDEX line — append it, or run `python3 ~/.claude/skills/_shared/scripts/reindex.py <scope-dir> decisions` to reproject the whole decisions index (which also refreshes the superseded D-NNN line from the two bullets above, so you needn't hand-edit it).
    - In the risk's Action field, link to the new decision: e.g. "Superseded by D-MMM (replaces the failure mode)".
-   - The new decision D-MMM is itself unexamined — a supersession can introduce its own failure modes. Recommend `/red-team-me` scoped to D-MMM before it ships. (`reconcile-status`'s "un-red-teamed decision" smell will catch it later as a backstop, but flag it now rather than waiting.)
+   - The new decision D-MMM is itself unexamined — a supersession can introduce its own failure modes. Recommend the `red-team-me` skill scoped to D-MMM before it ships. (`reconcile-status`'s "un-red-teamed decision" smell will catch it later as a backstop, but flag it now rather than waiting.)
 
 4a. **Re-triage flow** — dispositions evolve in place (no supersession; a
    risk is durable, its disposition is current state). Besides fresh
@@ -48,6 +48,6 @@ Read `risks/INDEX.md` and `decisions/INDEX.md`. For each risk with `Disposition:
    Re-triage never supersedes and never deletes; it edits Disposition, Date,
    rationale, and Action in place and updates the one INDEX line.
 
-5. After triaging all pending risks, recommend running `/audit-artifacts` before `/decompose-plan`.
+5. After triaging all pending risks, recommend running the `audit-artifacts` skill before `decompose-plan`.
 
 6. Conventions. Reference `docs/CONVENTIONS-SPEC.md`. If missing, copy from [../_shared/conventions-spec.md](../_shared/conventions-spec.md) and [../_shared/conventions-examples.md](../_shared/conventions-examples.md) to `docs/`.

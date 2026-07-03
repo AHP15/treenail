@@ -28,7 +28,7 @@ Two things are non-negotiable per task, because they are what `reconcile-status`
 
 5. **Start.** Flip the task `todo` → `in_progress` in `tasks/T-NNN.md` and update its `tasks/INDEX.md` status column. This skill is the designated writer of `in_progress` — the signal `reconcile-status` reads to derive a decision as `in_progress` rather than `not_started`. A trivially small task may go straight to `done` in step 7 (the spec allows skipping `in_progress`); a larger one flips here first so an interruption mid-build leaves correct state.
 
-6. **Build to Acceptance.** Implement with the normal coding tools, scoped to this task's Acceptance — nothing more. If the work surfaces a **new decision** (a genuine choice the recorded ones don't cover), **stop the loop** and route to `/challenge-me`; do not invent a decision inside a task. A **new risk** → note it for `/red-team-me` or `/triage-risks` and continue. The task implements the plan; it does not amend it.
+6. **Build to Acceptance.** Implement with the normal coding tools, scoped to this task's Acceptance — nothing more. If the work surfaces a **new decision** (a genuine choice the recorded ones don't cover), **stop the loop** and route to the `challenge-me` skill; do not invent a decision inside a task. A **new risk** → note it for the `red-team-me` or `triage-risks` skill and continue. The task implements the plan; it does not amend it.
 
 7. **Land — the evidence hygiene the pipeline rests on.** When Acceptance is met:
    - Status → `done`; fill **Date done** (today, ISO). `done ⇔ non-empty Date done`.
@@ -38,6 +38,6 @@ Two things are non-negotiable per task, because they are what `reconcile-status`
 
 8. **Loop or stop.** After landing, check the batch bound from step 1. **Continue** — return to step 2 for the next eligible task, in warm context — until any of these, then **stop and hand back**: the batch is exhausted; no eligible task remains (all open tasks blocked on unfinished deps); a new decision surfaced (step 6); an Evidence anchor would not resolve; or the user asked to go task-by-task. Report what you completed and what stopped you.
 
-9. **Recommend next.** When the run ends, recommend `/reconcile-status` — it re-resolves the anchors you wrote and recomputes each implementing decision's view, closing the loop from code back to plan. Reaping the finished tasks is `archive-cycle`'s job on its normal cadence.
+9. **Recommend next.** When the run ends, recommend the `reconcile-status` skill — it re-resolves the anchors you wrote and recomputes each implementing decision's view, closing the loop from code back to plan. Reaping the finished tasks is `archive-cycle`'s job on its normal cadence.
 
 10. **Stay in lane + conventions.** Do not triage risks, mint or supersede decisions, promote, or re-order the whole task list (that is `sequence-work`). This skill writes only each task's Status, Date done, Evidence, Notes, and that task's INDEX line. Reference `docs/CONVENTIONS-SPEC.md` for the TASKS field order, the Evidence anchor grammar, and the INDEX line format.
