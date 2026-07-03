@@ -262,7 +262,7 @@ def build_claude_plugin(out):
                 ),
                 "version": version,
                 "author": {"name": "abdessittir"},
-                "homepage": "https://github.com/abdessittir/keel",
+                "homepage": "https://github.com/AHP15/keel",
                 "license": "MIT",
             },
             indent=2,

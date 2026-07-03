@@ -3,6 +3,10 @@
   "version": "0.0.1",
   "description": "Installer for the Keel planning-skills pack: build, install, and update agent skills for Claude Code, opencode, and Codex.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AHP15/keel.git"
+  },
   "type": "module",
   "bin": {
     "keel-skills": "bin/keel-skills.js"

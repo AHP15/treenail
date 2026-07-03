@@ -215,4 +215,9 @@ def main(argv):
 
 
 if __name__ == "__main__":
+    # Report output is machine-parsed, so emit deterministic UTF-8
+    # regardless of console code page — Windows cp1252 or a POSIX C
+    # locale must never crash on report typography (—, ≤, →) (R-010).
+    for _stream in (sys.stdout, sys.stderr):
+        _stream.reconfigure(encoding="utf-8", errors="replace")
     sys.exit(main(sys.argv))

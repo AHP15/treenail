@@ -38,7 +38,10 @@ PY = sys.executable
 def run(script, *args, **kw):
     """Run a scripts/ CLI tool, return (rc, stdout, stderr)."""
     cmd = [PY, os.path.join(SCRIPTS, script), *args]
-    p = subprocess.run(cmd, capture_output=True, text=True, **kw)
+    # The scripts reconfigure stdio to UTF-8 (R-010); decode the same way
+    # so captures don't depend on the host locale (Windows cp1252).
+    p = subprocess.run(cmd, capture_output=True, encoding="utf-8",
+                       errors="replace", **kw)
     return p.returncode, p.stdout, p.stderr
 
 
