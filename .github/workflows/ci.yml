@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    # Green Windows CI gates v1 (D-009, D-015, R-010).
+    name: pipeline tests + dist sync + installer smoke (${{ matrix.os }})
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Run _shared script test suite
+        working-directory: skills
+        run: python -m unittest discover -s _shared/scripts/tests -v
+
+      - name: Verify committed dist/ is in sync with skills/ source
+        run: python build.py --check
+
+      # Loader-level smoke (D-019): static imports mean any subcommand
+      # loads the whole import graph, catching ESM conversion regressions.
+      - name: CLI loader smoke on Node 22 (help + detect)
+        run: |
+          node cli/bin/keel-skills.js help
+          node cli/bin/keel-skills.js detect
+
+      - name: Installer smoke test (temp home)
+        run: node cli/test/smoke-install.mjs

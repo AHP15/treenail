@@ -1,0 +1,19 @@
+{
+  "name": "keel",
+  "owner": {
+    "name": "abdessittir",
+    "url": "https://github.com/abdessittir"
+  },
+  "metadata": {
+    "description": "Marketplace for the Keel planning-skills pack",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "keel",
+      "source": "./dist/claude-plugin",
+      "description": "Keel planning-skills pack: decision, risk, and task pipeline skills for agent-driven planning, with the shared ~/.keel runtime bundled and auto-provisioned.",
+      "category": "productivity"
+    }
+  ]
+}

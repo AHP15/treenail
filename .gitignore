@@ -1,0 +1,7 @@
+.DS_Store
+__pycache__/
+*.pyc
+node_modules/
+# prepack-staged copy of dist/ (cli/scripts/prepack.js); removed by postpack
+cli/dist/
+*.tgz

@@ -1,0 +1,22 @@
+{
+  "name": "keel-skills",
+  "version": "0.0.1",
+  "description": "Installer for the Keel planning-skills pack: build, install, and update agent skills for Claude Code, opencode, and Codex.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "keel-skills": "bin/keel-skills.js"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "dist/"
+  ],
+  "scripts": {
+    "prepack": "node scripts/prepack.js",
+    "postpack": "node scripts/postpack.js"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

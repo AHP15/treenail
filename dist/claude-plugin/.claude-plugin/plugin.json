@@ -1,0 +1,10 @@
+{
+  "name": "keel",
+  "description": "Keel planning-skills pack: decision, risk, and task pipeline skills for agent-driven planning.",
+  "version": "0.0.1",
+  "author": {
+    "name": "abdessittir"
+  },
+  "homepage": "https://github.com/abdessittir/keel",
+  "license": "MIT"
+}
