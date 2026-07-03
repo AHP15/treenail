@@ -6,7 +6,7 @@ R-005 | mitigate | high | No end-to-end behavioral validation exists for any age
 R-006 | mitigate | medium | The agent-neutral rewrite is a mass edit of 14 working prompts with no regression harness [tasks: T-007]
 R-007 | mitigate | high | Plugin-marketplace installs bypass the installer, so ~/.keel is never provisioned [tasks: T-019,T-020]
 R-008 | mitigate | medium | Multi-channel installs create version skew between skill text and the ~/.keel runtime [tasks: T-017,T-018]
-R-009 | mitigate | low | The keel-skills npm name is unreserved until first publish [tasks: T-004]
+R-009 | accept | low | The keel-skills npm name is unreserved until first publish
 R-010 | mitigate | high | Windows is claimed officially supported without Windows CI or a path-portability audit [tasks: T-005,T-006,T-024]
 R-011 | mitigate | medium | Update silently destroys user edits to installed skills [tasks: T-015]
 R-012 | mitigate | medium | Frozen per-project conventions require scripts to stay backward-compatible forever, with no version marker to dispatch on [tasks: T-022]
