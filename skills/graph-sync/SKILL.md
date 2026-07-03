@@ -10,7 +10,7 @@ Graphiti) and never reads the graph back into a record. Because the graph
 can be wiped and rebuilt from the files at any time, Graphiti's LLM-based
 entity extraction can never corrupt the deterministic pipeline: a bad
 extraction is advisory noise, fixed by a re-sync, exactly like INDEX drift
-is fixed by `/reindex`.
+is fixed by the `reindex` skill.
 
 It is **optional**. If no graph backend is configured the whole feature
 is a clean no-op — sync skips, queries stay silent, and the deterministic

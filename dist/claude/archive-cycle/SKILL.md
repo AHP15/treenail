@@ -31,7 +31,7 @@ the ARCHIVAL section of CONVENTIONS-SPEC.md.
        spent only once its superseding decision is actually *implemented*,
        and implementation status is **not stored** (it is derived by
        `reconcile-status`), so do not infer it from the record — optionally
-       run/cite `/reconcile-status` for the fixing decision, then confirm.
+       run/cite the `reconcile-status` skill for the fixing decision, then confirm.
        A `defer` is spent only once its trigger has passed without firing,
        which is a judgment.
      List every accept/fix/defer that is eligible-but-unconfirmed and
@@ -119,5 +119,5 @@ the ARCHIVAL section of CONVENTIONS-SPEC.md.
    and for `accept` risks not yet past a retrospective boundary. If
    nothing was eligible, say so — a no-op run is the normal steady state.
 
-9. After running, recommend `/audit-artifacts` to verify cross-references
-   still resolve, and `/reindex <scope>` if any INDEX line looks off.
+9. After running, recommend the `audit-artifacts` skill to verify cross-references
+   still resolve, and the `reindex` skill on the scope if any INDEX line looks off.

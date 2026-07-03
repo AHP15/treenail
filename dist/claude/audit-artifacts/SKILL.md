@@ -46,7 +46,7 @@ layer; it remains authoritative.
    the audit bounded to in-flight work: because terminal records are
    reaped out of the active dir continuously, the full-body validation
    pass never grows with a cycle's accumulated done/superseded records.
-   (A manually corrupted archived record is caught by `/reindex` and the
+   (A manually corrupted archived record is caught by the `reindex` skill and the
    step-6 link checks, not by a full re-scan.)
 
 2. INDEX consistency. INDEX is a pure projection of the per-record
@@ -58,7 +58,7 @@ layer; it remains authoritative.
    - INDEX line fields match the record body (status, disposition, etc.).
 
    Any mismatch here is INDEX drift, and the **only** remedy is
-   `/reindex <scope>` — which recomputes the INDEX from the
+   the `reindex` skill run on the scope — which recomputes the INDEX from the
    authoritative records. Never report "edit the INDEX line to match";
    the per-record files are the source of truth and the index is
    regenerated, not patched. (A field that is wrong in the *record body*

@@ -4,7 +4,7 @@ T-003 | done | S | D-002 | Add the MIT license | 2026-07-02
 T-004 | done | S | D-001,D-007,R-009 | Publish a placeholder keel-skills 0.0.x to npm | 2026-07-03
 T-005 | done | S | D-009,R-010 | Port mint-id.sh to Python so no bash-only scripts remain | 2026-07-02
 T-006 | done | M | D-009,R-010 | Audit _shared scripts for POSIX assumptions and fix Windows portability | 2026-07-02
-T-007 | todo | L | D-005,R-006 | Rewrite the 14 skill bodies to agent-neutral phrasing in tagged, dogfooded batches |
+T-007 | in_progress | L | D-005,R-006 | Rewrite the 14 skill bodies to agent-neutral phrasing in tagged, dogfooded batches |
 T-008 | done | M | D-004,D-005 | Build pipeline core with the Claude adapter emitting dist/claude | 2026-07-02
 T-009 | done | M | D-004 | opencode build adapter emitting dist/opencode | 2026-07-02
 T-010 | done | M | D-004 | Codex build adapter emitting dist/codex | 2026-07-02
