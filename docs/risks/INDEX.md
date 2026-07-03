@@ -3,7 +3,7 @@ R-002 | defer | low | No CLA means outside contributions narrow future licensing
 R-003 | mitigate | medium | Dogfooding friction reinstates shadow editing in ~/.claude, recreating drift [tasks: T-016,T-015]
 R-004 | mitigate | high | The pipeline's interactive core degrades badly on opencode/Codex and the product is judged by its weakest port [tasks: T-025,T-026,T-027]
 R-005 | mitigate | high | No end-to-end behavioral validation exists for any agent; v1 can ship broken on advertised targets [tasks: T-028]
-R-006 | mitigate | medium | The agent-neutral rewrite is a mass edit of 14 working prompts with no regression harness [tasks: T-007]
+R-006 | accept | medium | The agent-neutral rewrite is a mass edit of 14 working prompts with no regression harness
 R-007 | mitigate | high | Plugin-marketplace installs bypass the installer, so ~/.keel is never provisioned [tasks: T-019,T-020]
 R-008 | mitigate | medium | Multi-channel installs create version skew between skill text and the ~/.keel runtime [tasks: T-017,T-018]
 R-009 | accept | low | The keel-skills npm name is unreserved until first publish
