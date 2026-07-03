@@ -2,6 +2,8 @@
 name: triage-risks
 description: Reconcile decisions with the risk list by assigning each pending risk a disposition (fix, mitigate, accept, defer) and updating decisions accordingly. Use after red-team-me, before implementation planning.
 ---
+> Provider note (Codex CLI): when a step calls for interviewing the user, ask each question in plain prose — state your recommended answer, ask if it works, and wait for the reply; there is no option-picker UI. When writing multiple Evidence anchors, comma-separate them and backtick each one.
+
 > Keel shared runtime: paths under `~/.keel` are the installed Keel runtime. If the `KEEL_HOME` environment variable is set, read every `~/.keel/...` path as `$KEEL_HOME/...` instead.
 
 Read `risks/INDEX.md` and `decisions/INDEX.md`. For each risk with `Disposition: pending`, decide and write back.

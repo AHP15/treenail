@@ -2,6 +2,8 @@
 name: red-team-me
 description: Adversarially stress-test the decisions record by hunting for failure modes, hidden assumptions, and missing pieces. Use after challenge-me, before implementation, or whenever the user wants an outside-view critique of a plan.
 ---
+> Provider note (Codex CLI): when a step calls for interviewing the user, ask each question in plain prose — state your recommended answer, ask if it works, and wait for the reply; there is no option-picker UI. When writing multiple Evidence anchors, comma-separate them and backtick each one.
+
 > Keel shared runtime: paths under `~/.keel` are the installed Keel runtime. If the `KEEL_HOME` environment variable is set, read every `~/.keel/...` path as `$KEEL_HOME/...` instead.
 
 Read the decisions in scope and produce per-risk files. Adversarial — find what breaks, don't validate.

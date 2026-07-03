@@ -4,7 +4,7 @@ T-003 | done | S | D-002 | Add the MIT license | 2026-07-02
 T-004 | done | S | D-001,D-007,R-009 | Publish a placeholder keel-skills 0.0.x to npm | 2026-07-03
 T-005 | done | S | D-009,R-010 | Port mint-id.sh to Python so no bash-only scripts remain | 2026-07-02
 T-006 | done | M | D-009,R-010 | Audit _shared scripts for POSIX assumptions and fix Windows portability | 2026-07-02
-T-007 | in_progress | L | D-005,R-006 | Rewrite the 14 skill bodies to agent-neutral phrasing in tagged, dogfooded batches |
+T-007 | done | L | D-005,R-006 | Rewrite the 14 skill bodies to agent-neutral phrasing in tagged, dogfooded batches | 2026-07-03
 T-008 | done | M | D-004,D-005 | Build pipeline core with the Claude adapter emitting dist/claude | 2026-07-02
 T-009 | done | M | D-004 | opencode build adapter emitting dist/opencode | 2026-07-02
 T-010 | done | M | D-004 | Codex build adapter emitting dist/codex | 2026-07-02
@@ -23,7 +23,7 @@ T-022 | todo | M | D-010,R-012 | Stamp a spec-version marker into project-copied
 T-023 | done | M | D-012 | CI runs the _shared script tests and verifies dist/ is in sync with source | 2026-07-03
 T-024 | in_progress | M | D-009,D-015,R-010 | Windows CI runner: _shared script tests plus installer smoke test, green gates v1 |
 T-025 | done | M | R-004 | Spike: run the flagship interactive skills end-to-end on opencode and Codex and record what degrades | 2026-07-03
-T-026 | todo | S | D-005,R-004 | Build injects per-provider notes adapting interview phrasing to each agent's capabilities |
+T-026 | done | S | D-005,R-004 | Build injects per-provider notes adapting interview phrasing to each agent's capabilities | 2026-07-03
 T-027 | todo | M | D-007,D-013,D-015,R-004 | README: quickstart, manual copy, per-agent support-tier matrix, optional Graphiti setup, pipeline guide |
 T-028 | todo | M | D-015,R-005 | Define and pass the three-agent release-gate smoke checklist |
 T-029 | todo | S | D-001,D-014,D-015 | Cut v1: repo public under MIT, keel-skills 0.1.0 published, release tagged |

@@ -2,6 +2,7 @@
 name: sequence-work
 description: Order a task list into a phased plan that front-loads risk, ships value early, and respects dependencies. Use after decompose-plan, before implementation begins.
 ---
+> Provider note (Codex CLI): when a step calls for interviewing the user, ask each question in plain prose — state your recommended answer, ask if it works, and wait for the reply; there is no option-picker UI. When writing multiple Evidence anchors, comma-separate them and backtick each one.
 
 Read `tasks/INDEX.md` and produce a phased plan. Output is ephemeral — does not write files.
 

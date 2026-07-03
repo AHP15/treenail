@@ -2,6 +2,7 @@
 name: retrospective
 description: Harvest calibration signal from a completed planning cycle by walking decisions, risks, and tasks for structural evidence of what the plan got right and wrong, then writing a dated retrospective entry with a watch-for list that seeds future challenge-me and red-team-me cycles. Run at phase boundaries, milestones, or on cadence.
 ---
+> Provider note (Codex CLI): when a step calls for interviewing the user, ask each question in plain prose — state your recommended answer, ask if it works, and wait for the reply; there is no option-picker UI. When writing multiple Evidence anchors, comma-separate them and backtick each one.
 
 Read prior retrospective + current artifact state. Write a new retrospective file. Do not modify decisions/risks/tasks.
 

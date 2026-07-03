@@ -2,6 +2,8 @@
 name: challenge-me
 description: Thoroughly interview the user about a plan or design, surfacing the implicit and unstated decisions hidden in their framing, resolving everything in order of leverage, and producing a decisions record at the end. Use this whenever the user wants to stress-test a plan, pressure-test a design, find the hidden decisions in a plan, or mentions "challenge me" or "grill me" — even if they don't use those exact words.
 ---
+> Provider note (Codex CLI): when a step calls for interviewing the user, ask each question in plain prose — state your recommended answer, ask if it works, and wait for the reply; there is no option-picker UI. When writing multiple Evidence anchors, comma-separate them and backtick each one.
+
 > Keel shared runtime: paths under `~/.keel` are the installed Keel runtime. If the `KEEL_HOME` environment variable is set, read every `~/.keel/...` path as `$KEEL_HOME/...` instead.
 
 Interview me systematically until ALL the important decisions are settled — including the ones I haven't noticed I'm making. Work through the decision tree in priority order, grow it as resolved decisions spawn new branches, and produce per-decision records at the end.

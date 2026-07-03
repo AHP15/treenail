@@ -2,6 +2,8 @@
 name: archive-cycle
 description: Keep the active per-record set bounded to in-flight work. Reaps terminal decisions, risks, and tasks out of the active directory into archive/ with full prose kept — run this on cadence, e.g. session start. Also compacts archived records the latest retrospective has already consumed into 3-5 line summaries. Idempotent and safe to run any time. Never changes status, dispositions, or supersession links.
 ---
+> Provider note (opencode): when a step calls for interviewing the user, ask each question in plain prose — state your recommended answer, ask if it works, and wait for the reply; there is no option-picker UI. When writing multiple Evidence anchors, comma-separate them and backtick each one. Steps that write records shell out to `~/.keel` scripts and need file-write permission; in non-interactive runs approval must be granted up front.
+
 > Keel shared runtime: paths under `~/.keel` are the installed Keel runtime. If the `KEEL_HOME` environment variable is set, read every `~/.keel/...` path as `$KEEL_HOME/...` instead.
 
 Two decoupled operations, both safe to run any time (idempotent). The

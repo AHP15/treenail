@@ -54,6 +54,31 @@ KEEL_HOME_NOTE = (
     "`~/.keel/...` path as `$KEEL_HOME/...` instead.\n\n"
 )
 
+# Per-provider preamble injected into every built skill body (T-026,
+# D-005, R-004). Content comes from the T-025 degradation spike
+# (docs/spike-agent-degradation.md): the interview protocol survives on
+# both providers, but there is no option-picker UI, and Evidence anchor
+# formatting drifted without an explicit rule.
+INTERVIEW_NOTE = (
+    "when a step calls for interviewing the user, ask each question in "
+    "plain prose — state your recommended answer, ask if it works, and "
+    "wait for the reply; there is no option-picker UI. "
+    "When writing multiple Evidence anchors, comma-separate them and "
+    "backtick each one."
+)
+
+PROVIDER_NOTES = {
+    "opencode": (
+        "> Provider note (opencode): " + INTERVIEW_NOTE + " Steps that "
+        "write records shell out to `~/.keel` scripts and need file-write "
+        "permission; in non-interactive runs approval must be granted up "
+        "front.\n\n"
+    ),
+    "codex": (
+        "> Provider note (Codex CLI): " + INTERVIEW_NOTE + "\n\n"
+    ),
+}
+
 
 def rewrite_shared_refs(text):
     for old, new in KEEL_HOME_REWRITES:
@@ -144,14 +169,18 @@ def _filter_frontmatter(skill, allowed):
     return "---\n" + "\n".join(kept) + "\n---\n"
 
 
-def _emit_skill_dirs(out, skills, allowed):
+def _emit_skill_dirs(out, skills, allowed, note=""):
     """Every provider tree is skill dirs only: shared assets live in
     ~/.keel (D-006), so bodies are rewritten to reference it — never a
-    colocated _shared — and carry the KEEL_HOME-override note."""
+    colocated _shared — and carry the KEEL_HOME-override note. `note` is
+    the provider's capability preamble (PROVIDER_NOTES), injected first
+    so it frames everything after it."""
     for skill in skills:
         body = rewrite_shared_refs(skill.body)
         if "~/.keel" in body:
             body = KEEL_HOME_NOTE + body.lstrip("\n")
+        if note:
+            body = note + body.lstrip("\n")
         _write(os.path.join(out, skill.name, "SKILL.md"),
                _filter_frontmatter(skill, allowed) + body)
 
@@ -168,7 +197,8 @@ def build_opencode(out):
     frontmatter fields (and requires name to match the dir, which the
     canonical sources already do)."""
     allowed = {"name", "description", "license", "compatibility", "metadata"}
-    _emit_skill_dirs(out, discover_skills(), allowed)
+    _emit_skill_dirs(out, discover_skills(), allowed,
+                     note=PROVIDER_NOTES["opencode"])
 
 
 def build_codex(out):
@@ -176,7 +206,8 @@ def build_codex(out):
     and matches on the description field; name+description is the shared
     agent-skills core, so emit exactly that."""
     allowed = {"name", "description"}
-    _emit_skill_dirs(out, discover_skills(), allowed)
+    _emit_skill_dirs(out, discover_skills(), allowed,
+                     note=PROVIDER_NOTES["codex"])
 
 
 # The plugin channel installs skill text through Claude's plugin system,

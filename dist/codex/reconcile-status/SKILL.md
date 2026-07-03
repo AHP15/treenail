@@ -2,6 +2,8 @@
 name: reconcile-status
 description: Compute the implementation view for each accepted decision from current task statuses, and surface orphan tasks, uncovered decisions, silent reversals, stale mitigation coverage, and cross-record judgment smells (un-red-teamed decisions, thin high-severity defers, completed mitigations to re-triage). Read-only — implementation status is not stored. Run on cadence — every time tasks change state, and before any planning review.
 ---
+> Provider note (Codex CLI): when a step calls for interviewing the user, ask each question in plain prose — state your recommended answer, ask if it works, and wait for the reply; there is no option-picker UI. When writing multiple Evidence anchors, comma-separate them and backtick each one.
+
 > Keel shared runtime: paths under `~/.keel` are the installed Keel runtime. If the `KEEL_HOME` environment variable is set, read every `~/.keel/...` path as `$KEEL_HOME/...` instead.
 
 Compute the implementation view per accepted decision and resolve each

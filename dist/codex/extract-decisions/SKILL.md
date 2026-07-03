@@ -2,6 +2,8 @@
 name: extract-decisions
 description: Reverse-engineer planning artifacts from an existing, undocumented codebase by anchoring in what shipped — inventory the built capabilities as `done` tasks (real git dates, verified Evidence anchors), factor the load-bearing decisions those tasks embody (as `accepted`), surface the standing risks visible in the tree (as `pending`), and flag the built-but-not-decided code no decision explains. Use to bootstrap `docs/` for a brownfield project that has code but no decision/risk/task records, before running the normal pipeline (`audit-artifacts` → `reconcile-status` → `triage-risks`). The code-reading, tasks-first counterpart of `challenge-me`. Reach for this whenever you're staring at an undocumented codebase and need its planning record reconstructed, even if the user doesn't name the skill.
 ---
+> Provider note (Codex CLI): when a step calls for interviewing the user, ask each question in plain prose — state your recommended answer, ask if it works, and wait for the reply; there is no option-picker UI. When writing multiple Evidence anchors, comma-separate them and backtick each one.
+
 > Keel shared runtime: paths under `~/.keel` are the installed Keel runtime. If the `KEEL_HOME` environment variable is set, read every `~/.keel/...` path as `$KEEL_HOME/...` instead.
 
 Read an existing codebase and reconstruct the planning record it never wrote. `challenge-me` elicits decisions you are *about to* make by interviewing; this recovers decisions already *made and shipped* by reading the tree. It is the brownfield ingress: every other skill assumes `docs/` is seeded, and this is what seeds it.

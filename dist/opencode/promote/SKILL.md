@@ -2,6 +2,8 @@
 name: promote
 description: Promote a feature-level decision or risk to project-level scope. Copies the record up, freezes the feature-level source with a cross-scope link, and surfaces related records as candidates. On-demand only — the user decides what to promote; this skill executes the mechanics correctly across files and indices.
 ---
+> Provider note (opencode): when a step calls for interviewing the user, ask each question in plain prose — state your recommended answer, ask if it works, and wait for the reply; there is no option-picker UI. When writing multiple Evidence anchors, comma-separate them and backtick each one. Steps that write records shell out to `~/.keel` scripts and need file-write permission; in non-interactive runs approval must be granted up front.
+
 > Keel shared runtime: paths under `~/.keel` are the installed Keel runtime. If the `KEEL_HOME` environment variable is set, read every `~/.keel/...` path as `$KEEL_HOME/...` instead.
 
 Take a feature-level D-NNN or R-NNN and execute the cross-scope promotion. One record per invocation.

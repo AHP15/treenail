@@ -2,6 +2,8 @@
 name: reindex
 description: Rebuild one or more INDEX.md files from scratch as a pure deterministic projection of the per-record files. Use to repair INDEX drift surfaced by audit-artifacts, after a partial skill failure, after a manual edit to records, or any time you want to guarantee the index matches the authoritative per-record files. Never edits record bodies.
 ---
+> Provider note (opencode): when a step calls for interviewing the user, ask each question in plain prose — state your recommended answer, ask if it works, and wait for the reply; there is no option-picker UI. When writing multiple Evidence anchors, comma-separate them and backtick each one. Steps that write records shell out to `~/.keel` scripts and need file-write permission; in non-interactive runs approval must be granted up front.
+
 > Keel shared runtime: paths under `~/.keel` are the installed Keel runtime. If the `KEEL_HOME` environment variable is set, read every `~/.keel/...` path as `$KEEL_HOME/...` instead.
 
 INDEX is a derived projection, not a source of truth. This skill
