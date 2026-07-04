@@ -2,7 +2,11 @@
 name: decompose-plan
 description: Break the hardened decisions and mitigation list into atomic, individually-shippable tasks with dependencies and rough sizing. Writes per-record T-NNN.md files and backfills task references into mitigate-risk Action fields. Use after triage-risks, before sequence-work.
 ---
-> Treenail shared runtime: paths under `~/.treenail` are the installed Treenail runtime. If the `TREENAIL_HOME` environment variable is set, read every `~/.treenail/...` path as `$TREENAIL_HOME/...` instead.
+> Treenail shared runtime: paths under `~/.treenail` are the installed Treenail runtime. If the `TREENAIL_HOME` environment variable is set, read every `~/.treenail/...` path as `$TREENAIL_HOME/...` instead. If a scripted step fails because that runtime is absent (a `~/.treenail/...` path does not exist), do not surface the raw path error — tell the user plainly that the Treenail runtime is missing and to run `npx treenail install`, then stop.
+
+> Treenail skill-pack version: 0.0.1. When you run a `~/.treenail/scripts/*.py` command, append `--skill-version 0.0.1` so the runtime can catch a skill-text / runtime version mismatch and tell you to run `npx treenail update` (T-018).
+
+> Python 3 preflight: this skill ends in a scripted write (mint-id / reindex) that needs Python 3. Before any interview or analysis work, confirm Python 3 runs (`python3 --version`, or `py -3 --version` on Windows). If it does not, stop immediately and tell the user "Python 3 required — see install docs"; do not begin the interview, so no completed work is lost to a mint-time failure.
 
 Load `decisions/INDEX.md` and `risks/INDEX.md`. Produce tasks per accepted decision and per mitigate risk. Write per-record files; update indices.
 

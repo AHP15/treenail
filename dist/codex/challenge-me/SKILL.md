@@ -4,7 +4,11 @@ description: Thoroughly interview the user about a plan or design, surfacing the
 ---
 > Provider note (Codex CLI): when a step calls for interviewing the user, ask each question in plain prose — state your recommended answer, ask if it works, and wait for the reply; there is no option-picker UI. When writing multiple Evidence anchors, comma-separate them and backtick each one.
 
-> Treenail shared runtime: paths under `~/.treenail` are the installed Treenail runtime. If the `TREENAIL_HOME` environment variable is set, read every `~/.treenail/...` path as `$TREENAIL_HOME/...` instead.
+> Treenail shared runtime: paths under `~/.treenail` are the installed Treenail runtime. If the `TREENAIL_HOME` environment variable is set, read every `~/.treenail/...` path as `$TREENAIL_HOME/...` instead. If a scripted step fails because that runtime is absent (a `~/.treenail/...` path does not exist), do not surface the raw path error — tell the user plainly that the Treenail runtime is missing and to run `npx treenail install`, then stop.
+
+> Treenail skill-pack version: 0.0.1. When you run a `~/.treenail/scripts/*.py` command, append `--skill-version 0.0.1` so the runtime can catch a skill-text / runtime version mismatch and tell you to run `npx treenail update` (T-018).
+
+> Python 3 preflight: this skill ends in a scripted write (mint-id / reindex) that needs Python 3. Before any interview or analysis work, confirm Python 3 runs (`python3 --version`, or `py -3 --version` on Windows). If it does not, stop immediately and tell the user "Python 3 required — see install docs"; do not begin the interview, so no completed work is lost to a mint-time failure.
 
 Interview me systematically until ALL the important decisions are settled — including the ones I haven't noticed I'm making. Work through the decision tree in priority order, grow it as resolved decisions spawn new branches, and produce per-decision records at the end.
 
@@ -49,7 +53,7 @@ Depth dimensions: stress the decision against each of — failure and partial fa
 9. Stop when remaining questions are low-leverage, when the user signals satisfaction, or when further resolution needs implementation feedback rather than more talking. Don't manufacture questions to seem thorough.
 
 10. Write the records:
-    - On first run: ensure `docs/CONVENTIONS-SPEC.md` exists. If not, copy [~/.treenail/conventions-spec.md](~/.treenail/conventions-spec.md) → `docs/CONVENTIONS-SPEC.md` and [~/.treenail/conventions-examples.md](~/.treenail/conventions-examples.md) → `docs/CONVENTIONS-EXAMPLES.md`. Ensure `docs/decisions/INDEX.md` exists (touch if not).
+    - On first run: ensure `docs/CONVENTIONS-SPEC.md` exists. If not, copy [~/.treenail/conventions-spec.md](~/.treenail/conventions-spec.md) → `docs/CONVENTIONS-SPEC.md` and [~/.treenail/conventions-examples.md](~/.treenail/conventions-examples.md) → `docs/CONVENTIONS-EXAMPLES.md`, and write the spec version (the `Spec-version:` line from conventions-spec.md, e.g. `1`) into `docs/.treenail-version` so the scripts can dispatch on it later (T-022). Ensure `docs/decisions/INDEX.md` exists (touch if not).
     - For each resolved decision: mint the next D-NNN within scope by running `python3 ~/.treenail/scripts/mint_id.py <decisions-dir> D` (e.g. `docs/decisions` or `docs/features/<feature>/decisions`). The script executes the **ID reservation protocol** — filesystem-arbitrated max over active + archive, atomic no-clobber claim, retry on collision — and prints the claimed `D-NNN` and its (empty) file path. Never derive the max from INDEX; it may lag. (If `python3` is unavailable, fall back to the protocol by hand per CONVENTIONS-SPEC.md.)
     - Write the decision body into the claimed `decisions/D-NNN.md` per the DECISIONS section of `CONVENTIONS-SPEC.md`.
     - Add its INDEX line: either append `D-NNN | accepted | <title>` to `decisions/INDEX.md`, or after writing all records run `python3 ~/.treenail/scripts/reindex.py <scope-dir> decisions` (the canonical projection — preferred when you wrote several records).

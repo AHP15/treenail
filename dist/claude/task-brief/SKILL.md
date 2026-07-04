@@ -2,7 +2,11 @@
 name: task-brief
 description: 'Drive implementation of the sequenced plan — work tasks one at a time, but continuously across a user-bounded batch (one task, a phase, or "until you need me"), instead of cold-reinvoking per task. For each task it assembles a build-ready brief from the full decision + risk + conventions context, then enforces the per-task status hygiene the rest of the pipeline depends on: flip to `in_progress` at start, and at completion fill `Date done` plus machine-resolvable `Evidence` anchors verified to resolve before they are written. Use to start building, get a brief for what to build next, work through a phase, or correctly close out a finished task.'
 ---
-> Treenail shared runtime: paths under `~/.treenail` are the installed Treenail runtime. If the `TREENAIL_HOME` environment variable is set, read every `~/.treenail/...` path as `$TREENAIL_HOME/...` instead.
+> Treenail shared runtime: paths under `~/.treenail` are the installed Treenail runtime. If the `TREENAIL_HOME` environment variable is set, read every `~/.treenail/...` path as `$TREENAIL_HOME/...` instead. If a scripted step fails because that runtime is absent (a `~/.treenail/...` path does not exist), do not surface the raw path error — tell the user plainly that the Treenail runtime is missing and to run `npx treenail install`, then stop.
+
+> Treenail skill-pack version: 0.0.1. When you run a `~/.treenail/scripts/*.py` command, append `--skill-version 0.0.1` so the runtime can catch a skill-text / runtime version mismatch and tell you to run `npx treenail update` (T-018).
+
+> Python 3 preflight: this skill ends in a scripted write (mint-id / reindex) that needs Python 3. Before any interview or analysis work, confirm Python 3 runs (`python3 --version`, or `py -3 --version` on Windows). If it does not, stop immediately and tell the user "Python 3 required — see install docs"; do not begin the interview, so no completed work is lost to a mint-time failure.
 
 This is the executor for the `[implementation]` seam — where `sequence-work`'s order stops being a plan and someone builds it. `sequence-work` produces the order (ephemeral, read-only); this skill *runs* it: pick the next eligible task → brief → build → land with verified evidence → continue to the next, staying in warm context across the batch rather than re-deriving scope on every task. It does not mint, supersede, triage, or promote — it implements already-planned tasks and records each one correctly.
 

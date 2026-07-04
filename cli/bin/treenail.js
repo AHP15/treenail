@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { detect } from '../lib/detect.js';
-import { install } from '../lib/install.js';
+import { install, update } from '../lib/install.js';
 
 const USAGE = `treenail — installer for the Treenail planning-skills pack
 
@@ -33,8 +33,7 @@ async function main() {
     case 'install':
       return install(args);
     case 'update':
-      console.error('treenail update: not implemented yet.');
-      return 1;
+      return update(args);
     case 'help':
     case '--help':
     case '-h':

@@ -2,7 +2,9 @@
 name: archive-cycle
 description: Keep the active per-record set bounded to in-flight work. Reaps terminal decisions, risks, and tasks out of the active directory into archive/ with full prose kept — run this on cadence, e.g. session start. Also compacts archived records the latest retrospective has already consumed into 3-5 line summaries. Idempotent and safe to run any time. Never changes status, dispositions, or supersession links.
 ---
-> Treenail shared runtime: paths under `~/.treenail` are the installed Treenail runtime. If the `TREENAIL_HOME` environment variable is set, read every `~/.treenail/...` path as `$TREENAIL_HOME/...` instead.
+> Treenail shared runtime: paths under `~/.treenail` are the installed Treenail runtime. If the `TREENAIL_HOME` environment variable is set, read every `~/.treenail/...` path as `$TREENAIL_HOME/...` instead. If a scripted step fails because that runtime is absent (a `~/.treenail/...` path does not exist), do not surface the raw path error — tell the user plainly that the Treenail runtime is missing and to run `npx treenail install`, then stop.
+
+> Treenail skill-pack version: 0.0.1. When you run a `~/.treenail/scripts/*.py` command, append `--skill-version 0.0.1` so the runtime can catch a skill-text / runtime version mismatch and tell you to run `npx treenail update` (T-018).
 
 Two decoupled operations, both safe to run any time (idempotent). The
 **reap** keeps the active read path bounded *within* a cycle; the

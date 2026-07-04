@@ -74,4 +74,5 @@ if __name__ == "__main__":
     # locale must never crash on report typography (—, ≤, →) (R-010).
     for _stream in (sys.stdout, sys.stderr):
         _stream.reconfigure(encoding="utf-8", errors="replace")
-    sys.exit(main(sys.argv))
+    from skill_version import check_skill_version
+    sys.exit(main(check_skill_version(sys.argv)))

@@ -2,7 +2,11 @@
 name: triage-risks
 description: Reconcile decisions with the risk list by assigning each pending risk a disposition (fix, mitigate, accept, defer) and updating decisions accordingly. Use after red-team-me, before implementation planning.
 ---
-> Treenail shared runtime: paths under `~/.treenail` are the installed Treenail runtime. If the `TREENAIL_HOME` environment variable is set, read every `~/.treenail/...` path as `$TREENAIL_HOME/...` instead.
+> Treenail shared runtime: paths under `~/.treenail` are the installed Treenail runtime. If the `TREENAIL_HOME` environment variable is set, read every `~/.treenail/...` path as `$TREENAIL_HOME/...` instead. If a scripted step fails because that runtime is absent (a `~/.treenail/...` path does not exist), do not surface the raw path error — tell the user plainly that the Treenail runtime is missing and to run `npx treenail install`, then stop.
+
+> Treenail skill-pack version: 0.0.1. When you run a `~/.treenail/scripts/*.py` command, append `--skill-version 0.0.1` so the runtime can catch a skill-text / runtime version mismatch and tell you to run `npx treenail update` (T-018).
+
+> Python 3 preflight: this skill ends in a scripted write (mint-id / reindex) that needs Python 3. Before any interview or analysis work, confirm Python 3 runs (`python3 --version`, or `py -3 --version` on Windows). If it does not, stop immediately and tell the user "Python 3 required — see install docs"; do not begin the interview, so no completed work is lost to a mint-time failure.
 
 Read `risks/INDEX.md` and `decisions/INDEX.md`. For each risk with `Disposition: pending`, decide and write back.
 

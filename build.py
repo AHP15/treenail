@@ -51,7 +51,11 @@ TREENAIL_HOME_REWRITES = (
 TREENAIL_HOME_NOTE = (
     "> Treenail shared runtime: paths under `~/.treenail` are the installed Treenail "
     "runtime. If the `TREENAIL_HOME` environment variable is set, read every "
-    "`~/.treenail/...` path as `$TREENAIL_HOME/...` instead.\n\n"
+    "`~/.treenail/...` path as `$TREENAIL_HOME/...` instead. "
+    "If a scripted step fails because that runtime is absent (a `~/.treenail/...` "
+    "path does not exist), do not surface the raw path error — tell the user "
+    "plainly that the Treenail runtime is missing and to run `npx treenail install`, "
+    "then stop.\n\n"
 )
 
 # Per-provider preamble injected into every built skill body (T-026,
@@ -84,6 +88,34 @@ def rewrite_shared_refs(text):
     for old, new in TREENAIL_HOME_REWRITES:
         text = text.replace(old, new)
     return text
+
+
+# Lockstep version stamp injected into every scripted skill body (T-017,
+# D-014). The one semver source is cli/package.json; the build stamps it here,
+# the installer writes the same value to ~/.treenail/VERSION, so skill text and
+# runtime always match on a clean install. T-018's handshake reads this stamp.
+# Injected at the top of every skill that ends in a scripted write (mint-id /
+# reindex) so the agent preflights Python 3 before any interview work (T-021,
+# D-009, R-015) — a mint-time traceback must never discard a completed
+# interview. Read-only scripted skills fail fast on their own; this guards the
+# ones with prior work to lose.
+PYTHON_PREFLIGHT_NOTE = (
+    "> Python 3 preflight: this skill ends in a scripted write (mint-id / "
+    "reindex) that needs Python 3. Before any interview or analysis work, "
+    "confirm Python 3 runs (`python3 --version`, or `py -3 --version` on "
+    "Windows). If it does not, stop immediately and tell the user "
+    "\"Python 3 required — see install docs\"; do not begin the interview, so no "
+    "completed work is lost to a mint-time failure.\n\n"
+)
+
+
+def version_stamp(version):
+    return (
+        f"> Treenail skill-pack version: {version}. When you run a "
+        f"`~/.treenail/scripts/*.py` command, append `--skill-version {version}` "
+        f"so the runtime can catch a skill-text / runtime version mismatch and "
+        f"tell you to run `npx treenail update` (T-018).\n\n"
+    )
 
 # Support trees copied alongside the skills: the shared runtime and the
 # fill-in templates. Placement is the adapter's call.
@@ -175,10 +207,14 @@ def _emit_skill_dirs(out, skills, allowed, note=""):
     colocated _shared — and carry the TREENAIL_HOME-override note. `note` is
     the provider's capability preamble (PROVIDER_NOTES), injected first
     so it frames everything after it."""
+    version = read_cli_version()
     for skill in skills:
         body = rewrite_shared_refs(skill.body)
         if "~/.treenail" in body:
-            body = TREENAIL_HOME_NOTE + body.lstrip("\n")
+            prefix = TREENAIL_HOME_NOTE + version_stamp(version)
+            if "mint_id.py" in body or "reindex.py" in body:
+                prefix += PYTHON_PREFLIGHT_NOTE
+            body = prefix + body.lstrip("\n")
         if note:
             body = note + body.lstrip("\n")
         _write(os.path.join(out, skill.name, "SKILL.md"),

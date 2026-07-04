@@ -1,6 +1,13 @@
 # Decision, Risk, Task, Retrospective Conventions — Spec
 
+Spec-version: 1
+
 This is the schema. For exemplars, see `CONVENTIONS-EXAMPLES.md`.
+
+This spec version is frozen into a project at adoption time: the bootstrap
+writes it to `docs/.treenail-version`, and the record-parsing scripts refuse
+loudly (rather than guess) on a project stamped with a spec version they do not
+support. Bump `Spec-version` on any breaking schema change (T-022, R-012).
 
 ---
 
