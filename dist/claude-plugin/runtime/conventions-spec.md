@@ -48,7 +48,7 @@ by reading the records in the matching directory (active dir for
 `INDEX.md`, `archive/` for `archive/INDEX.md`) and emitting one line per
 record. Two runs over the same records MUST produce byte-identical output.
 
-This projection is implemented by `~/.keel/scripts/reindex.py` (run it
+This projection is implemented by `~/.treenail/scripts/reindex.py` (run it
 via the `reindex` skill); because byte-identical determinism is a
 property of code, not of hand-typed lines, the script is the canonical
 executor and an incremental hand-append is only ever a shortcut for what
@@ -77,7 +77,7 @@ state of its own, so the repair is always "recompute," never "decide."
 
 When `audit-artifacts` reports an INDEX/file mismatch, the remedy is
 always `/reindex <scope>` — never hand-editing the INDEX line. The
-mismatch is detected by `~/.keel/scripts/audit.py`, which decides it
+mismatch is detected by `~/.treenail/scripts/audit.py`, which decides it
 using `reindex.py`'s own projection, so "INDEX matches its records" is
 checked by the same code that rebuilds the index.
 
@@ -87,7 +87,7 @@ checked by the same code that rebuilds the index.
 
 Every skill that mints a new ID (`challenge-me`, `red-team-me`,
 `triage-risks`'s fix flow, `decompose-plan`, `promote`) MUST use this
-protocol, implemented by `~/.keel/scripts/mint_id.py <artifact-dir>
+protocol, implemented by `~/.treenail/scripts/mint_id.py <artifact-dir>
 <PREFIX>` — the canonical executor (the steps below are what it does, and
 the hand fallback when no shell is available). It makes the filesystem —
 not the INDEX, and not the skill's
@@ -388,7 +388,7 @@ work *within* a cycle, not just at its boundary.
 
 **Step 1 — Reap (continuous; keeps the active set bounded).** The moment
 a record reaches a terminal state it is eligible to leave the active
-directory. `archive-cycle` runs `~/.keel/scripts/archive_cycle.py` to move
+directory. `archive-cycle` runs `~/.treenail/scripts/archive_cycle.py` to move
 eligible records from `<artifact>/` to `<artifact>/archive/` with full
 prose retained, then rebuilds the active and archive indexes from the
 records. Run this on cadence (e.g. session start), not only at cycle
@@ -424,7 +424,7 @@ latest retrospective's machine-readable **Boundary-end** field (never
 fuzzy `Cycle` prose): `archive-cycle` compacts any *uncompacted* record
 in `archive/` whose terminal date is at or before that frontier. The
 eligible set is computed deterministically by
-`~/.keel/scripts/compact-select.py` — **if no retrospective carries a
+`~/.treenail/scripts/compact-select.py` — **if no retrospective carries a
 parseable `Boundary-end`, that script reports no frontier and compaction
 is skipped entirely** (reaped records simply stay uncompacted in
 `archive/`, already off the hot path, until a retrospective harvests

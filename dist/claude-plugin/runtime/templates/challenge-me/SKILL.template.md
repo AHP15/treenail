@@ -13,7 +13,7 @@ To create a working skill for a new domain:
   1. Copy this file to your agent's skills directory:
          ~/.claude/skills/<skill-name>/SKILL.md
      It MUST live directly under skills/ (not under _templates/) so the
-     ~/.keel/... script paths resolve from the instance.
+     ~/.treenail/... script paths resolve from the instance.
   2. Replace every {{PLACEHOLDER}} below. FILL-GUIDE.md has per-slot guidance
      and a table of four fully-worked domains you can paste from.
      When done, search the file for "{{" — none should remain.
@@ -48,7 +48,7 @@ Interview me systematically until ALL the important decisions are settled — in
 3b. Prior art (advisory; optional). [OPTIONAL — delete this entire step if you won't run the Graphiti knowledge graph for this domain.] If the Graphiti graph is configured, query it for semantically-related decisions and risks from **other** scopes — the "have we faced something like this before?" recall that INDEX (scoped, exact-match) can't give you:
 
    ```
-   python3 ~/.keel/scripts/graph_query.py {{DOCS_ROOT}} "<the problem in a sentence>" --scope all
+   python3 ~/.treenail/scripts/graph_query.py {{DOCS_ROOT}} "<the problem in a sentence>" --scope all
    ```
 
    Run it per major decision branch from step 1. The output is one line per related prior record with its `[ID]`; pull the specific `<ID>.md` only if a hit looks genuinely relevant. Use these as **input to your leverage ordering and recommended answers** (e.g. a prior decision that broke, a risk that materialized elsewhere) — never as settled constraints; this scope still decides for itself. If the script prints nothing (graph unavailable, or no hits), proceed exactly as before — prior art is a bonus, not a dependency.
@@ -80,8 +80,8 @@ Depth dimensions: stress the decision against each of — {{DEPTH_DIMENSIONS}} �
 9. Stop when remaining questions are low-leverage, when the user signals satisfaction, or when further resolution needs real-world feedback rather than more talking. Don't manufacture questions to seem thorough.
 
 10. Write the records:
-    - On first run: ensure `{{DOCS_ROOT}}/CONVENTIONS-SPEC.md` exists. If not, copy `~/.keel/conventions-spec.md` → `{{DOCS_ROOT}}/CONVENTIONS-SPEC.md` and `~/.keel/conventions-examples.md` → `{{DOCS_ROOT}}/CONVENTIONS-EXAMPLES.md`. Ensure `{{DOCS_ROOT}}/decisions/INDEX.md` exists (touch if not).
-    - For each resolved decision: mint the next D-NNN within scope by running `python3 ~/.keel/scripts/mint_id.py <decisions-dir> D` (e.g. `{{DOCS_ROOT}}/decisions` or `{{DOCS_ROOT}}/features/<{{SUBSCOPE_NOUN}}>/decisions`). The script executes the **ID reservation protocol** — filesystem-arbitrated max over active + archive, atomic no-clobber claim, retry on collision — and prints the claimed `D-NNN` and its (empty) file path. Never derive the max from INDEX; it may lag. (If `python3` is unavailable, fall back to the protocol by hand per CONVENTIONS-SPEC.md.)
+    - On first run: ensure `{{DOCS_ROOT}}/CONVENTIONS-SPEC.md` exists. If not, copy `~/.treenail/conventions-spec.md` → `{{DOCS_ROOT}}/CONVENTIONS-SPEC.md` and `~/.treenail/conventions-examples.md` → `{{DOCS_ROOT}}/CONVENTIONS-EXAMPLES.md`. Ensure `{{DOCS_ROOT}}/decisions/INDEX.md` exists (touch if not).
+    - For each resolved decision: mint the next D-NNN within scope by running `python3 ~/.treenail/scripts/mint_id.py <decisions-dir> D` (e.g. `{{DOCS_ROOT}}/decisions` or `{{DOCS_ROOT}}/features/<{{SUBSCOPE_NOUN}}>/decisions`). The script executes the **ID reservation protocol** — filesystem-arbitrated max over active + archive, atomic no-clobber claim, retry on collision — and prints the claimed `D-NNN` and its (empty) file path. Never derive the max from INDEX; it may lag. (If `python3` is unavailable, fall back to the protocol by hand per CONVENTIONS-SPEC.md.)
     - Write the decision body into the claimed `decisions/D-NNN.md` per the DECISIONS section of `CONVENTIONS-SPEC.md`.
-    - Add its INDEX line: either append `D-NNN | accepted | <title>` to `decisions/INDEX.md`, or after writing all records run `python3 ~/.keel/scripts/reindex.py <scope-dir> decisions` (the canonical projection — preferred when you wrote several records).
+    - Add its INDEX line: either append `D-NNN | accepted | <title>` to `decisions/INDEX.md`, or after writing all records run `python3 ~/.treenail/scripts/reindex.py <scope-dir> decisions` (the canonical projection — preferred when you wrote several records).
     - Also output a brief inline summary in chat (one line per decision).

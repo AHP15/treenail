@@ -1,6 +1,6 @@
 import { detectProviders } from './providers.js';
 
-// `keel-skills detect` — report which agents are present and where each
+// `treenail detect` — report which agents are present and where each
 // one's user-level skill directory is (T-012).
 export function detect() {
   const results = detectProviders();

@@ -2,7 +2,7 @@
 name: reindex
 description: Rebuild one or more INDEX.md files from scratch as a pure deterministic projection of the per-record files. Use to repair INDEX drift surfaced by audit-artifacts, after a partial skill failure, after a manual edit to records, or any time you want to guarantee the index matches the authoritative per-record files. Never edits record bodies.
 ---
-> Keel shared runtime: paths under `~/.keel` are the installed Keel runtime. If the `KEEL_HOME` environment variable is set, read every `~/.keel/...` path as `$KEEL_HOME/...` instead.
+> Treenail shared runtime: paths under `~/.treenail` are the installed Treenail runtime. If the `TREENAIL_HOME` environment variable is set, read every `~/.treenail/...` path as `$TREENAIL_HOME/...` instead.
 
 INDEX is a derived projection, not a source of truth. This skill
 discards the existing INDEX content and regenerates it from the
@@ -23,7 +23,7 @@ lines cannot guarantee determinism, the script can.
 2. Run the projector against the scope's docs root:
 
    ```
-   python3 ~/.keel/scripts/reindex.py <scope-dir> [artifact ...]
+   python3 ~/.treenail/scripts/reindex.py <scope-dir> [artifact ...]
    ```
 
    `<scope-dir>` is the docs root for the scope — `docs` for project

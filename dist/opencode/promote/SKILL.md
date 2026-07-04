@@ -2,9 +2,9 @@
 name: promote
 description: Promote a feature-level decision or risk to project-level scope. Copies the record up, freezes the feature-level source with a cross-scope link, and surfaces related records as candidates. On-demand only — the user decides what to promote; this skill executes the mechanics correctly across files and indices.
 ---
-> Provider note (opencode): when a step calls for interviewing the user, ask each question in plain prose — state your recommended answer, ask if it works, and wait for the reply; there is no option-picker UI. When writing multiple Evidence anchors, comma-separate them and backtick each one. Steps that write records shell out to `~/.keel` scripts and need file-write permission; in non-interactive runs approval must be granted up front.
+> Provider note (opencode): when a step calls for interviewing the user, ask each question in plain prose — state your recommended answer, ask if it works, and wait for the reply; there is no option-picker UI. When writing multiple Evidence anchors, comma-separate them and backtick each one. Steps that write records shell out to `~/.treenail` scripts and need file-write permission; in non-interactive runs approval must be granted up front.
 
-> Keel shared runtime: paths under `~/.keel` are the installed Keel runtime. If the `KEEL_HOME` environment variable is set, read every `~/.keel/...` path as `$KEEL_HOME/...` instead.
+> Treenail shared runtime: paths under `~/.treenail` are the installed Treenail runtime. If the `TREENAIL_HOME` environment variable is set, read every `~/.treenail/...` path as `$TREENAIL_HOME/...` instead.
 
 Take a feature-level D-NNN or R-NNN and execute the cross-scope promotion. One record per invocation.
 
@@ -12,7 +12,7 @@ Take a feature-level D-NNN or R-NNN and execute the cross-scope promotion. One r
 
 2. Load full source record (`docs/features/<feature>/decisions/D-NNN.md` or `risks/R-NNN.md`).
 
-3. Mint the destination ID by running `python3 ~/.keel/scripts/mint_id.py docs/decisions D` (or `docs/risks R`) — the **project-level** dir, since promotion targets project scope. The script executes the **ID reservation protocol** (filesystem-arbitrated max over the project-level active + archive files, atomic no-clobber claim, retry on collision) and prints the claimed destination ID and path. Do not derive the max from INDEX; it may lag. (Fall back to the protocol by hand if `python3` is unavailable.)
+3. Mint the destination ID by running `python3 ~/.treenail/scripts/mint_id.py docs/decisions D` (or `docs/risks R`) — the **project-level** dir, since promotion targets project scope. The script executes the **ID reservation protocol** (filesystem-arbitrated max over the project-level active + archive files, atomic no-clobber claim, retry on collision) and prints the claimed destination ID and path. Do not derive the max from INDEX; it may lag. (Fall back to the protocol by hand if `python3` is unavailable.)
 
 4. **Decisions**:
    - Write `docs/decisions/D-MMM.md` with the source's body content. Status: `accepted`. Add `Promoted from: feature:<feature>/D-NNN`.
@@ -29,7 +29,7 @@ Take a feature-level D-NNN or R-NNN and execute the cross-scope promotion. One r
 6. Surface candidates. Scan the source's **explicit** links — `Related decisions`, `Mitigates`, mitigating tasks, `Supersedes` chain — and recommend other records the user may want to promote next. Then, if the Graphiti graph is configured, widen the net with **semantic** candidates the explicit links miss — feature-level records elsewhere that resemble this one and may deserve the same project-level promotion:
 
    ```
-   python3 ~/.keel/scripts/graph_query.py docs "<source title/description>" --scope all
+   python3 ~/.treenail/scripts/graph_query.py docs "<source title/description>" --scope all
    ```
 
    Present both sets clearly labelled (explicit vs semantic-advisory). Do not promote any of them automatically — promotion is one record per invocation, and the user decides. If the graph is unavailable the step simply yields no extra candidates.

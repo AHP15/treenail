@@ -378,7 +378,7 @@ class TestAudit(unittest.TestCase):
             - **Size**: S
             - **Implements**: D-001
             - **Acceptance**: x.
-            - **Evidence**: `git:abc1234:grep:"name": "keel" in cli/package.json`
+            - **Evidence**: `git:abc1234:grep:"name": "treenail" in cli/package.json`
             - **Date done**: 2025-01-01
         """)
         run("reindex.py", self.docs, "tasks")

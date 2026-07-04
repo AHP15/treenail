@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Provision ~/.keel (or $KEEL_HOME) from the runtime bundled in the Keel
+"""Provision ~/.treenail (or $TREENAIL_HOME) from the runtime bundled in the Treenail
 Claude Code plugin (T-019, R-007). Runs on SessionStart: no-op when the
 installed runtime is present and at least as new as the bundle."""
 
@@ -27,8 +27,8 @@ def as_tuple(version):
 
 
 def main():
-    home = os.environ.get("KEEL_HOME") or os.path.join(
-        os.path.expanduser("~"), ".keel")
+    home = os.environ.get("TREENAIL_HOME") or os.path.join(
+        os.path.expanduser("~"), ".treenail")
     bundled = read_version(BUNDLED)
     if bundled is None:
         return 0  # damaged bundle; never touch an existing install
@@ -38,7 +38,7 @@ def main():
     if os.path.lexists(home):
         shutil.rmtree(home, ignore_errors=False)
     shutil.copytree(BUNDLED, home)
-    print(f"Keel runtime {bundled} provisioned at {home}")
+    print(f"Treenail runtime {bundled} provisioned at {home}")
     return 0
 
 

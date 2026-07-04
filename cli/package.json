@@ -1,15 +1,15 @@
 {
-  "name": "keel-skills",
+  "name": "treenail",
   "version": "0.0.1",
-  "description": "Installer for the Keel planning-skills pack: build, install, and update agent skills for Claude Code, opencode, and Codex.",
+  "description": "Installer for the Treenail planning-skills pack: build, install, and update agent skills for Claude Code, opencode, and Codex.",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AHP15/keel.git"
+    "url": "git+https://github.com/AHP15/treenail.git"
   },
   "type": "module",
   "bin": {
-    "keel-skills": "bin/keel-skills.js"
+    "treenail": "bin/treenail.js"
   },
   "files": [
     "bin/",

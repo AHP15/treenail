@@ -4,7 +4,7 @@ description: Thoroughly interview the user about a plan or design, surfacing the
 ---
 > Provider note (Codex CLI): when a step calls for interviewing the user, ask each question in plain prose — state your recommended answer, ask if it works, and wait for the reply; there is no option-picker UI. When writing multiple Evidence anchors, comma-separate them and backtick each one.
 
-> Keel shared runtime: paths under `~/.keel` are the installed Keel runtime. If the `KEEL_HOME` environment variable is set, read every `~/.keel/...` path as `$KEEL_HOME/...` instead.
+> Treenail shared runtime: paths under `~/.treenail` are the installed Treenail runtime. If the `TREENAIL_HOME` environment variable is set, read every `~/.treenail/...` path as `$TREENAIL_HOME/...` instead.
 
 Interview me systematically until ALL the important decisions are settled — including the ones I haven't noticed I'm making. Work through the decision tree in priority order, grow it as resolved decisions spawn new branches, and produce per-decision records at the end.
 
@@ -17,7 +17,7 @@ Interview me systematically until ALL the important decisions are settled — in
 3b. Prior art (advisory; optional). If the Graphiti graph is configured, query it for semantically-related decisions and risks from **other** scopes — the "have we faced something like this before?" recall that INDEX (scoped, exact-match) can't give you:
 
    ```
-   python3 ~/.keel/scripts/graph_query.py docs "<the design problem in a sentence>" --scope all
+   python3 ~/.treenail/scripts/graph_query.py docs "<the design problem in a sentence>" --scope all
    ```
 
    Run it per major decision branch from step 1. The output is one line per related prior record with its `[ID]`; pull the specific `<ID>.md` only if a hit looks genuinely relevant. Use these as **input to your leverage ordering and recommended answers** (e.g. a prior decision that broke, a risk that materialized elsewhere) — never as settled constraints; this scope still decides for itself. If the script prints nothing (graph unavailable, or no hits), proceed exactly as before — prior art is a bonus, not a dependency.
@@ -49,8 +49,8 @@ Depth dimensions: stress the decision against each of — failure and partial fa
 9. Stop when remaining questions are low-leverage, when the user signals satisfaction, or when further resolution needs implementation feedback rather than more talking. Don't manufacture questions to seem thorough.
 
 10. Write the records:
-    - On first run: ensure `docs/CONVENTIONS-SPEC.md` exists. If not, copy [~/.keel/conventions-spec.md](~/.keel/conventions-spec.md) → `docs/CONVENTIONS-SPEC.md` and [~/.keel/conventions-examples.md](~/.keel/conventions-examples.md) → `docs/CONVENTIONS-EXAMPLES.md`. Ensure `docs/decisions/INDEX.md` exists (touch if not).
-    - For each resolved decision: mint the next D-NNN within scope by running `python3 ~/.keel/scripts/mint_id.py <decisions-dir> D` (e.g. `docs/decisions` or `docs/features/<feature>/decisions`). The script executes the **ID reservation protocol** — filesystem-arbitrated max over active + archive, atomic no-clobber claim, retry on collision — and prints the claimed `D-NNN` and its (empty) file path. Never derive the max from INDEX; it may lag. (If `python3` is unavailable, fall back to the protocol by hand per CONVENTIONS-SPEC.md.)
+    - On first run: ensure `docs/CONVENTIONS-SPEC.md` exists. If not, copy [~/.treenail/conventions-spec.md](~/.treenail/conventions-spec.md) → `docs/CONVENTIONS-SPEC.md` and [~/.treenail/conventions-examples.md](~/.treenail/conventions-examples.md) → `docs/CONVENTIONS-EXAMPLES.md`. Ensure `docs/decisions/INDEX.md` exists (touch if not).
+    - For each resolved decision: mint the next D-NNN within scope by running `python3 ~/.treenail/scripts/mint_id.py <decisions-dir> D` (e.g. `docs/decisions` or `docs/features/<feature>/decisions`). The script executes the **ID reservation protocol** — filesystem-arbitrated max over active + archive, atomic no-clobber claim, retry on collision — and prints the claimed `D-NNN` and its (empty) file path. Never derive the max from INDEX; it may lag. (If `python3` is unavailable, fall back to the protocol by hand per CONVENTIONS-SPEC.md.)
     - Write the decision body into the claimed `decisions/D-NNN.md` per the DECISIONS section of `CONVENTIONS-SPEC.md`.
-    - Add its INDEX line: either append `D-NNN | accepted | <title>` to `decisions/INDEX.md`, or after writing all records run `python3 ~/.keel/scripts/reindex.py <scope-dir> decisions` (the canonical projection — preferred when you wrote several records).
+    - Add its INDEX line: either append `D-NNN | accepted | <title>` to `decisions/INDEX.md`, or after writing all records run `python3 ~/.treenail/scripts/reindex.py <scope-dir> decisions` (the canonical projection — preferred when you wrote several records).
     - Also output a brief inline summary in chat (one line per decision).

@@ -32,9 +32,9 @@ function run(cmd, args, opts = {}) {
   return r;
 }
 
-const work = fs.mkdtempSync(path.join(os.tmpdir(), 'keel-tarball-'));
+const work = fs.mkdtempSync(path.join(os.tmpdir(), 'treenail-tarball-'));
 try {
-  console.log('packing keel-skills...');
+  console.log('packing treenail...');
   run(npm, ['pack', '--pack-destination', work], { cwd: cliRoot });
   const tgz = fs.readdirSync(work).filter((n) => n.endsWith('.tgz'));
   if (tgz.length !== 1) {
@@ -49,7 +49,7 @@ try {
   run(npm, ['install', '--no-audit', '--no-fund', tarball], { cwd: proj });
 
   const installedBin = path.join(
-    proj, 'node_modules', 'keel-skills', 'bin', 'keel-skills.js'
+    proj, 'node_modules', 'treenail', 'bin', 'treenail.js'
   );
   console.log('running the installer smoke against the installed bin...\n');
   const r = spawnSync(

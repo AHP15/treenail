@@ -35,8 +35,8 @@ jobs:
       # loads the whole import graph, catching ESM conversion regressions.
       - name: CLI loader smoke on Node 22 (help + detect)
         run: |
-          node cli/bin/keel-skills.js help
-          node cli/bin/keel-skills.js detect
+          node cli/bin/treenail.js help
+          node cli/bin/treenail.js detect
 
       - name: Installer smoke test (temp home)
         run: node cli/test/smoke-install.mjs

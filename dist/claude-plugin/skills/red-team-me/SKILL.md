@@ -2,7 +2,7 @@
 name: red-team-me
 description: Adversarially stress-test the decisions record by hunting for failure modes, hidden assumptions, and missing pieces. Use after challenge-me, before implementation, or whenever the user wants an outside-view critique of a plan.
 ---
-> Keel shared runtime: paths under `~/.keel` are the installed Keel runtime. If the `KEEL_HOME` environment variable is set, read every `~/.keel/...` path as `$KEEL_HOME/...` instead.
+> Treenail shared runtime: paths under `~/.treenail` are the installed Treenail runtime. If the `TREENAIL_HOME` environment variable is set, read every `~/.treenail/...` path as `$TREENAIL_HOME/...` instead.
 
 Read the decisions in scope and produce per-risk files. Adversarial — find what breaks, don't validate.
 
@@ -15,7 +15,7 @@ Read the decisions in scope and produce per-risk files. Adversarial — find wha
 3b. Prior failures (advisory; optional). If the Graphiti graph is configured, query it per decision you're stress-testing for risks that materialized — or decisions that broke — elsewhere in the project, including other features:
 
    ```
-   python3 ~/.keel/scripts/graph_query.py docs "<the decision being tested>" --scope all
+   python3 ~/.treenail/scripts/graph_query.py docs "<the decision being tested>" --scope all
    ```
 
    A hit on a related prior risk is a strong steer toward a concrete, evidence-backed failure mode rather than a speculative one (and it counters the over-prediction patterns the retrospective Watch-for warns about). Treat results as leads to investigate, not as risks to copy verbatim — re-derive the failure mode for *this* decision. If the script is silent (graph unavailable or no hits), continue with step 4 unchanged.
@@ -30,13 +30,13 @@ Read the decisions in scope and produce per-risk files. Adversarial — find wha
    Where step 3b surfaced a real prior failure, prefer it over a speculative one.
 
 5. For each risk:
-   - Mint the next R-NNN by running `python3 ~/.keel/scripts/mint_id.py <risks-dir> R` (e.g. `docs/risks` or `docs/features/<feature>/risks`). The script executes the **ID reservation protocol** — filesystem-arbitrated max over active + archive, atomic no-clobber claim, retry on collision — and prints the claimed `R-NNN` and its (empty) file path. Don't take the max from INDEX; it may lag. (Fall back to the protocol by hand per CONVENTIONS-SPEC.md if `python3` is unavailable.)
+   - Mint the next R-NNN by running `python3 ~/.treenail/scripts/mint_id.py <risks-dir> R` (e.g. `docs/risks` or `docs/features/<feature>/risks`). The script executes the **ID reservation protocol** — filesystem-arbitrated max over active + archive, atomic no-clobber claim, retry on collision — and prints the claimed `R-NNN` and its (empty) file path. Don't take the max from INDEX; it may lag. (Fall back to the protocol by hand per CONVENTIONS-SPEC.md if `python3` is unavailable.)
    - Write the body into the claimed `risks/R-NNN.md` per the RISKS section of `CONVENTIONS-SPEC.md`. Disposition: `pending`. Date, Disposition rationale, and Action stay empty — `triage-risks` fills them in.
    - Set `Related decisions: D-NNN` linking to the source decision(s).
-   - Add its INDEX line: append `R-NNN | pending | <severity> | <title>` to `risks/INDEX.md`, or after writing all risks run `python3 ~/.keel/scripts/reindex.py <scope-dir> risks` (preferred when you wrote several).
+   - Add its INDEX line: append `R-NNN | pending | <severity> | <title>` to `risks/INDEX.md`, or after writing all risks run `python3 ~/.treenail/scripts/reindex.py <scope-dir> risks` (preferred when you wrote several).
 
 6. Don't propose fixes. Triage is the next skill's job. Stay in failure-mode-finding mode.
 
 7. Don't pad. If you don't see a meaningful risk in an area, say so. A short honest list beats a long ceremonial one.
 
-8. On first run, ensure `docs/CONVENTIONS-SPEC.md` exists; if not, copy [~/.keel/conventions-spec.md](~/.keel/conventions-spec.md) and [~/.keel/conventions-examples.md](~/.keel/conventions-examples.md) to `docs/`.
+8. On first run, ensure `docs/CONVENTIONS-SPEC.md` exists; if not, copy [~/.treenail/conventions-spec.md](~/.treenail/conventions-spec.md) and [~/.treenail/conventions-examples.md](~/.treenail/conventions-examples.md) to `docs/`.

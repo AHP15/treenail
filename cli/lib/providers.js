@@ -30,10 +30,10 @@ export const PROVIDERS = [
   },
 ];
 
-// ~/.keel — the agent-neutral shared runtime home (D-006), overridable
-// via KEEL_HOME.
-export function keelHome(env = process.env) {
-  return env.KEEL_HOME || path.join(HOME, '.keel');
+// ~/.treenail — the agent-neutral shared runtime home (D-006), overridable
+// via TREENAIL_HOME.
+export function treenailHome(env = process.env) {
+  return env.TREENAIL_HOME || path.join(HOME, '.treenail');
 }
 
 function onPath(bin, env = process.env) {

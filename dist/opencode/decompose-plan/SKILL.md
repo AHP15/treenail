@@ -2,9 +2,9 @@
 name: decompose-plan
 description: Break the hardened decisions and mitigation list into atomic, individually-shippable tasks with dependencies and rough sizing. Writes per-record T-NNN.md files and backfills task references into mitigate-risk Action fields. Use after triage-risks, before sequence-work.
 ---
-> Provider note (opencode): when a step calls for interviewing the user, ask each question in plain prose — state your recommended answer, ask if it works, and wait for the reply; there is no option-picker UI. When writing multiple Evidence anchors, comma-separate them and backtick each one. Steps that write records shell out to `~/.keel` scripts and need file-write permission; in non-interactive runs approval must be granted up front.
+> Provider note (opencode): when a step calls for interviewing the user, ask each question in plain prose — state your recommended answer, ask if it works, and wait for the reply; there is no option-picker UI. When writing multiple Evidence anchors, comma-separate them and backtick each one. Steps that write records shell out to `~/.treenail` scripts and need file-write permission; in non-interactive runs approval must be granted up front.
 
-> Keel shared runtime: paths under `~/.keel` are the installed Keel runtime. If the `KEEL_HOME` environment variable is set, read every `~/.keel/...` path as `$KEEL_HOME/...` instead.
+> Treenail shared runtime: paths under `~/.treenail` are the installed Treenail runtime. If the `TREENAIL_HOME` environment variable is set, read every `~/.treenail/...` path as `$TREENAIL_HOME/...` instead.
 
 Load `decisions/INDEX.md` and `risks/INDEX.md`. Produce tasks per accepted decision and per mitigate risk. Write per-record files; update indices.
 
@@ -19,9 +19,9 @@ Load `decisions/INDEX.md` and `risks/INDEX.md`. Produce tasks per accepted decis
 3. Load full bodies only when needed. Most decision titles in INDEX are enough to know what tasks are required — load D-NNN.md only when nuance affects the split.
 
 4. For each task:
-   - Mint the next T-NNN by running `python3 ~/.keel/scripts/mint_id.py <tasks-dir> T` (e.g. `docs/tasks` or `docs/features/<feature>/tasks`). The script executes the **ID reservation protocol** — filesystem-arbitrated max over active + archive, atomic no-clobber claim, retry on collision (not from INDEX, which may lag) — and prints the claimed `T-NNN` and its file path. Because it claims by creating the file, running it once per task in this run automatically counts each just-claimed file in the next candidate; no manual bookkeeping. IDs are immutable once claimed. (Fall back to the protocol by hand if `python3` is unavailable.)
+   - Mint the next T-NNN by running `python3 ~/.treenail/scripts/mint_id.py <tasks-dir> T` (e.g. `docs/tasks` or `docs/features/<feature>/tasks`). The script executes the **ID reservation protocol** — filesystem-arbitrated max over active + archive, atomic no-clobber claim, retry on collision (not from INDEX, which may lag) — and prints the claimed `T-NNN` and its file path. Because it claims by creating the file, running it once per task in this run automatically counts each just-claimed file in the next candidate; no manual bookkeeping. IDs are immutable once claimed. (Fall back to the protocol by hand if `python3` is unavailable.)
    - Write the body into the claimed `tasks/T-NNN.md` per the TASKS section of CONVENTIONS-SPEC.md: Title, Status `todo`, Size, Implements/Mitigates, Depends on (optional), Acceptance, Evidence (empty — filled when the task is marked `done`; if the Acceptance already names a concrete target file/symbol/test you may pre-seed a well-formed anticipated anchor such as `grep:<regex> in <pathglob>` or `symbol:<path>:<regex>`), Date done (empty), Date dropped (empty), Notes (optional).
-   - Add its INDEX line: append `T-NNN | todo | <size> | <implements/mitigates> | <title> |`, or — preferred when you wrote several tasks — after writing all bodies run `python3 ~/.keel/scripts/reindex.py <scope-dir> tasks` to project the whole tasks index at once.
+   - Add its INDEX line: append `T-NNN | todo | <size> | <implements/mitigates> | <title> |`, or — preferred when you wrote several tasks — after writing all bodies run `python3 ~/.treenail/scripts/reindex.py <scope-dir> tasks` to project the whole tasks index at once.
 
 5. Backfill mitigations. For every risk with `Disposition: mitigate`:
    - Update `risks/R-NNN.md` Action field to reference the T-NNN(s) that mitigate it.
@@ -31,6 +31,6 @@ Load `decisions/INDEX.md` and `risks/INDEX.md`. Produce tasks per accepted decis
 
 7. Same scope as source decisions/risks. Project-level tasks for project-level decisions; feature-level for feature.
 
-8. Conventions. Reference `docs/CONVENTIONS-SPEC.md`. If missing, copy [~/.keel/conventions-spec.md](~/.keel/conventions-spec.md) and [~/.keel/conventions-examples.md](~/.keel/conventions-examples.md) to `docs/`.
+8. Conventions. Reference `docs/CONVENTIONS-SPEC.md`. If missing, copy [~/.treenail/conventions-spec.md](~/.treenail/conventions-spec.md) and [~/.treenail/conventions-examples.md](~/.treenail/conventions-examples.md) to `docs/`.
 
 9. Output. Flat list of minted task IDs and titles, plus any coverage gaps from step 1. Do not sequence, do not assign owners, do not estimate calendar time. That's `sequence-work`'s job.

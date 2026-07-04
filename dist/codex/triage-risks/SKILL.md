@@ -4,7 +4,7 @@ description: Reconcile decisions with the risk list by assigning each pending ri
 ---
 > Provider note (Codex CLI): when a step calls for interviewing the user, ask each question in plain prose — state your recommended answer, ask if it works, and wait for the reply; there is no option-picker UI. When writing multiple Evidence anchors, comma-separate them and backtick each one.
 
-> Keel shared runtime: paths under `~/.keel` are the installed Keel runtime. If the `KEEL_HOME` environment variable is set, read every `~/.keel/...` path as `$KEEL_HOME/...` instead.
+> Treenail shared runtime: paths under `~/.treenail` are the installed Treenail runtime. If the `TREENAIL_HOME` environment variable is set, read every `~/.treenail/...` path as `$TREENAIL_HOME/...` instead.
 
 Read `risks/INDEX.md` and `decisions/INDEX.md`. For each risk with `Disposition: pending`, decide and write back.
 
@@ -25,8 +25,8 @@ Read `risks/INDEX.md` and `decisions/INDEX.md`. For each risk with `Disposition:
 4. **fix flow** — when supersession is required:
    - Edit the old D-NNN.md: Status → `superseded`, add `Date superseded: <today>` and `Superseded by: D-MMM`. Do not edit Context/Decision/Rationale (historical record).
    - Update `decisions/INDEX.md` line: change status to `superseded`, append `(→ D-MMM)` to title.
-   - Mint D-MMM by running `python3 ~/.keel/scripts/mint_id.py <decisions-dir> D` (the **ID reservation protocol**: filesystem-arbitrated max over active + archive, atomic no-clobber claim, retry on collision — not from INDEX). It prints the claimed `D-MMM` and its file path. Write the body into `decisions/D-MMM.md` per CONVENTIONS-SPEC.md with `Supersedes: D-NNN`. (Fall back to the protocol by hand if `python3` is unavailable.)
-   - Add D-MMM's INDEX line — append it, or run `python3 ~/.keel/scripts/reindex.py <scope-dir> decisions` to reproject the whole decisions index (which also refreshes the superseded D-NNN line from the two bullets above, so you needn't hand-edit it).
+   - Mint D-MMM by running `python3 ~/.treenail/scripts/mint_id.py <decisions-dir> D` (the **ID reservation protocol**: filesystem-arbitrated max over active + archive, atomic no-clobber claim, retry on collision — not from INDEX). It prints the claimed `D-MMM` and its file path. Write the body into `decisions/D-MMM.md` per CONVENTIONS-SPEC.md with `Supersedes: D-NNN`. (Fall back to the protocol by hand if `python3` is unavailable.)
+   - Add D-MMM's INDEX line — append it, or run `python3 ~/.treenail/scripts/reindex.py <scope-dir> decisions` to reproject the whole decisions index (which also refreshes the superseded D-NNN line from the two bullets above, so you needn't hand-edit it).
    - In the risk's Action field, link to the new decision: e.g. "Superseded by D-MMM (replaces the failure mode)".
    - The new decision D-MMM is itself unexamined — a supersession can introduce its own failure modes. Recommend the `red-team-me` skill scoped to D-MMM before it ships. (`reconcile-status`'s "un-red-teamed decision" smell will catch it later as a backstop, but flag it now rather than waiting.)
 
@@ -53,4 +53,4 @@ Read `risks/INDEX.md` and `decisions/INDEX.md`. For each risk with `Disposition:
 
 5. After triaging all pending risks, recommend running the `audit-artifacts` skill before `decompose-plan`.
 
-6. Conventions. Reference `docs/CONVENTIONS-SPEC.md`. If missing, copy from [~/.keel/conventions-spec.md](~/.keel/conventions-spec.md) and [~/.keel/conventions-examples.md](~/.keel/conventions-examples.md) to `docs/`.
+6. Conventions. Reference `docs/CONVENTIONS-SPEC.md`. If missing, copy from [~/.treenail/conventions-spec.md](~/.treenail/conventions-spec.md) and [~/.treenail/conventions-examples.md](~/.treenail/conventions-examples.md) to `docs/`.

@@ -1,18 +1,18 @@
 {
-  "name": "keel",
+  "name": "treenail",
   "owner": {
     "name": "AHP15",
     "url": "https://github.com/AHP15"
   },
   "metadata": {
-    "description": "Marketplace for the Keel planning-skills pack",
+    "description": "Marketplace for the Treenail planning-skills pack",
     "version": "1.0.0"
   },
   "plugins": [
     {
-      "name": "keel",
+      "name": "treenail",
       "source": "./dist/claude-plugin",
-      "description": "Keel planning-skills pack: decision, risk, and task pipeline skills for agent-driven planning, with the shared ~/.keel runtime bundled and auto-provisioned.",
+      "description": "Treenail planning-skills pack: decision, risk, and task pipeline skills for agent-driven planning, with the shared ~/.treenail runtime bundled and auto-provisioned.",
       "category": "productivity"
     }
   ]

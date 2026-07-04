@@ -2,19 +2,19 @@
 name: audit-artifacts
 description: Run structural invariant checks across decisions, risks, and tasks. Reports violations by severity; does not fix them. Run before any downstream skill (triage-risks, decompose-plan, sequence-work, reconcile-status, promote, archive-cycle) and before shipping planning work to reviewers.
 ---
-> Keel shared runtime: paths under `~/.keel` are the installed Keel runtime. If the `KEEL_HOME` environment variable is set, read every `~/.keel/...` path as `$KEEL_HOME/...` instead.
+> Treenail shared runtime: paths under `~/.treenail` are the installed Treenail runtime. If the `TREENAIL_HOME` environment variable is set, read every `~/.treenail/...` path as `$TREENAIL_HOME/...` instead.
 
 Verify structural invariants across decisions, risks, and tasks. Do not modify any file.
 
 **Run the mechanical checker first, then layer judgment on top.** The
 decidable invariants (steps 2-6 below, minus the smell/judgment calls)
-are implemented in `~/.keel/scripts/audit.py`, which reuses
+are implemented in `~/.treenail/scripts/audit.py`, which reuses
 `reindex.py`'s projection so its INDEX-consistency check is decided by
 the exact code that rebuilds the index — no second, drifting
 implementation. Start with:
 
 ```
-python3 ~/.keel/scripts/audit.py <scope-dir>
+python3 ~/.treenail/scripts/audit.py <scope-dir>
 ```
 
 `<scope-dir>` is the docs root — `docs` or `docs/features/<feature>`. It

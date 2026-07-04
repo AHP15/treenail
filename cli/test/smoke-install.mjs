@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-// Installer smoke test (T-024, R-010): run `keel-skills install` against a
-// throwaway home directory and verify the ~/.keel runtime and the provider
+// Installer smoke test (T-024, R-010): run `treenail install` against a
+// throwaway home directory and verify the ~/.treenail runtime and the provider
 // skill dirs land where they should. Cross-platform by construction — CI
 // runs it on ubuntu, macos, and windows runners.
 //
-// Usage: node cli/test/smoke-install.mjs [path/to/keel-skills.js]
+// Usage: node cli/test/smoke-install.mjs [path/to/treenail.js]
 // The optional arg lets the release gate point it at the bin inside an
 // installed (packed-tarball) copy of the package instead of the checkout.
 
@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const bin = path.resolve(
-  process.argv[2] || path.join(here, '..', 'bin', 'keel-skills.js')
+  process.argv[2] || path.join(here, '..', 'bin', 'treenail.js')
 );
 
 // Same resolution the CLI itself uses: dist/ ships next to the package's
@@ -26,7 +26,7 @@ function distRoot() {
     path.join(path.dirname(bin), '..', 'dist'),
     path.join(path.dirname(bin), '..', '..', 'dist'),
   ]) {
-    if (fs.existsSync(path.join(candidate, 'keel-home', 'VERSION'))) {
+    if (fs.existsSync(path.join(candidate, 'treenail-home', 'VERSION'))) {
       return candidate;
     }
   }
@@ -46,14 +46,14 @@ const expectedSkills = fs
   .map((e) => e.name)
   .sort();
 
-const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'keel-smoke-'));
+const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'treenail-smoke-'));
 try {
   // Make exactly one provider (Claude Code) "present" via its config dir;
   // PATH detection is irrelevant inside the fake home.
   fs.mkdirSync(path.join(fakeHome, '.claude'), { recursive: true });
 
   const env = { ...process.env, HOME: fakeHome, USERPROFILE: fakeHome };
-  delete env.KEEL_HOME; // must default to <home>/.keel
+  delete env.TREENAIL_HOME; // must default to <home>/.treenail
 
   const r = spawnSync(process.execPath, [bin, 'install'], {
     env,
@@ -63,15 +63,15 @@ try {
   process.stderr.write(r.stderr || '');
   check(r.status === 0, `install exits 0 (got ${r.status})`);
 
-  const keelHome = path.join(fakeHome, '.keel');
-  const version = fs.existsSync(path.join(keelHome, 'VERSION'))
-    ? fs.readFileSync(path.join(keelHome, 'VERSION'), 'utf8').trim()
+  const treenailHome = path.join(fakeHome, '.treenail');
+  const version = fs.existsSync(path.join(treenailHome, 'VERSION'))
+    ? fs.readFileSync(path.join(treenailHome, 'VERSION'), 'utf8').trim()
     : '';
-  check(version.length > 0, `~/.keel/VERSION provisioned (got '${version}')`);
+  check(version.length > 0, `~/.treenail/VERSION provisioned (got '${version}')`);
   for (const asset of ['scripts', 'templates', 'conventions-spec.md', 'guide.md']) {
     check(
-      fs.existsSync(path.join(keelHome, asset)),
-      `~/.keel/${asset} provisioned`
+      fs.existsSync(path.join(treenailHome, asset)),
+      `~/.treenail/${asset} provisioned`
     );
   }
 

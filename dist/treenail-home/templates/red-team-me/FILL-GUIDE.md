@@ -20,10 +20,10 @@ decisions, red-team hunts the risks against them. Point both at the same
 ## Instantiate in 4 steps
 
 1. **Copy** the template to in your agent's skills directory — it must live directly
-   under `skills/` so the `~/.keel/...` paths resolve:
+   under `skills/` so the `~/.treenail/...` paths resolve:
    ```
    mkdir -p ~/.claude/skills/red-team-me-<domain>
-   cp ~/.keel/templates/red-team-me/SKILL.template.md \
+   cp ~/.treenail/templates/red-team-me/SKILL.template.md \
       ~/.claude/skills/red-team-me-<domain>/SKILL.md
    ```
 2. **Fill** every `{{PLACEHOLDER}}` (paste a block from the four worked

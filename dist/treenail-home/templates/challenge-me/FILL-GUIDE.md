@@ -15,10 +15,10 @@ them and you have the same interview for a different kind of work.
 ## Instantiate in 4 steps
 
 1. **Copy** the template to in your agent's skills directory — it must live directly
-   under `skills/` so the `~/.keel/...` paths resolve:
+   under `skills/` so the `~/.treenail/...` paths resolve:
    ```
    mkdir -p ~/.claude/skills/challenge-me-<domain>
-   cp ~/.keel/templates/challenge-me/SKILL.template.md \
+   cp ~/.treenail/templates/challenge-me/SKILL.template.md \
       ~/.claude/skills/challenge-me-<domain>/SKILL.md
    ```
 2. **Fill** every `{{PLACEHOLDER}}` (paste a block from the four worked

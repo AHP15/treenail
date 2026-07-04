@@ -1,6 +1,6 @@
-# Keel — Planning Pipeline Guide (v2 — context-bounded)
+# Treenail — Planning Pipeline Guide (v2 — context-bounded)
 
-**Keel** is the name of this pipeline: the load-bearing spine every
+**Treenail** is the name of this pipeline: the load-bearing spine every
 project is built up from — decision records laid down first, append-only,
 never removed, with every risk and task hanging off them for alignment.
 
@@ -194,7 +194,7 @@ collapses that cycle's bodies. Same skill, safe to run any time.
 ## Scenario A: starting a new project (empty folder)
 
 1. **`/challenge-me` — project scope.** Confirms scope. Copies
-   `~/.keel/conventions-spec.md` and `~/.keel/conventions-examples.md`
+   `~/.treenail/conventions-spec.md` and `~/.treenail/conventions-examples.md`
    to `docs/` on first run. Writes one `docs/decisions/D-NNN.md` per
    accepted decision plus `docs/decisions/INDEX.md`.
 
@@ -384,8 +384,8 @@ recompute. `reindex` is idempotent: re-running on a clean tree is a
 no-op.
 
 **No CONVENTIONS-SPEC.md exists yet.** First skill that writes an
-artifact copies `~/.keel/conventions-spec.md` and
-`~/.keel/conventions-examples.md` to `docs/`. Edit the spec to tailor;
+artifact copies `~/.treenail/conventions-spec.md` and
+`~/.treenail/conventions-examples.md` to `docs/`. Edit the spec to tailor;
 keep the schema intact.
 
 ---

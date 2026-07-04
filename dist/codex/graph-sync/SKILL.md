@@ -4,7 +4,7 @@ description: Project the planning artifacts (decisions, risks, tasks) of a scope
 ---
 > Provider note (Codex CLI): when a step calls for interviewing the user, ask each question in plain prose — state your recommended answer, ask if it works, and wait for the reply; there is no option-picker UI. When writing multiple Evidence anchors, comma-separate them and backtick each one.
 
-> Keel shared runtime: paths under `~/.keel` are the installed Keel runtime. If the `KEEL_HOME` environment variable is set, read every `~/.keel/...` path as `$KEEL_HOME/...` instead.
+> Treenail shared runtime: paths under `~/.treenail` are the installed Treenail runtime. If the `TREENAIL_HOME` environment variable is set, read every `~/.treenail/...` path as `$TREENAIL_HOME/...` instead.
 
 The graph is a **derived, advisory index** — the semantic sibling of
 INDEX.md. The per-record `<ID>.md` files plus git history remain the
@@ -37,7 +37,7 @@ one (each sync costs LLM extraction tokens).
 3. **Validate the projection first (offline, no backend needed):**
 
    ```
-   python3 ~/.keel/scripts/graph_sync.py <scope-dir> --dry-run
+   python3 ~/.treenail/scripts/graph_sync.py <scope-dir> --dry-run
    ```
 
    This parses the records (reusing `reindex.py`'s authoritative parser)
@@ -48,7 +48,7 @@ one (each sync costs LLM extraction tokens).
 4. **Sync incrementally:**
 
    ```
-   python3 ~/.keel/scripts/graph_sync.py <scope-dir>
+   python3 ~/.treenail/scripts/graph_sync.py <scope-dir>
    ```
 
    A per-scope state file `<scope>/.graph-sync.json` records the content
@@ -75,7 +75,7 @@ one (each sync costs LLM extraction tokens).
    `graph_query.py` for prior-art candidates, which the user confirms.
 
 7. **Conventions.** The record→episode projection lives in
-   `~/.keel/scripts/graph_common.py` (`episode_body`). It leads each
+   `~/.treenail/scripts/graph_common.py` (`episode_body`). It leads each
    episode with the record's unique ID token and its explicit link IDs so
    Graphiti anchors to the IDs we already maintain rather than inventing
    its own.

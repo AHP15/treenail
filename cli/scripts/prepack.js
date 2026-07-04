@@ -10,9 +10,9 @@ const pkgRoot = path.join(import.meta.dirname, '..');
 const repoDist = path.join(pkgRoot, '..', 'dist');
 const out = path.join(pkgRoot, 'dist');
 
-const BUNDLED = ['claude', 'opencode', 'codex', 'keel-home'];
+const BUNDLED = ['claude', 'opencode', 'codex', 'treenail-home'];
 
-if (!fs.existsSync(path.join(repoDist, 'keel-home', 'VERSION'))) {
+if (!fs.existsSync(path.join(repoDist, 'treenail-home', 'VERSION'))) {
   console.error(
     'prepack: built dist/ not found at the repo root — run `python3 build.py` first.'
   );

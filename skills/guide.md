@@ -1,6 +1,6 @@
-# Keel — Planning Pipeline Guide (v2 — context-bounded)
+# Treenail — Planning Pipeline Guide (v2 — context-bounded)
 
-**Keel** is the name of this pipeline: the load-bearing spine every
+**Treenail** is the name of this pipeline: the load-bearing spine every
 project is built up from — decision records laid down first, append-only,
 never removed, with every risk and task hanging off them for alignment.
 

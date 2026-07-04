@@ -1,4 +1,4 @@
-# Keel is a text-only repo whose CI compares committed dist/ against a
+# Treenail is a text-only repo whose CI compares committed dist/ against a
 # fresh build byte-for-byte (build.py --check) and runs golden-file
 # tests. Force LF in every working tree — including Windows runners
 # (R-010) — so checkout never introduces CRLF drift.

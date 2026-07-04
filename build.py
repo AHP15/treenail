@@ -28,30 +28,30 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 SKILLS_DIR = os.path.join(ROOT, "skills")
 DIST_DIR = os.path.join(ROOT, "dist")
 
-# The shared runtime lives in an agent-neutral ~/.keel, overridable via
-# KEEL_HOME (D-006). The build rewrites every shared-asset reference in
+# The shared runtime lives in an agent-neutral ~/.treenail, overridable via
+# TREENAIL_HOME (D-006). The build rewrites every shared-asset reference in
 # the canonical sources — which historically point into
-# ~/.claude/skills/_shared — to the ~/.keel layout. Order matters: the
+# ~/.claude/skills/_shared — to the ~/.treenail layout. Order matters: the
 # most specific prefixes first, then the bare catch-all.
-KEEL_HOME_REWRITES = (
-    ("~/.claude/skills/_shared/scripts/", "~/.keel/scripts/"),
-    ("~/.claude/skills/_shared/", "~/.keel/"),
-    ("~/.claude/skills/_templates/", "~/.keel/templates/"),
-    ("../_shared/scripts/", "~/.keel/scripts/"),
-    ("../_shared/", "~/.keel/"),
-    ("_shared/scripts/", "~/.keel/scripts/"),
-    ("_shared/conventions-spec.md", "~/.keel/conventions-spec.md"),
-    ("_shared/conventions-examples.md", "~/.keel/conventions-examples.md"),
-    # template placement prose: with scripts in ~/.keel, the old
+TREENAIL_HOME_REWRITES = (
+    ("~/.claude/skills/_shared/scripts/", "~/.treenail/scripts/"),
+    ("~/.claude/skills/_shared/", "~/.treenail/"),
+    ("~/.claude/skills/_templates/", "~/.treenail/templates/"),
+    ("../_shared/scripts/", "~/.treenail/scripts/"),
+    ("../_shared/", "~/.treenail/"),
+    ("_shared/scripts/", "~/.treenail/scripts/"),
+    ("_shared/conventions-spec.md", "~/.treenail/conventions-spec.md"),
+    ("_shared/conventions-examples.md", "~/.treenail/conventions-examples.md"),
+    # template placement prose: with scripts in ~/.treenail, the old
     # "sibling of _shared" constraint reduces to "in the skills dir"
     ("a sibling of `_shared`", "in your agent's skills directory"),
     ("a SIBLING of _shared:", "your agent's skills directory:"),
 )
 
-KEEL_HOME_NOTE = (
-    "> Keel shared runtime: paths under `~/.keel` are the installed Keel "
-    "runtime. If the `KEEL_HOME` environment variable is set, read every "
-    "`~/.keel/...` path as `$KEEL_HOME/...` instead.\n\n"
+TREENAIL_HOME_NOTE = (
+    "> Treenail shared runtime: paths under `~/.treenail` are the installed Treenail "
+    "runtime. If the `TREENAIL_HOME` environment variable is set, read every "
+    "`~/.treenail/...` path as `$TREENAIL_HOME/...` instead.\n\n"
 )
 
 # Per-provider preamble injected into every built skill body (T-026,
@@ -70,7 +70,7 @@ INTERVIEW_NOTE = (
 PROVIDER_NOTES = {
     "opencode": (
         "> Provider note (opencode): " + INTERVIEW_NOTE + " Steps that "
-        "write records shell out to `~/.keel` scripts and need file-write "
+        "write records shell out to `~/.treenail` scripts and need file-write "
         "permission; in non-interactive runs approval must be granted up "
         "front.\n\n"
     ),
@@ -81,7 +81,7 @@ PROVIDER_NOTES = {
 
 
 def rewrite_shared_refs(text):
-    for old, new in KEEL_HOME_REWRITES:
+    for old, new in TREENAIL_HOME_REWRITES:
         text = text.replace(old, new)
     return text
 
@@ -171,14 +171,14 @@ def _filter_frontmatter(skill, allowed):
 
 def _emit_skill_dirs(out, skills, allowed, note=""):
     """Every provider tree is skill dirs only: shared assets live in
-    ~/.keel (D-006), so bodies are rewritten to reference it — never a
-    colocated _shared — and carry the KEEL_HOME-override note. `note` is
+    ~/.treenail (D-006), so bodies are rewritten to reference it — never a
+    colocated _shared — and carry the TREENAIL_HOME-override note. `note` is
     the provider's capability preamble (PROVIDER_NOTES), injected first
     so it frames everything after it."""
     for skill in skills:
         body = rewrite_shared_refs(skill.body)
-        if "~/.keel" in body:
-            body = KEEL_HOME_NOTE + body.lstrip("\n")
+        if "~/.treenail" in body:
+            body = TREENAIL_HOME_NOTE + body.lstrip("\n")
         if note:
             body = note + body.lstrip("\n")
         _write(os.path.join(out, skill.name, "SKILL.md"),
@@ -187,7 +187,7 @@ def _emit_skill_dirs(out, skills, allowed, note=""):
 
 def build_claude(out):
     """Claude Code: the canonical format IS Claude's — full frontmatter,
-    body rewritten to the ~/.keel runtime paths."""
+    body rewritten to the ~/.treenail runtime paths."""
     _emit_skill_dirs(out, discover_skills(), None)
 
 
@@ -213,12 +213,12 @@ def build_codex(out):
 # The plugin channel installs skill text through Claude's plugin system,
 # bypassing the npx installer (R-007). The plugin therefore carries the
 # whole shared runtime in runtime/ and a SessionStart hook provisions
-# ~/.keel from it: copy when missing, replace when the bundled version is
+# ~/.treenail from it: copy when missing, replace when the bundled version is
 # newer. Skill bodies stay identical to dist/claude — they keep reading
-# ~/.keel, so CLI-managed and plugin-managed installs share one runtime.
+# ~/.treenail, so CLI-managed and plugin-managed installs share one runtime.
 BOOTSTRAP_SCRIPT = '''\
 #!/usr/bin/env python3
-"""Provision ~/.keel (or $KEEL_HOME) from the runtime bundled in the Keel
+"""Provision ~/.treenail (or $TREENAIL_HOME) from the runtime bundled in the Treenail
 Claude Code plugin (T-019, R-007). Runs on SessionStart: no-op when the
 installed runtime is present and at least as new as the bundle."""
 
@@ -246,8 +246,8 @@ def as_tuple(version):
 
 
 def main():
-    home = os.environ.get("KEEL_HOME") or os.path.join(
-        os.path.expanduser("~"), ".keel")
+    home = os.environ.get("TREENAIL_HOME") or os.path.join(
+        os.path.expanduser("~"), ".treenail")
     bundled = read_version(BUNDLED)
     if bundled is None:
         return 0  # damaged bundle; never touch an existing install
@@ -257,7 +257,7 @@ def main():
     if os.path.lexists(home):
         shutil.rmtree(home, ignore_errors=False)
     shutil.copytree(BUNDLED, home)
-    print(f"Keel runtime {bundled} provisioned at {home}")
+    print(f"Treenail runtime {bundled} provisioned at {home}")
     return 0
 
 
@@ -269,7 +269,7 @@ if __name__ == "__main__":
 # quietly — the scripted-step preflight and runtime-missing messaging
 # (T-020/T-021) own that failure at the point of use.
 BOOTSTRAP_CMD = " || ".join(
-    f'{py} "${{CLAUDE_PLUGIN_ROOT}}/scripts/bootstrap_keel_home.py" 2>/dev/null'
+    f'{py} "${{CLAUDE_PLUGIN_ROOT}}/scripts/bootstrap_treenail_home.py" 2>/dev/null'
     for py in ("python3", "python", "py -3")
 ) + " || exit 0"
 
@@ -280,20 +280,20 @@ def build_claude_plugin(out):
     Claude's plugin format. Installed from the marketplace manifest at the
     repo root (.claude-plugin/marketplace.json)."""
     _emit_skill_dirs(os.path.join(out, "skills"), discover_skills(), None)
-    build_keel_home(os.path.join(out, "runtime"))
+    build_treenail_home(os.path.join(out, "runtime"))
     version = read_cli_version()
     _write(
         os.path.join(out, ".claude-plugin", "plugin.json"),
         json.dumps(
             {
-                "name": "keel",
+                "name": "treenail",
                 "description": (
-                    "Keel planning-skills pack: decision, risk, and task "
+                    "Treenail planning-skills pack: decision, risk, and task "
                     "pipeline skills for agent-driven planning."
                 ),
                 "version": version,
                 "author": {"name": "abdessittir"},
-                "homepage": "https://github.com/AHP15/keel",
+                "homepage": "https://github.com/AHP15/treenail",
                 "license": "MIT",
             },
             indent=2,
@@ -313,7 +313,7 @@ def build_claude_plugin(out):
             indent=2,
         ) + "\n",
     )
-    _write(os.path.join(out, "scripts", "bootstrap_keel_home.py"),
+    _write(os.path.join(out, "scripts", "bootstrap_treenail_home.py"),
            BOOTSTRAP_SCRIPT)
 
 
@@ -323,8 +323,8 @@ def read_cli_version():
         return json.load(fh)["version"]
 
 
-def build_keel_home(out):
-    """The shared runtime tree the installer provisions into ~/.keel
+def build_treenail_home(out):
+    """The shared runtime tree the installer provisions into ~/.treenail
     (D-006): scripts, templates, conventions spec/examples, guide, VERSION.
     Scripts are copied byte-for-byte (they are code); prose assets get the
     same reference rewrite as skill bodies."""
@@ -332,7 +332,7 @@ def build_keel_home(out):
                     os.path.join(out, "scripts"),
                     ignore=shutil.ignore_patterns(
                         "__pycache__", "*.pyc", ".DS_Store", ".gitkeep",
-                        "tests"))  # tests run from the repo, not ~/.keel
+                        "tests"))  # tests run from the repo, not ~/.treenail
     src_templates = os.path.join(SKILLS_DIR, "_templates")
     for dirpath, dirnames, filenames in os.walk(src_templates):
         dirnames.sort()
@@ -359,7 +359,7 @@ ADAPTERS = {
     "claude-plugin": build_claude_plugin,
     "opencode": build_opencode,
     "codex": build_codex,
-    "keel-home": build_keel_home,
+    "treenail-home": build_treenail_home,
 }
 
 
@@ -392,7 +392,7 @@ def main(argv):
 
     if check:
         rc = 0
-        tmp = tempfile.mkdtemp(prefix="keel-build-check-")
+        tmp = tempfile.mkdtemp(prefix="treenail-build-check-")
         try:
             for p in providers:
                 build_provider(p, tmp)
@@ -409,8 +409,8 @@ def main(argv):
 
     for p in providers:
         build_provider(p, DIST_DIR)
-        if p == "keel-home":
-            print("built dist/keel-home (shared runtime tree)")
+        if p == "treenail-home":
+            print("built dist/treenail-home (shared runtime tree)")
         else:
             print(f"built dist/{p} ({len(discover_skills())} skills)")
     return 0

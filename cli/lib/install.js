@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
-import { detectProviders, keelHome } from './providers.js';
+import { detectProviders, treenailHome } from './providers.js';
 
 // The built trees ship inside the published package (cli/dist, copied by
 // prepack); in a repo checkout they live at the repo root.
@@ -11,7 +11,7 @@ function distRoot() {
     path.join(import.meta.dirname, '..', 'dist'),
     path.join(import.meta.dirname, '..', '..', 'dist'),
   ]) {
-    if (fs.existsSync(path.join(candidate, 'keel-home', 'VERSION'))) {
+    if (fs.existsSync(path.join(candidate, 'treenail-home', 'VERSION'))) {
       return candidate;
     }
   }
@@ -55,14 +55,14 @@ function replaceWithSymlink(target, dest) {
   fs.symlinkSync(target, dest, 'junction');
 }
 
-function provisionKeelHome(dist) {
-  const home = keelHome();
-  replaceWithCopy(path.join(dist, 'keel-home'), home);
+function provisionTreenailHome(dist) {
+  const home = treenailHome();
+  replaceWithCopy(path.join(dist, 'treenail-home'), home);
   return home;
 }
 
-// `keel-skills install [--dev]` — user-level install for every detected
-// agent (D-007/D-008) plus one shared ~/.keel runtime (D-006).
+// `treenail install [--dev]` — user-level install for every detected
+// agent (D-007/D-008) plus one shared ~/.treenail runtime (D-006).
 //
 // --dev (T-016): instead of copying built files, symlink each skill dir to
 // the canonical source in the repo checkout, so editing the installed copy
@@ -86,11 +86,11 @@ export function install(args = []) {
     return 1;
   }
 
-  const home = provisionKeelHome(dist);
+  const home = provisionTreenailHome(dist);
   const version = fs
     .readFileSync(path.join(home, 'VERSION'), 'utf8')
     .trim();
-  console.log(`Provisioned Keel runtime ${version} at ${home}`);
+  console.log(`Provisioned Treenail runtime ${version} at ${home}`);
 
   for (const p of providers) {
     const providerDist = path.join(dist, p.id);
@@ -124,7 +124,7 @@ export function install(args = []) {
     console.warn(
       'WARNING: no working Python 3 found (tried: ' +
         PYTHON_CANDIDATES.map(([c]) => c).join(', ') +
-        '). Keel skills need Python 3 for their scripted steps — install it from https://python.org.'
+        '). Treenail skills need Python 3 for their scripted steps — install it from https://python.org.'
     );
   }
   return 0;

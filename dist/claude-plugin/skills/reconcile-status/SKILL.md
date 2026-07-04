@@ -2,7 +2,7 @@
 name: reconcile-status
 description: Compute the implementation view for each accepted decision from current task statuses, and surface orphan tasks, uncovered decisions, silent reversals, stale mitigation coverage, and cross-record judgment smells (un-red-teamed decisions, thin high-severity defers, completed mitigations to re-triage). Read-only — implementation status is not stored. Run on cadence — every time tasks change state, and before any planning review.
 ---
-> Keel shared runtime: paths under `~/.keel` are the installed Keel runtime. If the `KEEL_HOME` environment variable is set, read every `~/.keel/...` path as `$KEEL_HOME/...` instead.
+> Treenail shared runtime: paths under `~/.treenail` are the installed Treenail runtime. If the `TREENAIL_HOME` environment variable is set, read every `~/.treenail/...` path as `$TREENAIL_HOME/...` instead.
 
 Compute the implementation view per accepted decision and resolve each
 `done` task's Evidence anchors against the working tree, then report. This
@@ -24,7 +24,7 @@ searching and two runs could disagree.
 2. Run the mechanical pass:
 
    ```
-   python3 ~/.keel/scripts/reconcile.py <scope-dir> [--root <repo-root>]
+   python3 ~/.treenail/scripts/reconcile.py <scope-dir> [--root <repo-root>]
    ```
 
    `<scope-dir>` is the docs root (`docs` or `docs/features/<feature>`).
@@ -51,7 +51,7 @@ searching and two runs could disagree.
 3. Run the judgment-smell pass (the quality half):
 
    ```
-   python3 ~/.keel/scripts/reconcile_smells.py <scope-dir>
+   python3 ~/.treenail/scripts/reconcile_smells.py <scope-dir>
    ```
 
    It unions active + archive and reports three advisory smells —
@@ -95,6 +95,6 @@ searching and two runs could disagree.
    validity is `audit-artifacts`' job; this skill is implementation reality.
 
 7. Conventions. Reference `docs/CONVENTIONS-SPEC.md`. If missing, copy
-   [~/.keel/conventions-spec.md](~/.keel/conventions-spec.md) and
-   [~/.keel/conventions-examples.md](~/.keel/conventions-examples.md)
+   [~/.treenail/conventions-spec.md](~/.treenail/conventions-spec.md) and
+   [~/.treenail/conventions-examples.md](~/.treenail/conventions-examples.md)
    to `docs/`.

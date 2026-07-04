@@ -4,7 +4,7 @@ description: Keep the active per-record set bounded to in-flight work. Reaps ter
 ---
 > Provider note (Codex CLI): when a step calls for interviewing the user, ask each question in plain prose — state your recommended answer, ask if it works, and wait for the reply; there is no option-picker UI. When writing multiple Evidence anchors, comma-separate them and backtick each one.
 
-> Keel shared runtime: paths under `~/.keel` are the installed Keel runtime. If the `KEEL_HOME` environment variable is set, read every `~/.keel/...` path as `$KEEL_HOME/...` instead.
+> Treenail shared runtime: paths under `~/.treenail` are the installed Treenail runtime. If the `TREENAIL_HOME` environment variable is set, read every `~/.treenail/...` path as `$TREENAIL_HOME/...` instead.
 
 Two decoupled operations, both safe to run any time (idempotent). The
 **reap** keeps the active read path bounded *within* a cycle; the
@@ -44,8 +44,8 @@ the ARCHIVAL section of CONVENTIONS-SPEC.md.
 3. Run the mechanical reap:
 
    ```
-   python3 ~/.keel/scripts/archive_cycle.py <scope-dir> --dry-run
-   python3 ~/.keel/scripts/archive_cycle.py <scope-dir> [--confirm-risk R-NNN,R-MMM]
+   python3 ~/.treenail/scripts/archive_cycle.py <scope-dir> --dry-run
+   python3 ~/.treenail/scripts/archive_cycle.py <scope-dir> [--confirm-risk R-NNN,R-MMM]
    ```
 
    The script moves each eligible `<artifact>/<ID>.md` →
@@ -60,7 +60,7 @@ the ARCHIVAL section of CONVENTIONS-SPEC.md.
 4. Determine the eligible set deterministically:
 
    ```
-   python3 ~/.keel/scripts/compact-select.py <scope-dir>
+   python3 ~/.treenail/scripts/compact-select.py <scope-dir>
    ```
 
    It finds the consumption frontier — the latest retrospective's
