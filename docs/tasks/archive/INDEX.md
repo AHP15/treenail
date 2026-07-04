@@ -39,3 +39,5 @@ T-039 | done | S | D-025 | Repoint or pin the seven done-task Evidence anchors p
 T-040 | done | S | D-025 | Anchor tooling resolves git:-pinned anchors against the named commit | 2026-07-04
 T-041 | done | S | D-025,R-024 | Encode D-025's anchor-maintenance rule in the conventions spec and audit guidance | 2026-07-04
 T-042 | done | S | D-022 | Rename the GitHub repo to treenail | 2026-07-04
+T-044 | done | S | R-026 | Distinguish configured-but-unreachable Graphiti from unconfigured with a one-line stderr advisory | 2026-07-04
+T-045 | done | S | R-027 | Add a newer-Node lane to the CI matrix so the open-ended `>=22` engines range is exercised at the ceiling | 2026-07-04

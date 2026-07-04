@@ -8,10 +8,13 @@ on:
 jobs:
   test:
     # Green Windows CI gates v1 (D-009, D-015, R-010).
-    name: pipeline tests + dist sync + installer smoke (${{ matrix.os }})
+    name: pipeline tests + dist sync + installer smoke (${{ matrix.os }}, node ${{ matrix.node }})
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
+        # 22 is the engines floor (D-020); `current` exercises the open-ended
+        # `>=22` ceiling so a newer-Node-major break is caught in CI (R-027).
+        node: [22, current]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -22,7 +25,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${{ matrix.node }}
 
       - name: Run _shared script test suite
         working-directory: skills
@@ -33,7 +36,7 @@ jobs:
 
       # Loader-level smoke (D-019): static imports mean any subcommand
       # loads the whole import graph, catching ESM conversion regressions.
-      - name: CLI loader smoke on Node 22 (help + detect)
+      - name: CLI loader smoke on Node ${{ matrix.node }} (help + detect)
         run: |
           node cli/bin/treenail.js help
           node cli/bin/treenail.js detect

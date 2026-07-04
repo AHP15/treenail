@@ -1,0 +1,1 @@
+2026-07-04 | Project inception through pre-v1 hardening — repo bootstrap, the agent-neutral skill rewrite, the three-provider build pipeline, the installer CLI + plugin channel, ESM/Node-gate/versioning work, the full Keel→Treenail rename, and today's Graphiti/CI hardening (2026-07-02 → 2026-07-04).

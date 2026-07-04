@@ -69,6 +69,18 @@ async def run_search(query, gids, k):
     return results
 
 
+def advise_if_configured(reason):
+    """R-026: a configured-but-unreachable Graphiti must not be
+    indistinguishable from an unconfigured one. If the user opted into a
+    backend via env, emit one stderr line so a broken setup is diagnosable;
+    otherwise stay fully silent so absence remains safe (D-013). Goes to
+    stderr so stdout (the prior-art results) stays clean and parseable.
+    """
+    if gc.graphiti_configured():
+        print(f"graph_query.py: Graphiti configured but unreachable: "
+              f"{reason}; proceeding without prior-art", file=sys.stderr)
+
+
 def main(argv):
     pos, k, scope_mode = parse_args(argv)
     if len(pos) < 2:
@@ -84,10 +96,14 @@ def main(argv):
 
     try:
         results = asyncio.run(run_search(query, gids, k))
-    except gc.GraphUnavailable:
-        # Advisory: stay silent so the calling skill proceeds cleanly.
+    except gc.GraphUnavailable as e:
+        # Advisory: stay silent when unconfigured so the calling skill
+        # proceeds cleanly; warn once when the user configured a backend
+        # that isn't reachable (R-026).
+        advise_if_configured(e)
         return 0
-    except Exception:
+    except Exception as e:
+        advise_if_configured(e)
         return 0
 
     if not results:

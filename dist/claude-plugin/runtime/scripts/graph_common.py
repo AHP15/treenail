@@ -153,6 +153,25 @@ def iter_records(scope_dir, artifact):
 # Graphiti client (lazy; raises GraphUnavailable instead of crashing)
 # ---------------------------------------------------------------------------
 
+# Env vars whose presence means the user opted into a Graphiti backend.
+# Mirrors what get_client() reads to select/authenticate a backend.
+GRAPHITI_ENV_VARS = ("GRAPHITI_BACKEND", "NEO4J_URI", "NEO4J_USER",
+                     "NEO4J_PASSWORD", "FALKORDB_URI")
+
+
+def graphiti_configured():
+    """True if the user opted into a Graphiti backend via env.
+
+    This is what lets a caller tell 'configured but unreachable' (worth a
+    one-line diagnostic — see R-026) apart from 'never set up' (stay
+    silent, so absence stays safe — D-013). Any selection/credential env
+    var counts as opt-in, so a partial or rotated config (URI set but
+    password missing/wrong, or graphiti-core not installed after the env
+    was set) still reads as configured and still earns the advisory.
+    """
+    return any(os.environ.get(v) for v in GRAPHITI_ENV_VARS)
+
+
 def get_client():
     """Return a connected Graphiti client, or raise GraphUnavailable.
 
