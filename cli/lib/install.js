@@ -102,8 +102,8 @@ function overwriteManaged(dist, providers, verb) {
 //
 // --dev (T-016): instead of copying built files, symlink each skill dir to
 // the canonical source in the repo checkout, so editing the installed copy
-// edits the repo. Claude also gets _shared/_templates links because the
-// canonical (unbuilt) bodies still reference ~/.claude/skills/_shared.
+// edits the repo. Claude also gets a _shared link because the canonical
+// (unbuilt) bodies still reference ~/.claude/skills/_shared.
 export function install(args = []) {
   const dev = args.includes('--dev');
   const dist = distRoot();
@@ -141,7 +141,7 @@ export function install(args = []) {
       }
     }
     if (dev && p.id === 'claude') {
-      for (const support of ['_shared', '_templates']) {
+      for (const support of ['_shared']) {
         replaceWithSymlink(
           path.join(repoSkills, support),
           path.join(p.skillsDir, support)
