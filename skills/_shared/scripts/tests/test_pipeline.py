@@ -371,6 +371,36 @@ class TestAudit(unittest.TestCase):
         self.assertEqual(rc, 1)
         self.assertIn("file anchor requires a path", out)
 
+    def test_done_git_pinned_anchor_is_well_formed(self):
+        write(f"{self.docs}/tasks/T-018.md", """
+            ## T-018: Pinned evidence
+            - **Status**: done
+            - **Size**: S
+            - **Implements**: D-001
+            - **Acceptance**: x.
+            - **Evidence**: `git:abc1234:grep:"name": "keel" in cli/package.json`
+            - **Date done**: 2025-01-01
+        """)
+        run("reindex.py", self.docs, "tasks")
+        rc, out, _ = run("audit.py", self.docs)
+        self.assertEqual(rc, 0, f"git: pin must be well-formed, got:\n{out}")
+        self.assertNotIn("malformed Evidence anchor", out)
+
+    def test_done_git_anchor_bad_sha_is_blocker(self):
+        write(f"{self.docs}/tasks/T-019.md", """
+            ## T-019: Pin without a sha
+            - **Status**: done
+            - **Size**: S
+            - **Implements**: D-001
+            - **Acceptance**: x.
+            - **Evidence**: `git:not-a-sha:file:cli/package.json`
+            - **Date done**: 2025-01-01
+        """)
+        run("reindex.py", self.docs, "tasks")
+        rc, out, _ = run("audit.py", self.docs)
+        self.assertEqual(rc, 1)
+        self.assertIn("hex commit sha", out)
+
     def test_fix_risk_missing_decision_is_blocker(self):
         write(f"{self.docs}/risks/R-003.md", """
             ## R-003: Fixed by missing decision
@@ -809,6 +839,64 @@ class TestReconcile(unittest.TestCase):
             - **Implements**: D-001
             - **Acceptance**: x.
             - **Evidence**: `symbol:src/auth/refresh.ts`
+            - **Date done**: 2025-02-01
+        """)
+        run("reindex.py", docs)
+        rc, out, _ = run("reconcile.py", docs, "--root", root)
+        self.assertIn("UNVERIFIED: drift", out)
+        self.assertIn("IMPLEMENTATION DRIFT: T-001", out)
+        self.assertEqual(rc, 1)
+
+    def _pinned_root(self):
+        """A tmp git repo where the committed evidence file is then removed
+        from the working tree — D-025's 'abolished fact' shape: the anchor
+        must resolve at the pinned commit, never in the tree."""
+        root, docs = self._root()
+
+        def git(*args):
+            subprocess.run(["git", "-C", root, "-c", "user.email=t@test",
+                            "-c", "user.name=t", "-c", "commit.gpgsign=false",
+                            *args], check=True, stdout=subprocess.DEVNULL,
+                           stderr=subprocess.DEVNULL)
+
+        git("init", "-q")
+        git("add", "src/auth/refresh.ts")
+        git("commit", "-q", "-m", "evidence")
+        p = subprocess.run(["git", "-C", root, "rev-parse", "--short",
+                            "HEAD"], capture_output=True, encoding="utf-8")
+        sha = p.stdout.strip()
+        os.remove(os.path.join(root, "src/auth/refresh.ts"))
+        return root, docs, sha
+
+    def test_pinned_anchor_resolves_at_commit_not_tree(self):
+        root, docs, sha = self._pinned_root()
+        self._dec(docs, "D-001", "abolished fact")
+        write(f"{docs}/tasks/T-001.md", f"""
+            ## T-001: pinned
+            - **Status**: done
+            - **Size**: M
+            - **Implements**: D-001
+            - **Acceptance**: x.
+            - **Evidence**:
+              - `git:{sha}:grep:rotateRefreshToken in src/auth`
+              - `git:{sha}:file:src/auth/refresh.ts`
+            - **Date done**: 2025-02-01
+        """)
+        run("reindex.py", docs)
+        rc, out, _ = run("reconcile.py", docs, "--root", root)
+        self.assertIn("D-001: implemented  (verified)", out)
+        self.assertEqual(rc, 0)
+
+    def test_dangling_pinned_anchor_is_drift(self):
+        root, docs, sha = self._pinned_root()
+        self._dec(docs, "D-001", "bad pin")
+        write(f"{docs}/tasks/T-001.md", f"""
+            ## T-001: dangling pin
+            - **Status**: done
+            - **Size**: M
+            - **Implements**: D-001
+            - **Acceptance**: x.
+            - **Evidence**: `git:{sha}:file:src/auth/never-existed.ts`
             - **Date done**: 2025-02-01
         """)
         run("reindex.py", docs)

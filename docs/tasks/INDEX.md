@@ -21,7 +21,7 @@ T-020 | todo | S | D-006,R-007 | Scripted-invocation failures state "Keel runtim
 T-021 | todo | S | D-009,R-015 | Scripted-write skills preflight the Python interpreter before interview work starts |
 T-022 | todo | M | D-010,R-012 | Stamp a spec-version marker into project-copied conventions; scripts refuse unknown versions |
 T-023 | done | M | D-012 | CI runs the _shared script tests and verifies dist/ is in sync with source | 2026-07-03
-T-024 | in_progress | M | D-009,D-015,R-010 | Windows CI runner: _shared script tests plus installer smoke test, green gates v1 |
+T-024 | done | M | D-009,D-015,R-010 | Windows CI runner: _shared script tests plus installer smoke test, green gates v1 | 2026-07-04
 T-025 | done | M | R-004 | Spike: run the flagship interactive skills end-to-end on opencode and Codex and record what degrades | 2026-07-03
 T-026 | done | S | D-005,R-004 | Build injects per-provider notes adapting interview phrasing to each agent's capabilities | 2026-07-03
 T-027 | todo | M | D-007,D-013,D-015,R-004 | README: quickstart, manual copy, per-agent support-tier matrix, optional Graphiti setup, pipeline guide |
@@ -31,4 +31,13 @@ T-030 | done | S | D-016,D-018 | Convert cli/ to native ESM and fix the publishe
 T-031 | done | S | D-020 | Startup Node-version gate in the bin plus engines >=22 | 2026-07-03
 T-032 | done | S | D-019 | CI smoke step runs the CLI on Node 22 | 2026-07-03
 T-033 | done | M | D-018,R-017 | Publish packaging: prepack bundles dist/ into the package, verified from the packed tarball | 2026-07-03
-T-034 | in_progress | S | R-017 | Release-gate checklist gains an install-from-packed-tarball smoke in a clean environment |
+T-034 | done | S | R-017 | Release-gate checklist gains an install-from-packed-tarball smoke in a clean environment | 2026-07-04
+T-035 | in_progress | S | D-021,D-025,R-018 | Reserve the treenail npm name with a placeholder publish |
+T-036 | todo | M | D-021,D-022,R-020 | Rename sweep: all live keel tokens become treenail, dist regenerated via build.py |
+T-037 | todo | S | D-022,R-020,R-021 | Release gate and CI assert zero old-name tokens and no keel-branded artifact |
+T-038 | todo | S | D-021,R-020 | Clean-machine smoke: npx treenail install plus one full skill run against ~/.treenail |
+T-039 | todo | S | D-025 | Repoint or pin the seven done-task Evidence anchors per D-025 |
+T-040 | done | S | D-025 | Anchor tooling resolves git:-pinned anchors against the named commit | 2026-07-04
+T-041 | todo | S | D-025,R-024 | Encode D-025's anchor-maintenance rule in the conventions spec and audit guidance |
+T-042 | todo | S | D-022 | Rename the GitHub repo to treenail |
+T-043 | todo | S | D-025 | Deprecate keel-skills on npm with a renamed-to-treenail pointer at v1 |

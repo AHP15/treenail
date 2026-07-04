@@ -8,15 +8,23 @@ The conventions define four machine-resolvable anchor forms:
   symbol:<path>:<regex>
   test:<id-or-path>
 
+plus a history pin over any of them (D-025: an anchor whose evidenced
+fact was abolished from the working tree is pinned to the last commit
+where it resolved, never rewritten):
+
+  git:<short-sha>:<anchor>
+
 `audit.py` uses this module to validate shape; `reconcile.py` uses the
-same parse result before resolving anchors against the working tree. Keep
-the grammar here so the structural and reality checks cannot silently
-diverge.
+same parse result before resolving anchors against the working tree —
+or, for `git:` pins, against the named commit. Keep the grammar here so
+the structural and reality checks cannot silently diverge.
 """
 
 import re
 
-ANCHOR_PREFIX_RE = re.compile(r"^(file:|grep:|symbol:|test:)")
+ANCHOR_PREFIX_RE = re.compile(r"^(file:|grep:|symbol:|test:|git:)")
+
+GIT_SHA_RE = re.compile(r"^[0-9a-f]{4,40}$", re.IGNORECASE)
 
 
 def extract_anchor_texts(value):
@@ -42,6 +50,24 @@ def parse_anchor(anchor):
     text = (anchor or "").strip()
     if not text:
         return None, {}, "empty anchor"
+
+    if text.startswith("git:"):
+        rest = text[4:]
+        sha, sep, inner = rest.partition(":")
+        sha, inner = sha.strip(), inner.strip()
+        if not sep or not inner:
+            return "git", {"sha": sha}, \
+                "git anchor requires git:<short-sha>:<anchor>"
+        if not GIT_SHA_RE.match(sha):
+            return "git", {"sha": sha}, \
+                "git anchor requires a hex commit sha (4-40 chars)"
+        if inner.startswith("git:"):
+            return "git", {"sha": sha}, "git anchors do not nest"
+        kind, parts, err = parse_anchor(inner)
+        if err:
+            return "git", {"sha": sha}, f"pinned anchor: {err}"
+        return "git", {"sha": sha, "kind": kind, "parts": parts,
+                       "anchor": inner}, None
 
     if text.startswith("file:"):
         path = text[5:].strip()
@@ -82,4 +108,5 @@ def parse_anchor(anchor):
             return "test", {"target": target}, "test anchor requires an id or path"
         return "test", {"target": target}, None
 
-    return None, {}, "anchor must start with file:, grep:, symbol:, or test:"
+    return None, {}, \
+        "anchor must start with file:, grep:, symbol:, test:, or git:"

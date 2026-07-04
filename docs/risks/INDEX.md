@@ -15,3 +15,10 @@ R-014 | accept | low | Public docs/ exposes the monetization strategy and intern
 R-015 | mitigate | low | Skills fail mid-run when Python 3 is absent despite the install-time warning [tasks: T-021]
 R-016 | fix | medium | On Node 18/20 the installer half-works, then crashes cryptically instead of stating the version requirement
 R-017 | mitigate | high | Prepack/dist bundling has no owning task, so every published package fails at distRoot() [tasks: T-033,T-034,T-028]
+R-018 | mitigate | medium | The `treenail` npm name is sniped before the placeholder publish, voiding the rename's premise [tasks: T-035]
+R-019 | accept | low | "Treenail" is traditionally pronounced "trunnel", splitting the verbal brand and re-colliding with Tor's DSL
+R-020 | mitigate | high | The rename is a 73-file mass edit with hard-cutover semantics and no regression harness — one missed reference fails at runtime with no fallback [tasks: T-036,T-037,T-038]
+R-021 | mitigate | medium | The rename races in-flight v1 distribution work — any artifact shipped under Keel branding first multiplies cutover cost [tasks: T-037,T-035,T-036,T-029]
+R-022 | fix | medium | The rename dangles machine-resolvable Evidence anchors in seven done tasks — immutable-records policy collides with anchor hygiene
+R-023 | fix | medium | Name-bearing anchors have no meaning-preserving repoint — the evidenced fact is abolished, not moved
+R-024 | mitigate | low | The repoint duty exists only in D-024's prose — no skill or check enforces "in the same edit", so future refactors silently recreate dangling anchors [tasks: T-041]

@@ -1,4 +1,4 @@
-D-001 | accepted | Keep the Keel brand; publish the installer as `keel-skills` on npm
+D-001 | superseded | Keep the Keel brand; publish the installer as `keel-skills` on npm (→ D-021)
 D-002 | accepted | MIT license
 D-003 | accepted | The repo is the canonical source; ~/.claude/skills becomes an install target
 D-004 | accepted | Single canonical skill source compiled per provider by a build step
@@ -18,3 +18,8 @@ D-017 | superseded | Node engine floor for the installer is >=22 (→ D-020)
 D-018 | accepted | Fix `files` to include `lib/` now; prepack/dist bundling stays with the publish task
 D-019 | accepted | CI smoke-runs the installer CLI on Node 22
 D-020 | accepted | Node >=22 enforced by a startup version gate in the bin, not just advisory engines
+D-021 | accepted | Rename the project to Treenail
+D-022 | accepted | One name across every surface — brand, npm, CLI, env var, home dir, plugin
+D-023 | superseded | Rename migration — reserve `treenail` on npm now; hard cutover, no old-name compat (→ D-024)
+D-024 | superseded | Rename migration — reserve `treenail` now, hard cutover, prose immutable but Evidence anchors maintained as live pointers (→ D-025)
+D-025 | accepted | Anchor maintenance has two modes — repoint moved targets, pin abolished ones to git history

@@ -156,12 +156,50 @@ def _py_search(pattern, root, scope):
     return False
 
 
+def _git_ok(args, root):
+    """True if `git <args>` exits 0 in `root`; False on any failure,
+    including git being absent."""
+    try:
+        r = subprocess.run(["git", *args], cwd=root,
+                           stdout=subprocess.DEVNULL,
+                           stderr=subprocess.DEVNULL)
+        return r.returncode == 0
+    except FileNotFoundError:
+        return False
+
+
+def _resolve_pinned(sha, kind, parts, root):
+    """Resolve a git:-pinned anchor at the named commit (D-025): the
+    evidenced fact was abolished from the working tree, so presence is
+    checked via git cat-file / git grep against `sha` instead."""
+    if kind == "file":
+        return _git_ok(["cat-file", "-e", f"{sha}:{parts['path']}"], root)
+    if kind == "grep":
+        args = ["grep", "-I", "-l", "-E", parts["pattern"], sha]
+        if parts.get("scope"):
+            args += ["--", parts["scope"]]
+        return _git_ok(args, root)
+    if kind == "symbol":
+        return _git_ok(["grep", "-I", "-l", "-E", parts["pattern"], sha,
+                        "--", parts["path"]], root)
+    if kind == "test":
+        t = parts["target"]
+        if _git_ok(["cat-file", "-e", f"{sha}:{t}"], root):
+            return True
+        return _git_ok(["grep", "-I", "-l", "-F", t, sha], root)
+    return False
+
+
 def resolve_anchor(anchor, root):
     """True if the anchor's target is present in the tree (presence, not
-    passing — matches reconcile-status's read-only resolution)."""
+    passing — matches reconcile-status's read-only resolution). `git:`
+    pins resolve against their named commit, not the working tree."""
     kind, parts, err = anchors.parse_anchor(anchor)
     if err:
         return False
+    if kind == "git":
+        return _resolve_pinned(parts["sha"], parts["kind"], parts["parts"],
+                               root)
     if kind == "file":
         return os.path.exists(os.path.join(root, parts["path"]))
     if kind == "grep":
