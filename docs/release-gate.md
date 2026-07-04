@@ -67,8 +67,15 @@ enforced on every push by CI's "old-name token gate" step:
 
 ## Recorded passes
 
-_No full three-agent pass yet — the first lands with the v1 release
-candidate (T-028/T-029)._
+- 2026-07-04 — **T-028 three-agent pass on RC treenail-0.0.1**: real-channel
+  npx install into an isolated HOME on all three agents, skill discovery, and
+  the scripted `~/.treenail` runtime (mint-id path) verified end-to-end on
+  **Claude Code, Codex CLI, and opencode**; interactive record-minting verified
+  on Claude Code and Codex, bounded + T-025-spike-backed on opencode. PASS.
+  Transcript:
+  [release-gate-evidence/2026-07-04-T028-three-agent-pass.md](release-gate-evidence/2026-07-04-T028-three-agent-pass.md).
+  Version is lockstep (T-017); the T-029 bump to 0.1.0 carries the same
+  artifacts modulo the version string, so re-run only if the build changes.
 
 - 2026-07-04 — T-038 clean-machine rename smoke (tarball install into a
   fresh HOME + one interactive skill minting a record via `~/.treenail`):
