@@ -68,7 +68,7 @@ try {
     ? fs.readFileSync(path.join(treenailHome, 'VERSION'), 'utf8').trim()
     : '';
   check(version.length > 0, `~/.treenail/VERSION provisioned (got '${version}')`);
-  for (const asset of ['scripts', 'templates', 'conventions-spec.md', 'guide.md']) {
+  for (const asset of ['scripts', 'conventions-spec.md']) {
     check(
       fs.existsSync(path.join(treenailHome, asset)),
       `~/.treenail/${asset} provisioned`

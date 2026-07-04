@@ -19,3 +19,5 @@ D-020 | accepted | Node >=22 enforced by a startup version gate in the bin, not 
 D-021 | accepted | Rename the project to Treenail
 D-022 | accepted | One name across every surface — brand, npm, CLI, env var, home dir, plugin
 D-025 | accepted | Anchor maintenance has two modes — repoint moved targets, pin abolished ones to git history
+D-026 | accepted | Remove the `skills/_templates/` authoring scaffolds
+D-027 | accepted | Remove the standalone pipeline guide; fold a curated subset into README

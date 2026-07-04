@@ -36,16 +36,11 @@ DIST_DIR = os.path.join(ROOT, "dist")
 TREENAIL_HOME_REWRITES = (
     ("~/.claude/skills/_shared/scripts/", "~/.treenail/scripts/"),
     ("~/.claude/skills/_shared/", "~/.treenail/"),
-    ("~/.claude/skills/_templates/", "~/.treenail/templates/"),
     ("../_shared/scripts/", "~/.treenail/scripts/"),
     ("../_shared/", "~/.treenail/"),
     ("_shared/scripts/", "~/.treenail/scripts/"),
     ("_shared/conventions-spec.md", "~/.treenail/conventions-spec.md"),
     ("_shared/conventions-examples.md", "~/.treenail/conventions-examples.md"),
-    # template placement prose: with scripts in ~/.treenail, the old
-    # "sibling of _shared" constraint reduces to "in the skills dir"
-    ("a sibling of `_shared`", "in your agent's skills directory"),
-    ("a SIBLING of _shared:", "your agent's skills directory:"),
 )
 
 TREENAIL_HOME_NOTE = (
@@ -117,13 +112,9 @@ def version_stamp(version):
         f"tell you to run `npx treenail update` (T-018).\n\n"
     )
 
-# Support trees copied alongside the skills: the shared runtime and the
-# fill-in templates. Placement is the adapter's call.
-SUPPORT_DIRS = ("_shared", "_templates")
-
-# Source files that are neither a skill nor a support dir but ship with
-# the pack (the pipeline guide).
-EXTRA_FILES = ("guide.md",)
+# Support trees copied alongside the skills: the shared runtime.
+# Placement is the adapter's call.
+SUPPORT_DIRS = ("_shared",)
 
 # Never copied into any dist.
 IGNORE = shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store", ".gitkeep")
@@ -157,7 +148,7 @@ class Skill:
 
 def discover_skills():
     """Every directory under skills/ holding a SKILL.md, sorted by name.
-    Support dirs (_shared, _templates) are handled separately."""
+    Support dirs (_shared) are handled separately."""
     skills = []
     for name in sorted(os.listdir(SKILLS_DIR)):
         src = os.path.join(SKILLS_DIR, name)
@@ -361,7 +352,7 @@ def read_cli_version():
 
 def build_treenail_home(out):
     """The shared runtime tree the installer provisions into ~/.treenail
-    (D-006): scripts, templates, conventions spec/examples, guide, VERSION.
+    (D-006): scripts, conventions spec/examples, VERSION.
     Scripts are copied byte-for-byte (they are code); prose assets get the
     same reference rewrite as skill bodies."""
     shutil.copytree(os.path.join(SKILLS_DIR, "_shared", "scripts"),
@@ -369,24 +360,10 @@ def build_treenail_home(out):
                     ignore=shutil.ignore_patterns(
                         "__pycache__", "*.pyc", ".DS_Store", ".gitkeep",
                         "tests"))  # tests run from the repo, not ~/.treenail
-    src_templates = os.path.join(SKILLS_DIR, "_templates")
-    for dirpath, dirnames, filenames in os.walk(src_templates):
-        dirnames.sort()
-        for name in sorted(filenames):
-            if name in (".DS_Store", ".gitkeep"):
-                continue
-            src = os.path.join(dirpath, name)
-            rel = os.path.relpath(src, src_templates)
-            with open(src, encoding="utf-8") as fh:
-                _write(os.path.join(out, "templates", rel),
-                       rewrite_shared_refs(fh.read()))
     for name in ("conventions-spec.md", "conventions-examples.md"):
         with open(os.path.join(SKILLS_DIR, "_shared", name),
                   encoding="utf-8") as fh:
             _write(os.path.join(out, name), rewrite_shared_refs(fh.read()))
-    for extra in EXTRA_FILES:
-        with open(os.path.join(SKILLS_DIR, extra), encoding="utf-8") as fh:
-            _write(os.path.join(out, extra), rewrite_shared_refs(fh.read()))
     _write(os.path.join(out, "VERSION"), read_cli_version() + "\n")
 
 

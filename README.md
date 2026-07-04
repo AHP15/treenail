@@ -110,17 +110,78 @@ error, nothing to sync.
 
 ## The pipeline
 
-New to the flow? The full walkthrough — what each skill does, in what order,
-and how the decision/risk/task records fit together — is in the
-**[pipeline guide](skills/guide.md)**.
-
-The short version:
-
 ```
 challenge-me → red-team-me → triage-risks → decompose-plan → sequence-work → task-brief
                                                                                     ↓
                                               reconcile-status ⇄ audit-artifacts ⇄ archive-cycle
 ```
+
+Each skill is one step in the flow, reading the records the step before it
+wrote and writing the ones the next step reads:
+
+- **`challenge-me`** — interviews a plan into `accepted` **decision** records,
+  surfacing the choices you hadn't noticed you were making.
+- **`red-team-me`** — attacks those decisions and raises **risk** records; it
+  proposes no fixes.
+- **`triage-risks`** — assigns every risk a disposition: `fix` (supersede a
+  decision), `mitigate` (spawn tasks), `accept`, or `defer`.
+- **`decompose-plan`** — turns the decisions and mitigations into **task**
+  records with machine-resolvable acceptance criteria.
+- **`sequence-work`** — orders the open tasks into an ephemeral phased plan.
+- **`task-brief`** — drives implementation one task at a time, assembling each
+  task's brief and writing back its status plus the code **Evidence** anchors
+  that prove it landed.
+- **`reconcile-status`** — derives which decisions are *actually* implemented
+  from task state and resolves their Evidence anchors against the working tree,
+  flagging drift between "tasks done" and "decision built."
+- **`audit-artifacts`** — a gate you can run any time: cross-checks each INDEX
+  against its records and catches dangling links or malformed Evidence.
+- **`retrospective`** — at a phase boundary, harvests what held, what broke,
+  and which risks materialized into a dated cycle record.
+- **`archive-cycle`** — reaps terminally-resolved records off the active read
+  path and compacts the bodies a retrospective has harvested.
+
+Supporting skills: **`extract-decisions`** (brownfield ingress —
+reconstructs the decisions already embodied in existing code),
+**`promote`** (lifts a feature-scoped record to project scope),
+**`reindex`** (rebuilds an INDEX from its authoritative records), and
+**`graph-sync`** (the optional one-way projection to Graphiti).
+
+### What it writes into your repo
+
+The records live under `docs/`, one file per record, split so day-to-day
+skills read only the active set:
+
+```
+docs/
+  CONVENTIONS-SPEC.md        # the record schema (source of truth for format)
+  CONVENTIONS-EXAMPLES.md    # exemplars, loaded only when tailoring
+  decisions/
+    INDEX.md                 # one line per active decision (always loaded)
+    D-001.md, D-002.md …     # full bodies, read on demand by ID
+    archive/                 # terminal records + their INDEX line, off the hot path
+  risks/     INDEX.md  R-NNN.md …  archive/
+  tasks/     INDEX.md  T-NNN.md …  archive/
+  retrospectives/  INDEX.md  YYYY-MM-DD.md
+  features/<feature>/…       # same structure, feature-scoped
+```
+
+A record's ID is unique within its scope and never changes; moving to
+`archive/` moves both the body and its INDEX line together. INDEX files are a
+derived projection of the per-record files — if one drifts, `reindex` rebuilds
+it; never hand-edit an INDEX to match.
+
+### When to run what
+
+| Trigger | Run |
+|---|---|
+| Session start (existing project) | `archive-cycle` (reap) → `audit-artifacts` → `reconcile-status` |
+| A batch of tasks changed state | `archive-cycle` (reap) → `reconcile-status` |
+| Before any downstream planning skill | `audit-artifacts` |
+| Phase boundary, milestone, ≥3 done tasks | `retrospective` |
+| After every retrospective | `archive-cycle` (now also compacts the harvested records) |
+| `audit-artifacts` reports INDEX drift | `reindex <scope>` |
+| A new cycle starts | `challenge-me` (auto-reads the latest retrospective's Watch-for) |
 
 ---
 
