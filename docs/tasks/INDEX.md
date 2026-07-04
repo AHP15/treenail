@@ -34,10 +34,10 @@ T-033 | done | M | D-018,R-017 | Publish packaging: prepack bundles dist/ into t
 T-034 | done | S | R-017 | Release-gate checklist gains an install-from-packed-tarball smoke in a clean environment | 2026-07-04
 T-035 | done | S | D-021,D-025,R-018 | Reserve the treenail npm name with a placeholder publish | 2026-07-04
 T-036 | done | M | D-021,D-022,R-020 | Rename sweep: all live keel tokens become treenail, dist regenerated via build.py | 2026-07-04
-T-037 | todo | S | D-022,R-020,R-021 | Release gate and CI assert zero old-name tokens and no keel-branded artifact |
-T-038 | todo | S | D-021,R-020 | Clean-machine smoke: npx treenail install plus one full skill run against ~/.treenail |
+T-037 | done | S | D-022,R-020,R-021 | Release gate and CI assert zero old-name tokens and no keel-branded artifact | 2026-07-04
+T-038 | done | S | D-021,R-020 | Clean-machine smoke: npx treenail install plus one full skill run against ~/.treenail | 2026-07-04
 T-039 | done | S | D-025 | Repoint or pin the seven done-task Evidence anchors per D-025 | 2026-07-04
 T-040 | done | S | D-025 | Anchor tooling resolves git:-pinned anchors against the named commit | 2026-07-04
-T-041 | todo | S | D-025,R-024 | Encode D-025's anchor-maintenance rule in the conventions spec and audit guidance |
-T-042 | todo | S | D-022 | Rename the GitHub repo to treenail |
+T-041 | done | S | D-025,R-024 | Encode D-025's anchor-maintenance rule in the conventions spec and audit guidance | 2026-07-04
+T-042 | done | S | D-022 | Rename the GitHub repo to treenail | 2026-07-04
 T-043 | todo | S | D-025 | Deprecate keel-skills on npm with a renamed-to-treenail pointer at v1 |

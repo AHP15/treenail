@@ -12,9 +12,9 @@ For each of Claude Code, opencode, and Codex CLI:
 1. **Install via the real channel** — the channel a user would actually
    use (npx installer for all three; additionally the plugin marketplace
    for Claude Code), not a repo-checkout shortcut.
-2. **Verify skill discovery** — the agent lists/loads the 14 Keel skills.
+2. **Verify skill discovery** — the agent lists/loads the 14 Treenail skills.
 3. **Run one scripted-runtime skill** — a skill that shells out to the
-   ~/.keel runtime (mint-id path), proving the provisioned runtime works.
+   ~/.treenail runtime (mint-id path), proving the provisioned runtime works.
 4. **Run one interactive skill end-to-end** — e.g. challenge-me, proving
    the interview core works on that agent.
 
@@ -31,12 +31,46 @@ node cli/test/smoke-tarball.mjs
 
 The script packs `cli/`, installs the tarball into a clean temp project,
 and runs the full installer smoke (`cli/test/smoke-install.mjs`) against
-the *installed* bin: `keel-skills install` must provision ~/.keel and
+the *installed* bin: `treenail install` must provision ~/.treenail and
 all 14 skills end to end from package-bundled assets only.
 
 Pass bar: the script exits 0 (`smoke-tarball: passed`).
 
+## Rename integrity (T-037, R-020/R-021)
+
+Nothing publishes under the old Keel branding. Two checks, both also
+enforced on every push by CI's "old-name token gate" step:
+
+1. **Zero live old-name tokens** — a repo-wide case-insensitive grep for
+   `keel` finds nothing outside the immutable planning records
+   (docs/decisions, docs/risks, docs/tasks, docs/retrospectives), the
+   dated spike lore (docs/spike-agent-degradation.md), and this file
+   (which must name the token to document the check):
+
+   ```
+   git grep -I -n -i -e keel -- . \
+     ':(exclude)docs/decisions' ':(exclude)docs/risks' \
+     ':(exclude)docs/tasks' ':(exclude)docs/retrospectives' \
+     ':(exclude)docs/spike-agent-degradation.md' \
+     ':(exclude)docs/release-gate.md'
+   ```
+
+   Pass bar: no matches (the command exits 1).
+
+2. **Every publishable name reads `treenail`** — the npm package name
+   (which names the packed tarball), the plugin manifest name
+   (dist/claude-plugin/.claude-plugin/plugin.json), and the marketplace
+   name and plugin entry (.claude-plugin/marketplace.json) all equal
+   `treenail`. CI asserts this with `cli/test/check-rename.mjs`; the
+   tarball smoke above then proves the packed artifact installs under
+   that name.
+
 ## Recorded passes
 
-_None yet — the first recorded pass lands with the v1 release candidate
-(T-028/T-029)._
+_No full three-agent pass yet — the first lands with the v1 release
+candidate (T-028/T-029)._
+
+- 2026-07-04 — T-038 clean-machine rename smoke (tarball install into a
+  fresh HOME + one interactive skill minting a record via `~/.treenail`):
+  PASS. Transcript:
+  [release-gate-evidence/2026-07-04-T038-clean-machine-smoke.md](release-gate-evidence/2026-07-04-T038-clean-machine-smoke.md)

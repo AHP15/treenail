@@ -40,3 +40,21 @@ jobs:
 
       - name: Installer smoke test (temp home)
         run: node cli/test/smoke-install.mjs
+
+      # Rename integrity (T-037, R-020/R-021): no live old-name token
+      # outside the immutable planning records and dated lore, and every
+      # publishable name reads `treenail`. Keeps the T-036 sweep honest
+      # over time; docs/release-gate.md documents the same two checks.
+      - name: Old-name token gate + publishable-name assertions
+        shell: bash
+        run: |
+          # pattern spelled k[e]el so this workflow doesn't match itself
+          if git grep -I -n -i -e 'k[e]el' -- . \
+              ':(exclude)docs/decisions' ':(exclude)docs/risks' \
+              ':(exclude)docs/tasks' ':(exclude)docs/retrospectives' \
+              ':(exclude)docs/spike-agent-degradation.md' \
+              ':(exclude)docs/release-gate.md'; then
+            echo "::error::live old-name token found outside records/lore (see matches above)"
+            exit 1
+          fi
+          node cli/test/check-rename.mjs

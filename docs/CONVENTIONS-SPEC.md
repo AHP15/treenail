@@ -254,6 +254,11 @@ follow the header, in order:
     scoped to a path glob)
   - `symbol:<path>:<regex>` — the pattern is found within that file
   - `test:<id-or-path>` — a test file/name expected to exist
+  - `git:<short-sha>:<anchor>` — a history pin: one of the four forms
+    above, resolved at the named commit (via `git show`/`git grep`)
+    instead of the working tree. Used only when the evidenced fact has
+    been abolished from the tree — see anchor maintenance under Update
+    rules.
   Every anchor must have a non-empty target. `symbol:` always requires
   both a path and a regex; use `file:` only when existence of the file is
   the evidence.
@@ -311,6 +316,21 @@ tasks project into `tasks/archive/INDEX.md` with the identical line format
 - `Evidence` anchors assert presence only. A `done` task whose Evidence
   anchors no longer resolve is plan-vs-code drift, surfaced by
   `reconcile-status` (not stored).
+- Anchor maintenance — the same-edit rule: an edit that moves or
+  abolishes an anchor's target repairs the anchor **in that same
+  change**, in one of two modes. **Moved** (the evidenced fact persists
+  under a new path/string — a rename or relocation): repoint the anchor
+  to the equivalent new target. **Abolished** (the fact ceases to exist
+  in the working tree): pin the anchor to history instead — rewrite it
+  as `git:<short-sha>:<original-anchor>`, where the sha names the last
+  commit at which the original anchor resolved. Pinning preserves the
+  original claim verbatim; never rewrite a record's prose to match a
+  rename. The mode is determined by whether the original claim still has
+  a truthful in-tree witness — not by editor judgment.
+- A dangling anchor discovered on a `done` task later (by
+  `audit-artifacts` or `reconcile-status`) is repaired per the same
+  rule — repointed if the fact moved, pinned at the last resolving
+  commit if it was abolished — not merely reported.
 - On a `done` task, every `Evidence` entry MUST be a machine-resolvable
   anchor (`file:<path>` / `grep:<regex>[ in <pathglob>]` /
   `symbol:<path>:<regex>` / `test:<id-or-path>`), not prose or a malformed
