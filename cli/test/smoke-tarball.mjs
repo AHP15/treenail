@@ -43,6 +43,44 @@ try {
   }
   const tarball = path.join(work, tgz[0]);
 
+  // R-001: the site (D-004 puts it under repo-root site/) must never enter
+  // the product tarball. The package is published from cli/ with a files
+  // allowlist, so site/ is already a sibling of the package — this asserts
+  // that invariant so a future files/root change fails loud here instead of
+  // shipping website bloat to every `npx treenail install` user.
+  const list = run('tar', ['-tzf', tarball]);
+  const entries = list.stdout
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean)
+    // tarball entries are prefixed `package/`; compare on the repo-relative path.
+    .map((l) => l.replace(/^package\//, ''));
+  const siteEntries = entries.filter(
+    (p) => p === 'site' || p.startsWith('site/')
+  );
+  if (siteEntries.length > 0) {
+    console.error(
+      `smoke-tarball: R-001 — ${siteEntries.length} site/** path(s) leaked into the tarball:\n  ` +
+        siteEntries.join('\n  ')
+    );
+    process.exit(1);
+  }
+
+  // R-001: size ceiling — a leaked site/ (node_modules, .next, Fumadocs
+  // assets) would be megabytes. The current tarball is ~0.13 MB; 1 MiB gives
+  // ample room for dist/ growth while still catching website bloat loudly.
+  const SIZE_CEILING = 1024 * 1024;
+  const size = fs.statSync(tarball).size;
+  if (size > SIZE_CEILING) {
+    console.error(
+      `smoke-tarball: R-001 — tarball is ${size} bytes, over the ${SIZE_CEILING}-byte ceiling`
+    );
+    process.exit(1);
+  }
+  console.log(
+    `tarball ok: ${entries.length} entries, ${size} bytes, no site/** paths`
+  );
+
   const proj = path.join(work, 'proj');
   fs.mkdirSync(proj);
   console.log('installing the tarball into a clean temp project...');
