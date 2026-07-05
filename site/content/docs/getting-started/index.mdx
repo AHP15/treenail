@@ -1,0 +1,68 @@
+---
+title: Getting Started
+description: Install Treenail for your coding agent and provision the shared runtime.
+---
+
+Treenail is a planning-skills pack for agent-driven development. Installing it
+puts the pipeline skills into your agent's skills directory and provisions a
+small shared runtime that the skills read from.
+
+## Prerequisites
+
+- **A supported agent** — Claude Code, opencode, or Codex CLI (user-level installs).
+- **Node ≥ 22** — runs the `npx treenail` installer.
+- **Python 3** — runs the scripted steps the skills call (`mint_id.py`,
+  `reindex.py`, `audit.py`, and friends).
+
+You need Node only to run the installer; the skills themselves shell out to
+Python for their deterministic bookkeeping.
+
+## Install with npx
+
+The installer detects which supported agents are present, installs the
+per-provider skill files for each, then provisions the shared runtime into
+`~/.treenail` (overridable via `$TREENAIL_HOME`):
+
+```sh
+npx treenail detect     # report which supported agents are present
+npx treenail install    # install skills for detected agents + provision ~/.treenail
+npx treenail update     # overwrite Treenail-managed dirs with this version
+```
+
+That is the whole install story for most users. `detect` is read-only, so it is
+safe to run first to see what Treenail will target.
+
+## Install as a Claude Code plugin
+
+Claude Code users can instead install Treenail from the plugin marketplace
+manifest at the repo root (`.claude-plugin/marketplace.json`). The plugin
+bundles the shared runtime and provisions `~/.treenail` on first session, so
+plugin-managed and CLI-managed installs share one runtime — you don't have to
+choose one channel forever.
+
+## Install by manual copy (no Node)
+
+Every provider build is committed under `dist/`, so you can install by copying —
+no Node tooling required. Clone the repo:
+
+```sh
+git clone https://github.com/AHP15/treenail.git
+```
+
+Then copy the tree for your agent into its skills directory, and copy the shared
+runtime into `~/.treenail`:
+
+| Agent        | Copy skills from      | Into                         |
+| ------------ | --------------------- | ---------------------------- |
+| Claude Code  | `dist/claude/`        | `~/.claude/skills/`          |
+| opencode     | `dist/opencode/`      | `~/.config/opencode/skills/` |
+| Codex CLI    | `dist/codex/`         | `~/.codex/skills/`           |
+| *(all)*      | `dist/treenail-home/` | `~/.treenail/`               |
+
+The skill bodies read their scripts, templates, and conventions from
+`~/.treenail`, so the runtime copy (`dist/treenail-home/` → `~/.treenail/`) is
+required for the scripted steps to work — even on a manual install.
+
+## Next
+
+Once the skills are installed, [make your first skill run](/docs/getting-started/first-run).

@@ -1,0 +1,58 @@
+---
+title: Your first skill run
+description: Restart your agent, invoke a skill, and watch Treenail lay down its first records.
+---
+
+With the skills installed, Treenail is driven entirely from inside your agent —
+you invoke a skill and it does the rest.
+
+## Restart, then invoke
+
+Restart your agent so it re-scans its skills directory and picks up the newly
+installed Treenail skills. Then invoke the first pipeline skill:
+
+```text
+challenge-me
+```
+
+`challenge-me` interviews you about a plan or design and turns it into
+`accepted` **decision** records — surfacing the choices you hadn't noticed you
+were making. It is the entry point to the whole pipeline.
+
+## What gets written
+
+Treenail writes plain Markdown records into your repo under `docs/`, one file
+per record. They are the source of truth — versioned alongside your code, not
+locked in a chat transcript:
+
+```text
+docs/
+  decisions/  INDEX.md  D-001.md  D-002.md …  archive/
+  risks/      INDEX.md  R-001.md …            archive/
+  tasks/      INDEX.md  T-001.md …            archive/
+  retrospectives/  INDEX.md  YYYY-MM-DD.md
+```
+
+After a `challenge-me` session you will have a `decisions/` directory with one
+`D-NNN.md` per decision and an `INDEX.md` summarizing them.
+
+## The first cycle
+
+`challenge-me` is step one of a pipeline. A typical first pass through it:
+
+1. **`challenge-me`** — interview a plan into decision records.
+2. **`red-team-me`** — attack those decisions and raise risk records.
+3. **`triage-risks`** — give each risk a disposition (`fix` / `mitigate` / `accept` / `defer`).
+4. **`decompose-plan`** — turn decisions and mitigations into task records.
+5. **`sequence-work`** — order the open tasks into a phased plan.
+6. **`task-brief`** — build the tasks one at a time, writing back status and Evidence.
+
+You don't have to run all six in one sitting — each skill reads the records the
+step before it wrote, so you can stop and resume across sessions. The
+[Core Concepts](/docs/core-concepts) section explains the model these records
+follow.
+
+<Callout title="Running headless on opencode?">
+opencode's headless runs need `--auto` to approve the file writes the skills
+make. Interactive sessions prompt as normal.
+</Callout>

@@ -1,0 +1,57 @@
+---
+title: Core Concepts
+description: The planning spine and the decision / risk / task model Treenail records follow.
+---
+
+Treenail gives your agent a durable **planning spine**: a small set of record
+types, laid down in a deliberate order, that outlive any single chat session.
+Understanding the spine is most of understanding Treenail.
+
+## The planning spine
+
+The spine is append-only and decision-first:
+
+- **Decisions come first.** Every plan is factored into decision records that
+  capture a choice and why it was made.
+- **Risks and tasks hang off decisions.** A risk attacks a decision; a task
+  implements one (or mitigates a risk). Neither floats free — each points back
+  at the decision it serves.
+
+Because decisions are laid down first and never rewritten in place, the record
+reads as a history of *what was decided and why*, not just a snapshot of the
+current plan.
+
+## The decision / risk / task model
+
+Three record types carry the plan. Each has a stable ID that never changes.
+
+| Record | ID form | What it captures |
+| ------ | ------- | ---------------- |
+| **Decision** | `D-001` | A choice and its rationale. Append-only; superseded, never edited. |
+| **Risk** | `R-002` | A concrete failure mode of a decision, plus a disposition (`fix` / `mitigate` / `accept` / `defer`). |
+| **Task** | `T-003` | A shippable unit of work that implements a decision or mitigates a risk, with machine-checkable acceptance and Evidence. |
+
+A decision can be **superseded** by a later decision (the old one stays as
+history, linked to its successor). A risk's **disposition** evolves in place as
+you learn more. A task moves `todo → in_progress → done` (or `dropped`), and
+when it is `done` it carries **Evidence** anchors — greppable references to the
+code that proves it landed.
+
+## The records live in your repo
+
+Treenail writes these records as plain Markdown under `docs/`, one file per
+record. They are versioned alongside your code and are the **source of truth** —
+not a database, not chat history:
+
+```text
+docs/
+  CONVENTIONS-SPEC.md        # the record schema (source of truth for format)
+  decisions/  INDEX.md  D-NNN.md …  archive/
+  risks/      INDEX.md  R-NNN.md …  archive/
+  tasks/      INDEX.md  T-NNN.md …  archive/
+```
+
+The skills that make up the pipeline each read the records the step before
+wrote and write the ones the next step reads. How those records are organized so
+the skills stay fast — scopes, INDEX files, and archiving — is covered in
+[Scopes, indexes & archiving](/docs/core-concepts/scopes-and-indexes).

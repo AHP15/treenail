@@ -5,3 +5,5 @@ node_modules/
 # prepack-staged copy of dist/ (cli/scripts/prepack.js); removed by postpack
 cli/dist/
 *.tgz
+# local Claude Code tooling (vendored design skills, agent config)
+.claude/
