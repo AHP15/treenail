@@ -1,0 +1,68 @@
+---
+title: Scopes, indexes & archiving
+description: How Treenail keeps the planning record fast — scopes, INDEX discipline, and the O(active work) read path.
+---
+
+The record set grows for the life of a project, but the skills stay fast because
+Treenail is built around one rule: read only the work that's active, never all of
+history.
+
+## Scopes: project vs feature
+
+Records live at one of two scopes:
+
+- **Project scope** — `docs/decisions/`, `docs/risks/`, `docs/tasks/`.
+- **Feature scope** — `docs/features/<feature>/…`, the same structure nested
+  under a feature.
+
+IDs are unique **within a scope**: a feature's `D-001` is not the project's
+`D-001`. Cross-scope links exist only through promotion — the `promote` skill
+lifts a feature-scoped decision or risk to project scope when it turns out to
+matter beyond its feature.
+
+## INDEX discipline
+
+Each record directory has an `INDEX.md` — one line per record — and the
+per-record `D-NNN.md` / `R-NNN.md` / `T-NNN.md` files are authoritative. The
+INDEX is a **pure derived projection** of those files: it carries nothing that
+isn't already in a record body or derivable from where the file sits on disk.
+
+This is why drift is always repairable without judgment: if an INDEX ever
+disagrees with its records, you don't hand-edit the line — you run `reindex`,
+which recomputes the whole index from the records. Two runs over the same
+records produce byte-identical output.
+
+<Callout title="Never hand-edit an INDEX to match">
+The per-record files are the source of truth. When `audit-artifacts` reports
+INDEX drift, the fix is always `reindex <scope>`, never patching the INDEX line.
+</Callout>
+
+## The `O(active work)` read path
+
+Day-to-day skills load only the **active** `INDEX.md` — the in-flight records —
+not the full history. Terminal records (superseded decisions, resolved risks,
+finished tasks) are moved out of the active directory into `archive/`, along
+with their INDEX line.
+
+So the cost of loading the planning context scales with the amount of *active*
+work, `O(active work)`, not with `O(all history)`. A project with hundreds of
+finished tasks loads no slower than one with a handful, because the finished
+tasks are off the hot path.
+
+## Archiving: reap, then compact
+
+Archiving is two decoupled steps, both performed by the `archive-cycle` skill:
+
+1. **Reap (continuous).** The moment a record reaches a terminal state it becomes
+   eligible to move from its active directory into `archive/`, with its full
+   prose preserved. This is what keeps the active read path bounded to in-flight
+   work — run it on cadence, e.g. at session start.
+2. **Compact (at a cycle boundary).** Once a `retrospective` has harvested a
+   record's cycle, its archived body can collapse to a short summary. Full
+   content always remains in git history.
+
+The two states in `archive/` are therefore "reaped but full-bodied" (a
+retrospective can still read it) and "compacted" (already harvested). Skills that
+need the whole record set — `reconcile-status`, `retrospective`, and
+`audit-artifacts` — read both the active and the archive indexes; everything else
+reads only the active one.

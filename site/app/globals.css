@@ -1,0 +1,183 @@
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/style.css';
+
+/* Tailwind v4 must scan Fumadocs' compiled components for class names. */
+@source '../node_modules/fumadocs-ui/dist/**/*.js';
+
+/* ==========================================================================
+   Treenail design system — "craft-meets-engineering" (D-011), dual theme (D-015)
+   A treenail is a wooden peg that locks a timber joint with no metal. The
+   system reads as a drafting table + blueprint: warm oak/amber joinery on a
+   cool technical ground, structural line-work, monospace record IDs. Warmth
+   is carried by the accent and type, never by the body ground (no cream).
+   All color in OKLCH.
+   ========================================================================== */
+
+@theme {
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-spline-mono), ui-monospace, 'SFMono-Regular', monospace;
+}
+
+:root {
+  /* Light — "drafting vellum": a cool near-white paper, faint blueprint tint. */
+  --tn-bg: oklch(0.972 0.006 236);
+  --tn-surface: oklch(0.945 0.008 236);
+  --tn-surface-raised: oklch(0.99 0.004 236);
+  --tn-ink: oklch(0.24 0.021 250);
+  --tn-muted: oklch(0.475 0.018 250);
+  --tn-border: oklch(0.86 0.012 240);
+  --tn-line: oklch(0.72 0.028 240); /* structural line-work */
+  --tn-grid: oklch(0.9 0.012 240 / 0.7);
+
+  --tn-accent: oklch(0.66 0.13 66); /* oak / amber */
+  --tn-accent-strong: oklch(0.58 0.125 62);
+  --tn-accent-ink: oklch(0.5 0.115 60); /* text-safe oak on light ground */
+  --tn-accent-fg: oklch(0.99 0.012 85); /* text on an accent fill */
+  --tn-accent-wash: oklch(0.66 0.13 66 / 0.1);
+  --tn-blueprint: oklch(0.52 0.09 245);
+
+  /* Map Fumadocs' shell to the craft palette so /docs adopts the system. */
+  --color-fd-background: var(--tn-bg);
+  --color-fd-foreground: var(--tn-ink);
+  --color-fd-muted: var(--tn-surface);
+  --color-fd-muted-foreground: var(--tn-muted);
+  --color-fd-popover: var(--tn-surface-raised);
+  --color-fd-popover-foreground: var(--tn-ink);
+  --color-fd-card: var(--tn-surface);
+  --color-fd-card-foreground: var(--tn-ink);
+  --color-fd-border: var(--tn-border);
+  --color-fd-primary: var(--tn-accent-ink);
+  --color-fd-primary-foreground: var(--tn-accent-fg);
+  --color-fd-secondary: var(--tn-surface);
+  --color-fd-secondary-foreground: var(--tn-ink);
+  --color-fd-accent: var(--tn-accent-wash);
+  --color-fd-accent-foreground: var(--tn-accent-ink);
+  --color-fd-ring: var(--tn-accent);
+}
+
+.dark {
+  /* Dark — "blueprint ink": a deep desaturated blue, not black. */
+  --tn-bg: oklch(0.195 0.022 250);
+  --tn-surface: oklch(0.235 0.024 250);
+  --tn-surface-raised: oklch(0.265 0.026 250);
+  --tn-ink: oklch(0.93 0.008 85); /* warm paper on ink */
+  --tn-muted: oklch(0.72 0.016 245);
+  --tn-border: oklch(0.36 0.022 245);
+  --tn-line: oklch(0.46 0.03 240);
+  --tn-grid: oklch(0.42 0.03 240 / 0.5);
+
+  --tn-accent: oklch(0.77 0.14 73);
+  --tn-accent-strong: oklch(0.82 0.14 76);
+  --tn-accent-ink: oklch(0.82 0.13 76); /* text-safe oak on ink */
+  --tn-accent-fg: oklch(0.21 0.03 60);
+  --tn-accent-wash: oklch(0.77 0.14 73 / 0.14);
+  --tn-blueprint: oklch(0.68 0.1 240);
+
+  --color-fd-background: var(--tn-bg);
+  --color-fd-foreground: var(--tn-ink);
+  --color-fd-muted: var(--tn-surface);
+  --color-fd-muted-foreground: var(--tn-muted);
+  --color-fd-popover: var(--tn-surface-raised);
+  --color-fd-popover-foreground: var(--tn-ink);
+  --color-fd-card: var(--tn-surface);
+  --color-fd-card-foreground: var(--tn-ink);
+  --color-fd-border: var(--tn-border);
+  --color-fd-primary: var(--tn-accent-ink);
+  --color-fd-primary-foreground: var(--tn-accent-fg);
+  --color-fd-secondary: var(--tn-surface);
+  --color-fd-secondary-foreground: var(--tn-ink);
+  --color-fd-accent: var(--tn-accent-wash);
+  --color-fd-accent-foreground: var(--tn-accent-ink);
+  --color-fd-ring: var(--tn-accent);
+}
+
+@layer base {
+  body {
+    background-color: var(--tn-bg);
+    color: var(--tn-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: var(--tn-accent-wash);
+  }
+}
+
+/* --- Craft utilities: the reusable system pieces the landing + docs share --- */
+
+/* Structural blueprint grid — the drafting-table ground. */
+.tn-blueprint-grid {
+  background-image:
+    linear-gradient(var(--tn-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--tn-grid) 1px, transparent 1px);
+  background-size: 2rem 2rem;
+  background-position: center;
+}
+
+/* A recessed technical panel with hairline structural border. */
+.tn-panel {
+  background-color: var(--tn-surface);
+  border: 1px solid var(--tn-border);
+  border-radius: 2px;
+}
+
+/* Monospace record ID chip — D-001 / R-002 / T-003 as real identifiers. */
+.tn-id {
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--tn-accent-ink);
+  border: 1px solid color-mix(in oklch, var(--tn-accent) 35%, transparent);
+  background: var(--tn-accent-wash);
+  border-radius: 2px;
+  padding: 0.05em 0.4em;
+  white-space: nowrap;
+}
+
+/* Corner registration ticks — a drafting/engineering framing motif. */
+.tn-ticks {
+  position: relative;
+}
+.tn-ticks::before,
+.tn-ticks::after {
+  content: '';
+  position: absolute;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-color: var(--tn-line);
+  border-style: solid;
+}
+.tn-ticks::before {
+  top: 0;
+  left: 0;
+  border-width: 1px 0 0 1px;
+}
+.tn-ticks::after {
+  bottom: 0;
+  right: 0;
+  border-width: 0 1px 1px 0;
+}
+
+/* Entrance: content is visible by default; the rise only enhances it, so a
+   headless render or a paused tab still ships the section. */
+@keyframes tn-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.tn-rise {
+  animation: tn-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tn-rise {
+    animation: none;
+  }
+}

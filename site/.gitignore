@@ -1,0 +1,11 @@
+# Node / Next.js build tooling for the marketing+docs site.
+# Kept out of the product npm tarball (R-001) — the package is published
+# from cli/, so site/ is already a sibling of the package; this file keeps
+# the site's own build output out of git.
+/node_modules
+/.next
+/out
+/.vercel
+/.source
+*.tsbuildinfo
+next-env.d.ts
