@@ -9,3 +9,9 @@
 /.source
 *.tsbuildinfo
 next-env.d.ts
+
+# Derived reference pages generated at build time from sibling repo files
+# (D-005, T-003). Single-sourced from skills/*/SKILL.md and
+# docs/CONVENTIONS-SPEC.md — regenerated on every dev/build, never committed.
+/content/docs/reference/skills
+/content/docs/reference/records

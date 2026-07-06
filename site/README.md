@@ -26,4 +26,21 @@ cd site
 npm install
 npm run dev      # http://localhost:3000
 npm run build    # production build
+npm test         # node --test (form validation + screening)
 ```
+
+## Spam protection (Turnstile)
+
+The contact and newsletter endpoints are gated by a hidden honeypot field and
+server-side Cloudflare Turnstile verification, keying/storing no client
+identifier (D-017). Two env vars drive it:
+
+- `NEXT_PUBLIC_TURNSTILE_SITE_KEY` — client widget site key (public).
+- `TURNSTILE_SECRET_KEY` — server-side siteverify secret.
+
+Verification **fails closed**: with no secret configured, or a token that
+can't be verified, submissions are rejected (never handed off to the metered
+providers). For local development use Cloudflare's documented Turnstile
+**test keys** (e.g. the always-passes sitekey `1x00000000000000000000AA` and
+secret `1x0000000000000000000000000000000AA`) so the forms submit end-to-end
+without a real Cloudflare account. Production/preview key scoping is T-014.

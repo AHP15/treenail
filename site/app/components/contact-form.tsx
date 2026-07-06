@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { TurnstileWidget } from './turnstile-widget';
 
 type Status = 'idle' | 'submitting' | 'success' | 'error';
 
@@ -42,6 +43,18 @@ export function ContactForm() {
 
   return (
     <form onSubmit={onSubmit} noValidate aria-describedby="contact-status">
+      {/* Honeypot: hidden from humans (and AT), tempting to bots. A filled
+          value is silently dropped server-side. */}
+      <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px' }}>
+        <label htmlFor="contact-company">Company</label>
+        <input
+          id="contact-company"
+          name="company"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+        />
+      </div>
       <p>
         <label htmlFor="contact-name">Name</label>
         <br />
@@ -60,6 +73,7 @@ export function ContactForm() {
         <textarea id="contact-message" name="message" required maxLength={5000} rows={6} />
         {errors.message && <span role="alert">{errors.message}</span>}
       </p>
+      <TurnstileWidget />
       <button type="submit" disabled={status === 'submitting'}>
         {status === 'submitting' ? 'Sending…' : 'Send message'}
       </button>
