@@ -161,6 +161,327 @@
   border-width: 0 1px 1px 0;
 }
 
+/* --- Landing page shell + sections (D-009, T-007) --------------------------- */
+.tn-shell {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding-inline: clamp(1.25rem, 3vw, 2rem);
+}
+.tn-nav {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.75rem, 2vw, 1.5rem);
+  font-size: 0.9rem;
+}
+.tn-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
+.tn-brand-peg {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: var(--tn-accent);
+  box-shadow: 0 0 0 3px var(--tn-accent-wash);
+}
+
+/* A section with a drafting eyebrow and consistent vertical rhythm. */
+.tn-section {
+  padding-block: clamp(3rem, 9vw, 6rem);
+  border-top: 1px solid var(--tn-border);
+}
+.tn-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tn-accent-ink);
+  margin: 0 0 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.tn-eyebrow::before {
+  content: '';
+  width: 1.5rem;
+  height: 1px;
+  background: var(--tn-accent);
+}
+.tn-h2 {
+  margin: 0;
+  font-size: clamp(1.6rem, 3.5vw, 2.35rem);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+  font-weight: 650;
+}
+.tn-lead {
+  margin: 1rem 0 0;
+  font-size: clamp(1rem, 2vw, 1.12rem);
+  line-height: 1.6;
+  color: var(--tn-muted);
+  max-width: 46ch;
+  text-wrap: pretty;
+}
+
+/* Buttons — square-ish blueprint hardware. */
+.tn-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.7rem 1.25rem;
+  border-radius: 2px;
+  font-weight: 550;
+  font-size: 0.95rem;
+  border: 1px solid var(--tn-border);
+  color: var(--tn-ink);
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+}
+.tn-btn:hover {
+  border-color: var(--tn-accent);
+}
+.tn-btn--accent {
+  background: var(--tn-accent);
+  color: var(--tn-accent-fg);
+  border-color: var(--tn-accent-strong);
+}
+.tn-btn--accent:hover {
+  background: var(--tn-accent-strong);
+}
+
+/* Cards that lift on hover (D-012 micro-interaction). */
+.tn-card {
+  padding: clamp(1.1rem, 3vw, 1.5rem);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.tn-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in oklch, var(--tn-accent) 40%, var(--tn-border));
+}
+.tn-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.02rem;
+  letter-spacing: -0.01em;
+}
+.tn-card p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--tn-muted);
+}
+.tn-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: clamp(0.85rem, 2.5vw, 1.25rem);
+  margin-top: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+/* Copy-command block (copy-command.tsx). */
+.tn-cmd {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem 0.7rem 0.6rem 0.95rem;
+  max-width: 100%;
+}
+.tn-cmd-prompt {
+  font-family: var(--font-mono);
+  color: var(--tn-accent-ink);
+  font-size: 0.9rem;
+}
+.tn-cmd-text {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--tn-ink);
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.tn-cmd-copy {
+  margin-left: auto;
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--tn-muted);
+  border: 1px solid var(--tn-border);
+  border-radius: 2px;
+  padding: 0.25rem 0.5rem;
+  background: var(--tn-bg);
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+.tn-cmd-copy:hover {
+  color: var(--tn-accent-ink);
+  border-color: var(--tn-accent);
+}
+
+/* Supported-agent tiers. */
+.tn-tier {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.tn-tier-badge {
+  align-self: flex-start;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.45rem;
+  border-radius: 2px;
+  border: 1px solid var(--tn-border);
+  color: var(--tn-muted);
+}
+.tn-tier-badge--full {
+  color: var(--tn-accent-fg);
+  background: var(--tn-accent);
+  border-color: var(--tn-accent-strong);
+}
+
+/* --- Pipeline centerpiece (D-012, T-008) ------------------------------------
+   The seven-skill pipeline as a blueprint rail of driven pegs. Content is
+   always visible; the scroll reveal is applied ONLY when the component has
+   "armed" itself (JS present + motion allowed), so no-JS / reduced-motion
+   renders every stage in full (R-006). */
+.tn-pipeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.tn-pipeline-stage {
+  display: grid;
+  grid-template-columns: 1.5rem 1fr;
+  gap: clamp(0.9rem, 2.5vw, 1.5rem);
+  padding-bottom: clamp(1.1rem, 3vw, 1.9rem);
+  border-radius: 3px;
+}
+.tn-pipeline-stage:last-child {
+  padding-bottom: 0;
+}
+.tn-pipeline-stage:focus-visible {
+  outline: 2px solid var(--tn-accent);
+  outline-offset: 6px;
+}
+
+/* Rail: the driven peg and the connector down to the next joint. */
+.tn-pipeline-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+.tn-pipeline-peg {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: none;
+  filter: drop-shadow(0 0 0 var(--tn-accent-wash));
+}
+.tn-pipeline-connector {
+  flex: 1;
+  width: 1.5px;
+  min-height: 1.5rem;
+  background: repeating-linear-gradient(
+    var(--tn-line) 0 4px,
+    transparent 4px 8px
+  );
+}
+
+.tn-pipeline-card {
+  padding: clamp(0.85rem, 2.5vw, 1.15rem) clamp(1rem, 3vw, 1.35rem);
+}
+.tn-pipeline-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.tn-pipeline-index {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--tn-muted);
+  letter-spacing: 0.06em;
+}
+.tn-pipeline-skill {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--tn-ink);
+  letter-spacing: -0.01em;
+}
+.tn-pipeline-summary {
+  margin: 0.5rem 0 0.85rem;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--tn-muted);
+  text-wrap: pretty;
+}
+.tn-pipeline-io {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.tn-pipeline-io-row {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr;
+  gap: 0.75rem;
+  align-items: baseline;
+}
+.tn-pipeline-io dt {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--tn-accent-ink);
+}
+.tn-pipeline-io dd {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--tn-ink);
+}
+
+/* Armed reveal: only when the component confirmed JS + allowed motion. */
+.tn-pipeline--armed .tn-pipeline-stage {
+  opacity: 0;
+  transform: translateY(0.6rem);
+  transition:
+    opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.tn-pipeline--armed .tn-pipeline-peg {
+  transform: scale(0.4);
+  opacity: 0.3;
+  transition:
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.08s,
+    opacity 0.4s ease 0.08s;
+}
+.tn-pipeline--armed .tn-pipeline-stage.is-in {
+  opacity: 1;
+  transform: none;
+}
+.tn-pipeline--armed .tn-pipeline-stage.is-in .tn-pipeline-peg {
+  transform: none;
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Belt-and-suspenders: even if armed, never move. */
+  .tn-pipeline--armed .tn-pipeline-stage,
+  .tn-pipeline--armed .tn-pipeline-peg {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
 /* Entrance: content is visible by default; the rise only enhances it, so a
    headless render or a paused tab still ships the section. */
 @keyframes tn-rise {

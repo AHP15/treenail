@@ -14,9 +14,21 @@ import {
   validateNewsletter,
   validateEmail,
 } from '../lib/forms/validation.ts';
-import { handleContact, handleNewsletter } from '../lib/forms/handlers.ts';
+import {
+  handleContact,
+  handleNewsletter,
+  HONEYPOT_FIELD,
+  TURNSTILE_TOKEN_FIELD,
+} from '../lib/forms/handlers.ts';
+import { verifyTurnstileToken } from '../lib/forms/turnstile.ts';
 
 const realFetch = globalThis.fetch;
+
+// Injected Turnstile verifiers so handler tests exercise screening without a
+// network or any client identifier (T-013). PASS/FAIL stand in for a
+// verified / unverifiable token.
+const PASS = { verifyToken: async () => true };
+const FAIL = { verifyToken: async () => false };
 
 function stubFetch() {
   const calls = [];
@@ -84,7 +96,10 @@ test('validateNewsletter requires a valid email', () => {
 test('contact handler rejects invalid input with 400 and no handoff', async () => {
   const stub = stubFetch();
   try {
-    const res = await handleContact({ name: '', email: 'bad', message: '' });
+    const res = await handleContact(
+      { name: '', email: 'bad', message: '' },
+      PASS
+    );
     assert.equal(res.status, 400);
     assert.equal(stub.calls.length, 0, 'no provider call on invalid input');
   } finally {
@@ -96,11 +111,14 @@ test('contact handler hands off a valid message to the provider', async () => {
   const stub = stubFetch();
   try {
     await withEnv(CONTACT_ENV, async () => {
-      const res = await handleContact({
-        name: 'Ada',
-        email: 'ada@dev.test',
-        message: 'Hello',
-      });
+      const res = await handleContact(
+        {
+          name: 'Ada',
+          email: 'ada@dev.test',
+          message: 'Hello',
+        },
+        PASS
+      );
       assert.equal(res.status, 200);
       assert.deepEqual(res.json, { ok: true });
     });
@@ -116,11 +134,14 @@ test('contact handler hands off a valid message to the provider', async () => {
 test('contact handler returns 500 when the provider is unconfigured', async () => {
   const stub = stubFetch();
   try {
-    const res = await handleContact({
-      name: 'Ada',
-      email: 'ada@dev.test',
-      message: 'Hello',
-    });
+    const res = await handleContact(
+      {
+        name: 'Ada',
+        email: 'ada@dev.test',
+        message: 'Hello',
+      },
+      PASS
+    );
     assert.equal(res.status, 500);
     assert.equal(stub.calls.length, 0, 'no send attempted without config');
   } finally {
@@ -132,13 +153,103 @@ test('newsletter handler hands off a valid email to the list provider', async ()
   const stub = stubFetch();
   try {
     await withEnv(NEWSLETTER_ENV, async () => {
-      const res = await handleNewsletter({ email: 'ada@dev.test' });
+      const res = await handleNewsletter({ email: 'ada@dev.test' }, PASS);
       assert.equal(res.status, 200);
     });
     assert.equal(stub.calls.length, 1);
     assert.equal(stub.calls[0].url, NEWSLETTER_ENV.NEWSLETTER_API_URL);
     assert.equal(stub.calls[0].body.email, 'ada@dev.test');
     assert.equal(stub.calls[0].body.list_id, NEWSLETTER_ENV.NEWSLETTER_LIST_ID);
+  } finally {
+    stub.restore();
+  }
+});
+
+// --- T-013: honeypot + server-side Turnstile screening (D-017) ---
+
+test('a filled honeypot is silently dropped with no handoff and no verify', async () => {
+  const stub = stubFetch();
+  let verifyCalled = false;
+  const deps = {
+    verifyToken: async () => {
+      verifyCalled = true;
+      return true;
+    },
+  };
+  try {
+    await withEnv(CONTACT_ENV, async () => {
+      const res = await handleContact(
+        {
+          name: 'Ada',
+          email: 'ada@dev.test',
+          message: 'Hello',
+          [HONEYPOT_FIELD]: 'ACME Corp',
+        },
+        deps
+      );
+      // Success shape (no signal to the bot) but never handed off.
+      assert.equal(res.status, 200);
+      assert.deepEqual(res.json, { ok: true });
+    });
+    assert.equal(stub.calls.length, 0, 'honeypot submission never reaches provider');
+    assert.equal(verifyCalled, false, 'honeypot short-circuits before verify');
+  } finally {
+    stub.restore();
+  }
+});
+
+test('an unverifiable Turnstile token is rejected fail-closed with no handoff', async () => {
+  const stub = stubFetch();
+  try {
+    await withEnv(CONTACT_ENV, async () => {
+      const res = await handleContact(
+        {
+          name: 'Ada',
+          email: 'ada@dev.test',
+          message: 'Hello',
+          [TURNSTILE_TOKEN_FIELD]: 'bad-token',
+        },
+        FAIL
+      );
+      assert.equal(res.status, 403, 'fail-closed rejection (R-017)');
+      assert.match(res.json.error, /verif/i, 'user-facing retryable error');
+    });
+    assert.equal(stub.calls.length, 0, 'unverified submission never reaches provider');
+  } finally {
+    stub.restore();
+  }
+});
+
+test('newsletter screening also fails closed on an unverifiable token', async () => {
+  const stub = stubFetch();
+  try {
+    await withEnv(NEWSLETTER_ENV, async () => {
+      const res = await handleNewsletter({ email: 'ada@dev.test' }, FAIL);
+      assert.equal(res.status, 403);
+    });
+    assert.equal(stub.calls.length, 0);
+  } finally {
+    stub.restore();
+  }
+});
+
+test('verifyTurnstileToken fails closed without a secret or a token', async () => {
+  const stub = stubFetch(); // must never be reached
+  try {
+    // No TURNSTILE_SECRET_KEY configured -> misconfiguration fails closed.
+    const savedSecret = process.env.TURNSTILE_SECRET_KEY;
+    delete process.env.TURNSTILE_SECRET_KEY;
+    try {
+      assert.equal(await verifyTurnstileToken('some-token'), false);
+    } finally {
+      if (savedSecret !== undefined) process.env.TURNSTILE_SECRET_KEY = savedSecret;
+    }
+    // Secret present but no/blank token -> fails closed before any network.
+    await withEnv({ TURNSTILE_SECRET_KEY: 'secret' }, async () => {
+      assert.equal(await verifyTurnstileToken(undefined), false);
+      assert.equal(await verifyTurnstileToken(''), false);
+    });
+    assert.equal(stub.calls.length, 0, 'no siteverify call when failing closed early');
   } finally {
     stub.restore();
   }

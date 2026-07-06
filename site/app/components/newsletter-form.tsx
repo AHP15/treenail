@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { TurnstileWidget } from './turnstile-widget';
 
 type Status = 'idle' | 'submitting' | 'success' | 'error';
 
@@ -39,6 +40,18 @@ export function NewsletterForm() {
 
   return (
     <form onSubmit={onSubmit} noValidate aria-describedby="newsletter-status">
+      {/* Honeypot: hidden from humans (and AT), tempting to bots. A filled
+          value is silently dropped server-side. */}
+      <span aria-hidden="true" style={{ position: 'absolute', left: '-9999px' }}>
+        <label htmlFor="newsletter-company">Company</label>
+        <input
+          id="newsletter-company"
+          name="company"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+        />
+      </span>
       <label htmlFor="newsletter-email">Email</label>{' '}
       <input
         id="newsletter-email"
@@ -48,6 +61,7 @@ export function NewsletterForm() {
         maxLength={320}
         placeholder="you@example.com"
       />{' '}
+      <TurnstileWidget />{' '}
       <button type="submit" disabled={status === 'submitting'}>
         {status === 'submitting' ? 'Subscribing…' : 'Subscribe'}
       </button>

@@ -4,9 +4,15 @@
 // testable under the node test runner and keeps the trust-boundary logic
 // in one place.
 //
-// Seams: honeypot + Turnstile verification (T-013) wraps ahead of
-// validation here; the ProviderConfigError branch becomes a preview/dev
-// sandbox no-op under T-014.
+// Trust-boundary order on every submission (T-013, D-017):
+//   1. screenSubmission — honeypot + server-side Turnstile, ahead of
+//      validation, keying/storing NO client identifier.
+//   2. validate (validation.ts).
+//   3. hand off to the managed provider (providers.ts).
+// The Turnstile verifier is injected (default = the real siteverify call) so
+// unit tests exercise screening without a network or a client identifier.
+// The ProviderConfigError branch becomes a preview/dev sandbox no-op under
+// T-014.
 
 import {
   validateContact,
@@ -19,11 +25,22 @@ import {
   ProviderConfigError,
   ProviderDeliveryError,
 } from './providers.ts';
+import { verifyTurnstileToken, type TurnstileVerifier } from './turnstile.ts';
 
 export interface HandlerResult {
   status: number;
   json: { ok: true } | { error: string } | { errors: FieldErrors };
 }
+
+// A hidden field no human ever fills; bots that fill every field trip it.
+export const HONEYPOT_FIELD = 'company';
+// The response token minted by the Turnstile widget (Cloudflare's field name).
+export const TURNSTILE_TOKEN_FIELD = 'cf-turnstile-response';
+
+export interface HandlerDeps {
+  verifyToken: TurnstileVerifier;
+}
+const DEFAULT_DEPS: HandlerDeps = { verifyToken: verifyTurnstileToken };
 
 const CONFIG_ERROR = (what: string): HandlerResult => ({
   status: 500,
@@ -33,8 +50,45 @@ const DELIVERY_ERROR = (msg: string): HandlerResult => ({
   status: 502,
   json: { error: msg },
 });
+// Fail-closed rejection for an unverifiable Turnstile token (R-017): a
+// user-facing, retryable error. No retry or queue on our side.
+const VERIFY_ERROR: HandlerResult = {
+  status: 403,
+  json: { error: 'Verification failed. Please try again.' },
+};
 
-export async function handleContact(body: unknown): Promise<HandlerResult> {
+type ScreenResult = { ok: true } | { ok: false; result: HandlerResult };
+
+// Honeypot + server-side Turnstile, ahead of validation. Reads only the
+// honeypot field and the opaque Turnstile token from the body — never an IP,
+// cookie, or any other client identifier (D-017 / D-006 zero-PII posture).
+async function screenSubmission(
+  body: unknown,
+  verifyToken: TurnstileVerifier
+): Promise<ScreenResult> {
+  const data = (body ?? {}) as Record<string, unknown>;
+
+  // Honeypot: a filled hidden field means a bot. Silently drop it — return a
+  // success shape but never hand off — so the bot gets no signal to adapt.
+  const honey = data[HONEYPOT_FIELD];
+  if (typeof honey === 'string' && honey.trim() !== '') {
+    return { ok: false, result: { status: 200, json: { ok: true } } };
+  }
+
+  // Server-side Turnstile: fail-closed on any non-affirmative result (R-017).
+  const verified = await verifyToken(data[TURNSTILE_TOKEN_FIELD]);
+  if (!verified) return { ok: false, result: VERIFY_ERROR };
+
+  return { ok: true };
+}
+
+export async function handleContact(
+  body: unknown,
+  deps: HandlerDeps = DEFAULT_DEPS
+): Promise<HandlerResult> {
+  const screen = await screenSubmission(body, deps.verifyToken);
+  if (!screen.ok) return screen.result;
+
   const result = validateContact(body);
   if (!result.ok) return { status: 400, json: { errors: result.errors } };
 
@@ -51,7 +105,13 @@ export async function handleContact(body: unknown): Promise<HandlerResult> {
   return { status: 200, json: { ok: true } };
 }
 
-export async function handleNewsletter(body: unknown): Promise<HandlerResult> {
+export async function handleNewsletter(
+  body: unknown,
+  deps: HandlerDeps = DEFAULT_DEPS
+): Promise<HandlerResult> {
+  const screen = await screenSubmission(body, deps.verifyToken);
+  if (!screen.ok) return screen.result;
+
   const result = validateNewsletter(body);
   if (!result.ok) return { status: 400, json: { errors: result.errors } };
 

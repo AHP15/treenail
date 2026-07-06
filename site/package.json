@@ -8,8 +8,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "node --test",
+    "generate:docs": "node scripts/generate-derived.mjs",
+    "predev": "node scripts/generate-derived.mjs && fumadocs-mdx",
     "postinstall": "fumadocs-mdx",
-    "prebuild": "fumadocs-mdx"
+    "prebuild": "node scripts/generate-derived.mjs && fumadocs-mdx"
   },
   "dependencies": {
     "@types/mdx": "^2.0.14",
