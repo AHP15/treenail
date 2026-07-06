@@ -15,7 +15,7 @@ export function ThemeToggle() {
   return (
     <button
       type="button"
-      aria-label={`Switch to ${isDark ? 'light' : 'dark'} theme`}
+      aria-label={mounted ? `Switch to ${isDark ? 'light' : 'dark'} theme` : 'Toggle theme'}
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
       className="tn-ticks"
       style={{
