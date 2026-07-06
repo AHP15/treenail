@@ -41,3 +41,5 @@ T-041 | done | S | D-025,R-024 | Encode D-025's anchor-maintenance rule in the c
 T-042 | done | S | D-022 | Rename the GitHub repo to treenail | 2026-07-04
 T-044 | done | S | R-026 | Distinguish configured-but-unreachable Graphiti from unconfigured with a one-line stderr advisory | 2026-07-04
 T-045 | done | S | R-027 | Add a newer-Node lane to the CI matrix so the open-ended `>=22` engines range is exercised at the ceiling | 2026-07-04
+T-046 | done | S | D-026 | Remove the `skills/_templates/` scaffolds and their build/install/test coupling | 2026-07-04
+T-047 | done | S | D-027 | Remove `skills/guide.md` and fold a curated subset into the README | 2026-07-04

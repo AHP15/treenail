@@ -19,3 +19,5 @@ R-020 | accept | high | The rename is a 73-file mass edit with hard-cutover sema
 R-022 | fix | medium | The rename dangles machine-resolvable Evidence anchors in seven done tasks — immutable-records policy collides with anchor hygiene
 R-023 | fix | medium | Name-bearing anchors have no meaning-preserving repoint — the evidenced fact is abolished, not moved
 R-024 | accept | low | The repoint duty exists only in D-024's prose — no skill or check enforces "in the same edit", so future refactors silently recreate dangling anchors
+R-028 | accept | medium | D-027 removes the guide that D-015's still-open v1-cut criterion says the README must cover, so the v1 gate has no referent at the publish moment
+R-030 | accept | low | Removing the only conforming authoring scaffold risks the next interview-family skill being authored with malformed frontmatter or a missed build-injection assumption
