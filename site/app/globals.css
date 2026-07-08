@@ -227,6 +227,30 @@
   max-width: 46ch;
   text-wrap: pretty;
 }
+/* Subsection heading + body copy for prose pages (privacy, etc.). */
+.tn-h3 {
+  margin: 0 0 0.6rem;
+  font-size: clamp(1.15rem, 2.4vw, 1.4rem);
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  font-weight: 600;
+}
+.tn-body {
+  margin: 0 0 0.9rem;
+  font-size: 0.98rem;
+  line-height: 1.65;
+  color: var(--tn-muted);
+  max-width: 62ch;
+  text-wrap: pretty;
+}
+.tn-body a {
+  color: var(--tn-accent-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.tn-body a:hover {
+  color: var(--tn-accent-strong);
+}
 
 /* Buttons — square-ish blueprint hardware. */
 .tn-btn {

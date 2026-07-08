@@ -1,0 +1,32 @@
+---
+title: Graphiti (optional)
+description: The optional semantic index that lets the retrieval skills surface related prior art across scopes.
+---
+
+Treenail works fully without it. If you want the retrieval skills
+([`challenge-me`](/docs/pipeline/skills/challenge-me),
+[`red-team-me`](/docs/pipeline/skills/red-team-me), and
+[`promote`](/docs/pipeline/skills/promote)) to surface semantically-related
+prior art across scopes, the [`graph-sync`](/docs/pipeline/skills/graph-sync)
+skill can project your records into an optional
+[Graphiti](https://github.com/getzep/graphiti) knowledge graph.
+
+<Callout title="Derived, never a source of truth">
+The graph is a one-way, rebuildable, advisory index projected from your records.
+Your Markdown records remain the single source of truth; the graph can be
+rebuilt from them at any time.
+</Callout>
+
+## Setup
+
+Setup is entirely yours — the installer neither installs nor checks it. You need:
+
+- `graphiti-core` installed, and
+- a reachable backend via environment variables — either **Neo4j**
+  (`NEO4J_URI`, `NEO4J_USER`, `NEO4J_PASSWORD`) or **FalkorDB** (`FALKORDB_URI`
+  with `GRAPHITI_BACKEND=falkordb`) — plus whatever LLM / embedder key Graphiti
+  is configured for.
+
+If none is configured, the graph skills detect that and **no-op silently** — no
+error, nothing to sync. That is why Graphiti is safe to ignore entirely: nothing
+in the core pipeline depends on it.

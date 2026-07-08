@@ -1,0 +1,80 @@
+---
+title: Record Conventions
+description: The decision / risk / task record schema — fields, Evidence anchors, and how IDs are minted.
+---
+
+Treenail's records are plain Markdown with a fixed schema. The schema is the
+contract every skill reads and writes against, so it is defined once, in
+[`docs/CONVENTIONS-SPEC.md`](https://github.com/AHP15/treenail/blob/main/docs/CONVENTIONS-SPEC.md),
+and the per-record field pages under **Record schema** in the sidebar are quoted
+verbatim from it at build time.
+
+<Callout title="These pages are single-sourced">
+The [Decision](/docs/record-conventions/records/decisions),
+[Risk](/docs/record-conventions/records/risks), and
+[Task](/docs/record-conventions/records/tasks) field pages are generated from
+the spec's field lists — they cannot drift from the format the skills enforce.
+</Callout>
+
+## The three record types
+
+| Record | ID form | Header | Carries |
+| ------ | ------- | ------ | ------- |
+| **Decision** | `D-NNN` | `## D-NNN: <Title>` | A choice and its rationale. Append-only; superseded, never edited. |
+| **Risk** | `R-NNN` | `## R-NNN: <Title>` | A failure mode of a decision + a disposition (`fix` / `mitigate` / `accept` / `defer`). |
+| **Task** | `T-NNN` | `## T-NNN: <Title>` | A shippable unit that implements a decision or mitigates a risk, with checkable Acceptance and Evidence. |
+
+The ID and Title live in the `##` header; the remaining fields are bullet fields
+that follow, **in the order the spec lists them**. See the field pages for the
+exact, authoritative list per record type.
+
+## Evidence anchors
+
+A `done` task carries **Evidence**: one or more machine-resolvable anchors that
+prove the code it describes is actually in the tree. Anchors assert *presence*,
+not passing — they are cheap and greppable, and `reconcile-status` resolves them
+read-only (it never runs tests). Each anchor is one of:
+
+| Anchor | Resolves when |
+| ------ | ------------- |
+| `file:<path>` | the path exists (relative to repo root) |
+| `grep:<regex>[ in <pathglob>]` | the pattern is found (optionally scoped to a glob) |
+| `symbol:<path>:<regex>` | the pattern is found within that file |
+| `test:<id-or-path>` | the named test file/name exists |
+| `git:<short-sha>:<anchor>` | one of the above, resolved at a past commit instead of the working tree |
+
+Prefer the most specific anchor the Acceptance supports: a `symbol:` / `grep:` /
+`test:` that names the *behavior* beats a bare `file:`, because a bare `file:`
+keeps resolving as long as the file exists at all — it can't notice that the
+relevant code inside was ripped out, which is exactly the drift detection is
+meant to catch.
+
+<Callout type="warn" title="Anchors are how drift is caught">
+A `done` task whose Evidence anchors no longer resolve is plan-vs-code drift,
+surfaced by `reconcile-status` and `audit-artifacts`. When a change abolishes an
+anchor's target, repair the anchor in the same change — repoint it if the fact
+moved, or pin it to history as `git:<short-sha>:<original-anchor>` if it's truly
+gone.
+</Callout>
+
+## How IDs are minted
+
+IDs are unique **within a scope** and immutable once claimed. Every skill that
+mints one uses the same reservation protocol — implemented by
+`_shared/scripts/mint_id.py` — which makes the **filesystem**, not the INDEX or
+an in-memory count, the arbiter, so two skills, sessions, or branches minting at
+once cannot collide:
+
+1. **Compute the candidate.** Glob both `<artifact>/<PREFIX>-*.md` and
+   `<artifact>/archive/<PREFIX>-*.md` in scope; the candidate is
+   `max(existing IDs) + 1` (IDs are unique across active *and* archive).
+2. **Claim it atomically.** Create the file with a no-clobber exclusive write
+   that fails if the path already exists. The create *is* the claim.
+3. **On collision, increment and retry.** If the exclusive create fails, a
+   concurrent minter won that ID — bump the candidate and retry.
+4. **Then fill the body and append the INDEX line.**
+
+<Callout title="Never renumber to close a gap">
+A gap from a failed claim is harmless; renumbering breaks every inbound link.
+IDs are permanent identifiers, not sequence positions.
+</Callout>

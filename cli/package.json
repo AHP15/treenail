@@ -7,6 +7,7 @@
     "type": "git",
     "url": "git+https://github.com/AHP15/treenail.git"
   },
+  "homepage": "https://github.com/AHP15/treenail#readme",
   "type": "module",
   "bin": {
     "treenail": "bin/treenail.js"

@@ -1,0 +1,59 @@
+---
+title: The Pipeline
+description: The ordered set of planning skills that build and maintain the decision / risk / task record.
+---
+
+The pipeline is the ordered set of skills that build and maintain the planning
+spine. Each skill reads the records the step before it wrote and writes the ones
+the next step reads, so the plan is always hardened before it is decomposed, and
+decomposed before it is built.
+
+You do not have to run the whole pipeline in one sitting — each skill is invoked
+on its own, whenever its input records exist. The order below is the path a plan
+travels from prose to shipped code, not a script you must run end to end.
+
+<Callout title="Reference pages are derived">
+Every per-skill page linked below is generated at build time from that skill's
+`SKILL.md`, so the description you read here is exactly the one the agent loads
+when it runs the skill. See [Record Conventions](/docs/core-concepts) for how the
+single-sourcing works.
+</Callout>
+
+## The pipeline skills
+
+The ten skills that carry a plan through its lifecycle, in the order a plan
+travels. The **reads → writes** column is the honest data flow between the
+decision, risk, and task records.
+
+| Skill | Reads → writes |
+| ----- | -------------- |
+| [challenge-me](/docs/pipeline/skills/challenge-me) | your plan, in prose → **Decisions** |
+| [red-team-me](/docs/pipeline/skills/red-team-me) | Decisions → **Risks** |
+| [triage-risks](/docs/pipeline/skills/triage-risks) | Risks + Decisions → dispositions + updated Decisions |
+| [decompose-plan](/docs/pipeline/skills/decompose-plan) | Decisions + Risks → **Tasks** |
+| [sequence-work](/docs/pipeline/skills/sequence-work) | Tasks + Risks → a phased order (ephemeral) |
+| [task-brief](/docs/pipeline/skills/task-brief) | Tasks + Decisions + Risks → code + task status & Evidence |
+| [reconcile-status](/docs/pipeline/skills/reconcile-status) | Tasks → the implementation view (read-only) |
+| [retrospective](/docs/pipeline/skills/retrospective) | a completed cycle of records → a dated retrospective entry |
+| [archive-cycle](/docs/pipeline/skills/archive-cycle) | terminal records → the same records, moved to `archive/` |
+| [extract-decisions](/docs/pipeline/skills/extract-decisions) | an existing codebase → reverse-engineered Decisions / Risks / Tasks |
+
+The first seven are the core flow: **challenge → red-team → triage → decompose →
+sequence → build → reconcile**. The last three attach to the lifecycle around it
+— `retrospective` harvests a finished cycle, `archive-cycle` keeps the active
+read path bounded, and `extract-decisions` bootstraps the record from a codebase
+that has none.
+
+## Supporting skills
+
+Four utilities keep the record correct and portable. They are not steps in the
+flow — you reach for them when their specific job comes up.
+
+| Skill | What it does |
+| ----- | ------------ |
+| [audit-artifacts](/docs/pipeline/skills/audit-artifacts) | Runs structural invariant checks across the records and reports violations. |
+| [reindex](/docs/pipeline/skills/reindex) | Rebuilds an `INDEX.md` as a pure projection of the per-record files. |
+| [promote](/docs/pipeline/skills/promote) | Lifts a feature-scoped decision or risk up to project scope. |
+| [graph-sync](/docs/pipeline/skills/graph-sync) | Projects the records into the optional Graphiti knowledge graph. |
+
+Each skill's full reference page is under **Skills** in the sidebar.

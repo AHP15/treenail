@@ -24,6 +24,9 @@ import {
   subscribeToNewsletter,
   ProviderConfigError,
   ProviderDeliveryError,
+  contactConfigured,
+  newsletterConfigured,
+  isProductionEnv,
 } from './providers.ts';
 import { verifyTurnstileToken, type TurnstileVerifier } from './turnstile.ts';
 
@@ -46,6 +49,12 @@ const CONFIG_ERROR = (what: string): HandlerResult => ({
   status: 500,
   json: { error: `${what} is not configured.` },
 });
+// Preview/dev sandbox no-op (R-008 / T-014): provider secrets are scoped to
+// Production only, so on preview/dev deploys the endpoints take this path —
+// input is still validated, but NOTHING is handed off to a real provider. The
+// success shape keeps the form demoable on a preview without any real
+// email/list write.
+const SANDBOX_RESULT: HandlerResult = { status: 200, json: { ok: true } };
 const DELIVERY_ERROR = (msg: string): HandlerResult => ({
   status: 502,
   json: { error: msg },
@@ -86,11 +95,23 @@ export async function handleContact(
   body: unknown,
   deps: HandlerDeps = DEFAULT_DEPS
 ): Promise<HandlerResult> {
-  const screen = await screenSubmission(body, deps.verifyToken);
-  if (!screen.ok) return screen.result;
+  // R-008 / T-014: keys absent = preview/dev sandbox. In Production the keys
+  // are present; if they are not, that is a loud misconfiguration, never a
+  // silent sandbox that would drop real submissions (no fail-open in prod).
+  const sandbox = !contactConfigured();
+  if (sandbox && isProductionEnv()) return CONFIG_ERROR('Contact form');
+
+  // Turnstile secret is Production-scoped too, so screening runs only when we
+  // are configured for a real send; sandbox skips it (no secret to verify).
+  if (!sandbox) {
+    const screen = await screenSubmission(body, deps.verifyToken);
+    if (!screen.ok) return screen.result;
+  }
 
   const result = validateContact(body);
   if (!result.ok) return { status: 400, json: { errors: result.errors } };
+
+  if (sandbox) return SANDBOX_RESULT; // no real provider write on preview/dev
 
   try {
     await deliverContactEmail(result.value);
@@ -109,11 +130,19 @@ export async function handleNewsletter(
   body: unknown,
   deps: HandlerDeps = DEFAULT_DEPS
 ): Promise<HandlerResult> {
-  const screen = await screenSubmission(body, deps.verifyToken);
-  if (!screen.ok) return screen.result;
+  // R-008 / T-014: same preview/dev sandbox posture as handleContact.
+  const sandbox = !newsletterConfigured();
+  if (sandbox && isProductionEnv()) return CONFIG_ERROR('Newsletter signup');
+
+  if (!sandbox) {
+    const screen = await screenSubmission(body, deps.verifyToken);
+    if (!screen.ok) return screen.result;
+  }
 
   const result = validateNewsletter(body);
   if (!result.ok) return { status: 400, json: { errors: result.errors } };
+
+  if (sandbox) return SANDBOX_RESULT; // no real list write on preview/dev
 
   try {
     await subscribeToNewsletter(result.value.email);
