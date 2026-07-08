@@ -55,7 +55,7 @@ jobs:
           if git grep -I -n -i -e 'k[e]el' -- . \
               ':(exclude)docs/decisions' ':(exclude)docs/risks' \
               ':(exclude)docs/tasks' ':(exclude)docs/retrospectives' \
-              ':(exclude)docs/spike-agent-degradation.md' \
+              ':(exclude)docs/cross-agent-parity-validation.md' \
               ':(exclude)docs/release-gate.md'; then
             echo "::error::live old-name token found outside records/lore (see matches above)"
             exit 1

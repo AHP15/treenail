@@ -10,13 +10,14 @@ import { ReleaseNote } from './components/release-note';
 // the individual developer using an AI coding agent (D-008). Section 4 hosts
 // the animated pipeline centerpiece (T-008).
 //
-// Agent-tier + quickstart copy passed the T-018 accuracy gate: the tiers are
-// sourced from the product's authoritative support matrix (README "Per-agent
-// support tiers" / project R-004's degradation spike) — all three run the
-// complete pipeline; what differs is the interview surface. Phrased to convey
-// that honest, bounded degradation (Best vs Full), never parity and never
-// "partial/broken". The quickstart was run end-to-end on Claude Code
-// (detect → install → update) and confirmed to behave as described.
+// The supported-agents section (05) presents the functional-parity claim
+// (project D-030) as equal-styled agent-name chips, alphabetically ordered
+// (D-019, D-020), with per-agent "what to expect" detail living in the
+// supported-agents doc (D-018). The claim is scoped to the validated set
+// (project D-031) — never an unbounded "every/any agent" (R-019) — and carries
+// one neutral surface-note sentence (D-021). Re-pin this copy to the validated
+// parity matrix (project D-029) on any edit, per the tier-accuracy gate. The
+// quickstart was run end-to-end on Claude Code and confirmed to behave as described.
 
 const GITHUB_URL = 'https://github.com/AHP15/treenail';
 
@@ -35,29 +36,11 @@ const PROBLEMS = [
   },
 ];
 
-// Sourced from the product support matrix (README / project R-004); see the
-// T-018 note at the top of this file. All three run the complete pipeline —
-// the tier reflects the interview surface, not whether it works.
-const TIERS = [
-  {
-    agent: 'Claude Code',
-    badge: 'Best',
-    full: true,
-    body: 'The complete pipeline at its richest: structured selectable-option interviews and native skill-to-skill chaining — the environment Treenail is dogfooded in daily.',
-  },
-  {
-    agent: 'Codex CLI',
-    badge: 'Full',
-    full: false,
-    body: 'Complete pipeline fidelity. Interview questions arrive as prose to answer in free text, rather than a selectable option list.',
-  },
-  {
-    agent: 'opencode',
-    badge: 'Full',
-    full: false,
-    body: 'Complete pipeline fidelity, verified even on the zero-config free model. Interviews arrive as prose; headless runs need --auto to approve file writes.',
-  },
-];
+// Supported agents (project D-030 functional parity): equal-styled name chips,
+// alphabetical (D-020). Per-agent "what to expect" detail lives in the
+// supported-agents doc (D-018/D-019), so adding an agent is one chip here plus
+// one doc table row — never a landing redesign.
+const SUPPORTED_AGENTS = ['Claude Code', 'Codex CLI', 'opencode'];
 
 export default function HomePage() {
   return (
@@ -215,27 +198,28 @@ export default function HomePage() {
           </p>
         </section>
 
-        {/* --- 6. Supported agents: honest tiers (gated by T-018) --- */}
+        {/* --- 6. Supported agents: functional parity as scalable chips (D-019/D-020/D-021) --- */}
         <section className="tn-section">
           <p className="tn-eyebrow">05 · Supported agents</p>
-          <h2 className="tn-h2">Honest about where it shines.</h2>
+          <h2 className="tn-h2">The full pipeline on every supported agent.</h2>
           <p className="tn-lead">
-            All three run the <strong>complete pipeline</strong> correctly —
-            validated end-to-end, not aspirational. What differs is the interview
-            surface: richest on Claude Code, prose-based on the others. Best on
-            Claude Code, fully functional on Codex CLI and opencode.
+            Every supported agent runs the <strong>complete pipeline</strong>{' '}
+            correctly — validated end-to-end, not aspirational. Interview
+            questions render as selectable options on Claude Code and as prose on
+            the other agents; the protocol underneath is the same.
           </p>
-          <div className="tn-grid-3">
-            {TIERS.map((t) => (
-              <div key={t.agent} className="tn-panel tn-card tn-tier">
-                <span className={`tn-tier-badge${t.full ? ' tn-tier-badge--full' : ''}`}>
-                  {t.badge}
-                </span>
-                <h3>{t.agent}</h3>
-                <p>{t.body}</p>
-              </div>
+          <div className="tn-agent-chips">
+            {SUPPORTED_AGENTS.map((agent) => (
+              <span key={agent} className="tn-agent-chip">
+                {agent}
+              </span>
             ))}
           </div>
+          <p style={{ marginTop: '1.25rem' }}>
+            <Link href="/docs/reference/supported-agents" className="tn-btn">
+              See what to expect on each agent →
+            </Link>
+          </p>
         </section>
 
         {/* --- 7. Quickstart --- */}

@@ -21,3 +21,8 @@ D-022 | accepted | One name across every surface — brand, npm, CLI, env var, h
 D-025 | accepted | Anchor maintenance has two modes — repoint moved targets, pin abolished ones to git history
 D-026 | accepted | Remove the `skills/_templates/` authoring scaffolds
 D-027 | accepted | Remove the standalone pipeline guide; fold a curated subset into README
+D-028 | accepted | Reach agent parity by reframing the message, not by degrading Claude Code
+D-029 | accepted | Repurpose the degradation spike as a cross-agent parity validation doc
+D-030 | accepted | Public claim is functional parity plus a neutral surface note — not identical experience
+D-031 | accepted | A new agent earns the "supported" label only by passing parity validation
+D-032 | accepted | Enforce visible recommendation + rationale in the interview, even when a structured option list is rendered

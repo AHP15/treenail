@@ -341,3 +341,45 @@ INDEX line: `T-044 | dropped | L | R-009 | Add per-device anomaly detection on r
 ```
 
 INDEX line: `2025-10-01 | OAuth rollout phase`
+
+---
+
+## Interview exemplar — rationale-first (challenge-me step 5b)
+
+Every interview question must carry a visible recommendation **and** its
+rationale as prose, so the user sees *why this over the alternatives* —
+never just the bare question, and never only terse option labels. This is
+the empirical premise the equal-support reframe (D-028) rests on: it holds
+identically whether the agent asks in prose or also renders a structured
+option list.
+
+**Prose surface (Codex CLI, opencode) — required shape:**
+
+```
+For the primary datastore I recommend Postgres 15+ with pgvector from day
+one, rather than adding a second store for search later — one system is
+simpler to back up and reason about, and pgvector covers the embedding
+need we anticipate. Does that work, or do you want search/vector handled
+by a dedicated store?
+```
+
+**Structured-option surface (Claude Code `AskUserQuestion`) — the prose
+recommendation + rationale still appears in the message, and does not
+collapse into the option descriptions:**
+
+```
+I recommend Postgres 15+ with pgvector — one system to back up and reason
+about, and it extends to search/embeddings without a second store. Picking
+a dedicated search store instead only pays off once Postgres is measurably
+the bottleneck, which we have no evidence of yet.
+
+  [ Postgres + pgvector (Recommended) ]  [ Postgres + dedicated search store ]
+```
+
+Anti-pattern — a question with no visible "why" (option labels are **not**
+a rationale):
+
+```
+Which datastore?
+  [ Postgres + pgvector ]  [ Postgres + dedicated search store ]
+```

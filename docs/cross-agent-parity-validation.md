@@ -1,4 +1,86 @@
-# Spike: flagship interactive skills on opencode and Codex (T-025, R-004)
+# Cross-agent parity validation: flagship interactive skills on opencode and Codex (T-025, R-004)
+
+**Cross-agent parity, validated end-to-end.** The finding of this
+document is that all three agents — Claude Code, Codex CLI, and
+opencode — run the complete Treenail pipeline (challenge-me →
+red-team-me → task-brief) with full fidelity, records auditing clean.
+What differs is only the *interview surface*: Claude Code renders
+selectable options, the other two use prose — the same interview
+protocol either way. The sections below are the original dated
+observations, preserved verbatim as the evidence base for R-004/R-005;
+this reframe leads with parity but changes none of them. This document
+also serves as the reusable template for validating a new agent against
+the support bar (D-031).
+
+## Re-validation — 2026-07-08 (T-052, R-031): current release candidate
+
+Fresh end-to-end run against the **current build** (the one the parity
+claim will ship with), because the 2026-07-03 spike below predates the
+functional-parity wording and the archived T-028 gate does not validate
+it. The current `dist/` was installed via the real `treenail install`
+into `~/.codex/skills`, `~/.config/opencode/skills`, and `~/.treenail`.
+
+**What was exercised — the full pipeline, both non-Claude agents.** Each
+agent drove the same greenfield scenario in an isolated scratch project (a
+markdown `linkcheck` CLI) whose feature pitch planted a deliberate flaw (a
+20-character-prefix cache key that collides distinct URLs), to test
+pushback:
+
+- **Codex CLI 0.142.5**, model `gpt-5.5`, reasoning effort `medium`,
+  driven headless via `codex exec` (`--sandbox workspace-write`).
+  - *challenge-me*: recommendation-first prose interview (the per-provider
+    preamble fired — "ask in prose, state your recommended answer"), minted
+    D-001–D-006, `reindex`, audit **0 blockers / 0 warn / 0 info**.
+    **Pushed back** on the planted prefix-key flaw with a correct
+    correctness argument, and noted in-memory caching doesn't solve
+    cross-process CI reuse.
+  - *red-team-me*: minted 4 well-formed `pending` risks; correctly treated
+    the resulting audit blockers as the by-design triage-risks handoff.
+  - *task-brief*: flipped a seeded T-001 to `in_progress`, implemented a
+    URL-keyed cache to Acceptance with `node --test` (2 tests pass,
+    including "keeps URLs with the same 20-character prefix separate"),
+    wrote Evidence anchors **verified to resolve** before landing, marked
+    `done` + Date done.
+- **opencode 1.17.15**, bundled **free** default model (0 credentials
+  configured), driven headless via `opencode run --auto`.
+  - *challenge-me*: native skill execution, recommendation-first prose
+    interview, minted D-001–D-006, audit **0/0/0**. **Pushed back** on the
+    prefix-key flaw *and* caught that the fetch layer doesn't exist yet;
+    expanded the tree with a child URL-normalization decision.
+  - *red-team-me*: 6 well-formed `pending` risks; explicitly explained the
+    blockers are the expected pre-triage handoff state.
+  - *task-brief*: implemented the seeded T-001 (`lib/cache.js` +
+    `test/test-cache.js`, 4 tests pass), Evidence anchors **verified to
+    resolve**, landed `done`.
+- **Claude Code**: the dogfood baseline — the full pipeline runs on it in
+  daily use (this validation was itself driven from Claude Code); not
+  re-run as a separate isolated scenario.
+
+All audits independently re-run from `~/.treenail/scripts/audit.py`, not
+trusted from the agents' self-reports.
+
+**What was NOT exercised (limits of this re-validation).** Driven headless
+(`codex exec` / `opencode run`), **not** the interactive TUIs — the same
+channel caveat the spike carries. One scenario per agent; the interview
+user was simulated (agents answered their own clarifying questions).
+Codex ran at `medium` reasoning effort, not its `xhigh` default; opencode
+ran on the bundled free model, not a user's configured provider (which can
+only improve on this floor). `triage-risks`/`decompose-plan`/
+`sequence-work` were not run, so the `pending`-risk audit blockers are
+expected, not failures. The interview *surface* difference is real and
+disclosed: Claude Code renders selectable options, Codex and opencode use
+prose — the same one-question-at-a-time, recommendation-first protocol
+either way.
+
+**Conclusion.** On the current build, all three agents run the complete
+pipeline (challenge-me → red-team-me → task-brief) to full fidelity —
+pushback intact, records auditing clean, the evidence-hygiene loop
+(anchors verified before a task lands) holding on a third-party agent.
+Functional parity holds; only the interview surface differs. This retires
+the "stale-evidence" concern of R-031 for the current claim, within the
+headless-channel limits stated above.
+
+---
 
 Date: 2026-07-03. Owner task: T-025 (mitigates R-004). This is the
 written findings record its Acceptance names: per-agent behavior of

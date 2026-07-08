@@ -13,7 +13,7 @@ Honesty notes up front:
   audit) — not a free-form multi-turn interview, because a fully autonomous
   `challenge-me` exceeds a headless per-turn time budget. Full interview
   fidelity on both agents was separately established in the T-025 spike
-  (`docs/spike-agent-degradation.md`); this gate re-validates that the *current
+  (`docs/cross-agent-parity-validation.md`); this gate re-validates that the *current
   release candidate* installs and its runtime + skill-invocation path work on
   all three.
 - All three ran against the **same** packed tarball installed via
