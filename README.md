@@ -67,23 +67,29 @@ The skill bodies read the shared scripts, templates, and conventions from
 
 ---
 
-## Per-agent support tiers
+## Supported agents
 
-Treenail's flagship skills are built around structured interviews and
-agentic multi-step sessions. All three agents run the **complete pipeline
-correctly**; what differs is the interview surface. This matrix is honest
-about that — it is validated end-to-end, not aspirational (see the
-[cross-agent parity validation](docs/cross-agent-parity-validation.md)).
+Treenail runs the **full pipeline on Claude Code, Codex CLI, and opencode** —
+functional parity, validated end-to-end, not aspirational (see the
+[cross-agent parity validation](docs/cross-agent-parity-validation.md)). The
+record formats, INDEX discipline, greenfield bootstrap, interview pushback, and
+drift detection all hold identically on every agent.
 
-| Agent           | Tier     | What to expect                                                                 |
-| --------------- | -------- | ------------------------------------------------------------------------------ |
-| **Claude Code** | **Best** | Structured selectable-option interviews, native skill-to-skill chaining; the environment Treenail is dogfooded in daily. |
-| **Codex CLI**   | **Full** | Complete pipeline fidelity. Interview questions arrive as prose (answer in free text) rather than a selectable option list. |
-| **opencode**    | **Full** | Complete pipeline fidelity, verified even on the zero-config free model. Interview questions arrive as prose. Headless runs need `--auto` to approve file writes. |
+Interview questions render as selectable options on Claude Code and as prose to
+answer in free text on Codex CLI and opencode — the same protocol underneath,
+only the presentation differs.
 
-The one-line claim: **best on Claude Code, fully functional on Codex CLI and
-opencode.** The record formats, INDEX discipline, greenfield bootstrap,
-interview pushback, and drift detection all hold on every agent.
+| Agent           | What to expect                                                                 |
+| --------------- | ------------------------------------------------------------------------------ |
+| [**Claude Code**](docs/cross-agent-parity-validation.md#claude-code) | Structured selectable-option interviews and native skill-to-skill chaining — the environment Treenail is dogfooded in daily. |
+| [**Codex CLI**](docs/cross-agent-parity-validation.md#codex-cli)   | Complete pipeline fidelity. Interview questions arrive as prose to answer in free text, rather than a selectable option list. |
+| [**opencode**](docs/cross-agent-parity-validation.md#opencode)    | Complete pipeline fidelity, verified even on the zero-config free model. Interviews arrive as prose; headless runs need `--auto` to approve file writes. |
+
+A new agent earns the **supported** label only by passing the
+[support bar](docs/cross-agent-parity-validation.md#support-bar-d-031) — full
+pipeline end-to-end, records auditing 0 blockers, interview protocol intact — and
+is not listed until a dated per-agent validation record exists (each agent name
+above links to its record).
 
 ---
 
