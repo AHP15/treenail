@@ -12,6 +12,61 @@ this reframe leads with parity but changes none of them. This document
 also serves as the reusable template for validating a new agent against
 the support bar (D-031).
 
+## Support bar (D-031)
+
+An agent is advertised as **supported** only after it passes this bar. To
+validate a new agent, copy the per-agent evidence structure below and record the
+run; a name may not be added to any supported list until its record exists.
+
+The bar — all three must hold, independently re-verified, not self-reported:
+
+1. **Full pipeline runs end-to-end** — challenge-me → red-team-me → task-brief
+   drive a real greenfield scenario to completion.
+2. **Records audit 0 blockers** — `audit.py` re-run from `~/.treenail/scripts`
+   returns 0 blockers on the records the run produced.
+3. **Interview protocol intact** — one question at a time, recommendation-first,
+   with genuine pushback on a planted flaw. The interview *surface* may differ
+   (selectable options vs. prose); the protocol may not.
+
+When adding an agent, also **re-derive the surface note** (R-020): the landing
+page and the "Supported agents" doc each carry one neutral sentence describing
+the interview-surface split. Confirm that sentence still accurately describes the
+split across the *new* agent set. Today's note assumes a "Claude Code renders
+options, the others use prose" binary; if the new agent also renders selectable
+options, or introduces a third interview surface, that binary is false — expand
+the note beyond one sentence to describe the actual mapping. This deliberately
+relaxes D-021's "exactly one sentence" literalism: the intent is one note per
+claim, not a permanent sentence count. Do not add a name to any supported list
+until its surface note re-derivation is done.
+
+This document is the reusable template: each supported agent below has a dated
+record demonstrating the three criteria.
+
+## Per-agent validation records (D-031)
+
+Each currently-supported agent, its validation date, and the evidence.
+
+### Claude Code
+
+Validated 2026-07-08 (dogfood baseline — this validation was itself driven from
+Claude Code, and the pipeline runs on it in daily use). Full pipeline end-to-end,
+records audit 0 blockers, interview protocol intact with selectable-option
+rendering. Evidence: the 2026-07-08 re-validation section below plus daily use.
+
+### Codex CLI
+
+Validated 2026-07-08 (Codex CLI 0.142.5, `gpt-5.5`), re-confirmed against the
+current release build. Full pipeline end-to-end, audit 0 blockers, pushback on
+the planted prefix-key flaw, Evidence anchors verified before landing. Evidence:
+"Re-validation — 2026-07-08" and "Codex CLI findings" below.
+
+### opencode
+
+Validated 2026-07-08 (opencode 1.17.15, bundled free model, zero credentials),
+re-confirmed against the current release build. Full pipeline end-to-end, audit
+0 blockers, drift detection held (re-opened a contaminated task on non-resolving
+anchors). Evidence: "Re-validation — 2026-07-08" and "opencode findings" below.
+
 ## Re-validation — 2026-07-08 (T-052, R-031): current release candidate
 
 Fresh end-to-end run against the **current build** (the one the parity

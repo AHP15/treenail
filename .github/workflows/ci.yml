@@ -61,3 +61,10 @@ jobs:
             exit 1
           fi
           node cli/test/check-rename.mjs
+
+      # Claim + support-surface gate (T-050, R-032/R-034): the parity claim and
+      # its surface note propagate as one honest unit, no stale ranking fragment
+      # survives, and every advertised agent resolves to a linked validation
+      # record. Keeps D-030/D-031 enforced instead of prose-only.
+      - name: Claim + support-surface gate
+        run: node cli/test/check-claim-surfaces.mjs

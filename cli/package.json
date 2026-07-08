@@ -1,6 +1,6 @@
 {
   "name": "treenail",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Installer for the Treenail planning-skills pack: build, install, and update agent skills for Claude Code, opencode, and Codex.",
   "license": "MIT",
   "repository": {
