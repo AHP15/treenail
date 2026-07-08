@@ -24,6 +24,43 @@ function requireEnv(name: string): string {
   return v;
 }
 
+// The env vars each provider needs — single-sourced so the "is it configured?"
+// checks (T-014) can't drift from the requireEnv() calls below.
+const CONTACT_ENV_KEYS = [
+  'CONTACT_EMAIL_API_URL',
+  'CONTACT_EMAIL_API_KEY',
+  'CONTACT_TO_ADDRESS',
+  'CONTACT_FROM_ADDRESS',
+] as const;
+const NEWSLETTER_ENV_KEYS = [
+  'NEWSLETTER_API_URL',
+  'NEWSLETTER_API_KEY',
+  'NEWSLETTER_LIST_ID',
+] as const;
+
+function allPresent(keys: readonly string[]): boolean {
+  return keys.every((k) => Boolean(process.env[k]));
+}
+
+// R-008 / T-014: the secrets are scoped to the Vercel Production environment
+// only, so on preview/dev deploys these return false and the endpoints enter a
+// sandbox no-op instead of hitting real providers. Production, where the keys
+// live, returns true and does a real send.
+export function contactConfigured(): boolean {
+  return allPresent(CONTACT_ENV_KEYS);
+}
+export function newsletterConfigured(): boolean {
+  return allPresent(NEWSLETTER_ENV_KEYS);
+}
+
+// True only on a real Vercel Production deploy. Used so that a missing key in
+// Production is a LOUD misconfiguration (never a silent sandbox that would drop
+// real submissions and fail open), while the same absence on preview/dev is the
+// expected sandbox trigger.
+export function isProductionEnv(): boolean {
+  return process.env.VERCEL_ENV === 'production';
+}
+
 // Contact-form messages are delivered as email to the owner's inbox via a
 // transactional-email API (D-006). Generic bearer-auth JSON POST.
 export async function deliverContactEmail(payload: ContactPayload): Promise<void> {

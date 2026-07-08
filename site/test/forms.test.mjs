@@ -8,6 +8,7 @@
 
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { readFile } from 'node:fs/promises';
 
 import {
   validateContact,
@@ -21,6 +22,13 @@ import {
   TURNSTILE_TOKEN_FIELD,
 } from '../lib/forms/handlers.ts';
 import { verifyTurnstileToken } from '../lib/forms/turnstile.ts';
+import {
+  allowGlobalSubmission,
+  __resetGlobalCap,
+  GLOBAL_CAP_ENABLED,
+  MAX_PER_WINDOW,
+  WINDOW_MS,
+} from '../lib/forms/global-rate-cap.ts';
 
 const realFetch = globalThis.fetch;
 
@@ -131,20 +139,78 @@ test('contact handler hands off a valid message to the provider', async () => {
   }
 });
 
-test('contact handler returns 500 when the provider is unconfigured', async () => {
+// --- T-014: preview/dev sandbox fail-safe (R-008) ---
+
+test('preview/dev sandbox: unconfigured + non-production short-circuits to a no-op with no provider call and no verify', async () => {
   const stub = stubFetch();
+  let verifyCalled = false;
+  const deps = {
+    verifyToken: async () => {
+      verifyCalled = true;
+      return true;
+    },
+  };
+  // No provider env and not production => sandbox. Ensure VERCEL_ENV is not
+  // 'production' for this case.
+  const savedVercel = process.env.VERCEL_ENV;
+  delete process.env.VERCEL_ENV;
   try {
     const res = await handleContact(
-      {
-        name: 'Ada',
-        email: 'ada@dev.test',
-        message: 'Hello',
-      },
-      PASS
+      { name: 'Ada', email: 'ada@dev.test', message: 'Hello' },
+      deps
     );
-    assert.equal(res.status, 500);
-    assert.equal(stub.calls.length, 0, 'no send attempted without config');
+    assert.equal(res.status, 200, 'sandbox returns a success no-op');
+    assert.deepEqual(res.json, { ok: true });
+    assert.equal(stub.calls.length, 0, 'no real provider write on preview/dev');
+    assert.equal(verifyCalled, false, 'sandbox skips Turnstile (secret is prod-only)');
   } finally {
+    if (savedVercel !== undefined) process.env.VERCEL_ENV = savedVercel;
+    stub.restore();
+  }
+});
+
+test('sandbox still validates: invalid input is a 400 with no provider call', async () => {
+  const stub = stubFetch();
+  const savedVercel = process.env.VERCEL_ENV;
+  delete process.env.VERCEL_ENV;
+  try {
+    const res = await handleContact({ name: '', email: 'bad', message: '' }, PASS);
+    assert.equal(res.status, 400, 'validation runs even in sandbox');
+    assert.equal(stub.calls.length, 0);
+  } finally {
+    if (savedVercel !== undefined) process.env.VERCEL_ENV = savedVercel;
+    stub.restore();
+  }
+});
+
+test('production + unconfigured is a loud 500 misconfiguration, never a silent sandbox', async () => {
+  const stub = stubFetch();
+  try {
+    // Production but provider keys absent: must NOT fail open to a sandbox
+    // that silently drops the submission (R-008).
+    await withEnv({ VERCEL_ENV: 'production' }, async () => {
+      const res = await handleContact(
+        { name: 'Ada', email: 'ada@dev.test', message: 'Hello' },
+        PASS
+      );
+      assert.equal(res.status, 500, 'loud misconfiguration in production');
+    });
+    assert.equal(stub.calls.length, 0, 'no send attempted');
+  } finally {
+    stub.restore();
+  }
+});
+
+test('newsletter preview/dev sandbox: unconfigured + non-production is a no-op with no list write', async () => {
+  const stub = stubFetch();
+  const savedVercel = process.env.VERCEL_ENV;
+  delete process.env.VERCEL_ENV;
+  try {
+    const res = await handleNewsletter({ email: 'ada@dev.test' }, PASS);
+    assert.equal(res.status, 200);
+    assert.equal(stub.calls.length, 0, 'no real list write on preview/dev');
+  } finally {
+    if (savedVercel !== undefined) process.env.VERCEL_ENV = savedVercel;
     stub.restore();
   }
 });
@@ -231,6 +297,42 @@ test('newsletter screening also fails closed on an unverifiable token', async ()
   } finally {
     stub.restore();
   }
+});
+
+// --- T-022: deferred global endpoint cap, specified but dormant (R-016) ---
+
+test('the global cap ships dormant — disabled and unwired', async () => {
+  // R-016: the escalation is specified, NOT enabled. Defaults off, and no
+  // handler imports it into the request path.
+  assert.equal(GLOBAL_CAP_ENABLED, false, 'global cap defaults off');
+  const handlers = await readFile(
+    new URL('../lib/forms/handlers.ts', import.meta.url),
+    'utf8'
+  );
+  assert.doesNotMatch(
+    handlers,
+    /global-rate-cap|allowGlobalSubmission/,
+    'screenSubmission must not call the dormant cap'
+  );
+});
+
+test('the global cap allows up to MAX_PER_WINDOW then blocks, keying on no client identifier', () => {
+  __resetGlobalCap();
+  // It takes NO client identifier (R-010/R-011 guard) — a single global window.
+  assert.equal(allowGlobalSubmission.length, 0, 'requires no argument — no client identifier can be passed');
+  const t = 1_000_000;
+  for (let i = 0; i < MAX_PER_WINDOW; i++) {
+    assert.equal(allowGlobalSubmission(t), true, `submission ${i} under the ceiling`);
+  }
+  assert.equal(allowGlobalSubmission(t), false, 'ceiling exceeded within the window');
+});
+
+test('the global cap resets after the window elapses', () => {
+  __resetGlobalCap();
+  const t = 2_000_000;
+  for (let i = 0; i < MAX_PER_WINDOW; i++) allowGlobalSubmission(t);
+  assert.equal(allowGlobalSubmission(t), false, 'blocked at end of window');
+  assert.equal(allowGlobalSubmission(t + WINDOW_MS), true, 'a fresh window allows again');
 });
 
 test('verifyTurnstileToken fails closed without a secret or a token', async () => {

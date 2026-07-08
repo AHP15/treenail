@@ -1,0 +1,70 @@
+---
+title: CLI
+description: The treenail installer — detect, install, update — and the TREENAIL_HOME shared runtime.
+---
+
+The `treenail` CLI is an installer, not a runtime: it places the skill files
+where each agent looks for them and provisions the shared runtime. Once
+installed, the skills run inside your agent — the CLI is not in the loop.
+
+<Callout title="Prerequisites">
+**Node ≥ 22** and **Python 3**. The Node floor is a hard gate, not advisory —
+below Node 22 the CLI would half-work and then crash inside `install`, so it
+exits early with a clear message instead.
+</Callout>
+
+## Commands
+
+Run without installing, via `npx`:
+
+```sh
+npx treenail detect     # report which supported agents are present
+npx treenail install    # install skills for detected agents + provision the runtime
+npx treenail update     # overwrite Treenail-managed dirs with this version
+npx treenail help       # show usage
+```
+
+### `detect`
+
+Reports which supported agents (Claude Code, opencode, Codex CLI) are present as
+user-level installs. Read-only — it changes nothing, so it is safe to run first
+to see what `install` would target.
+
+### `install`
+
+Installs the per-provider skill files for **each detected agent** — an agent
+that isn't present is skipped, not an error — and provisions the shared runtime
+into the runtime home. After installing, restart your agent so it re-scans its
+skills directory, then invoke a skill (e.g. `challenge-me`) to start planning.
+
+### `update`
+
+Overwrites the Treenail-managed directories with the version you invoke, picking
+up new skills and runtime scripts. It replaces managed dirs wholesale rather than
+merging, so a partial or stale install converges to a clean state.
+
+## `TREENAIL_HOME`
+
+The skills share a runtime home — scripts like `mint_id.py` and `reindex.py`
+that the skills call. It defaults to `~/.treenail`:
+
+```sh
+export TREENAIL_HOME=/opt/treenail   # override the default ~/.treenail
+```
+
+When `TREENAIL_HOME` is set, read every `~/.treenail/...` path in the docs as
+`$TREENAIL_HOME/...`. The Claude plugin install and the CLI install share this
+one runtime, so plugin-managed and CLI-managed setups interoperate.
+
+## Other install paths
+
+`npx` is the common path, but not the only one:
+
+- **Claude plugin** — Claude Code users can install from the marketplace
+  manifest at the repo root; the plugin bundles the runtime and provisions
+  `~/.treenail` on first session.
+- **Manual copy** — every provider build is committed under `dist/`, so you can
+  install with no Node tooling by copying `dist/<agent>/` into your agent's
+  skills directory and the runtime into `~/.treenail`.
+
+See [Getting Started](/docs/getting-started) for the full install walkthrough.

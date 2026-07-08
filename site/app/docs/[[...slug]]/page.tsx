@@ -43,5 +43,8 @@ export async function generateMetadata(props: {
   return {
     title: page.data.title,
     description: page.data.description,
+    // Self-referential canonical per doc page so SEO equity isn't fragmented
+    // across the subdomain and the future custom domain (R-007, T-019).
+    alternates: { canonical: page.url },
   };
 }

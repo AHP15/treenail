@@ -4,12 +4,19 @@ import { JointDiagram } from './components/joint-diagram';
 import { Pipeline } from './components/pipeline';
 import { CopyCommand } from './components/copy-command';
 import { NewsletterForm } from './components/newsletter-form';
+import { ReleaseNote } from './components/release-note';
 
 // The landing page: eight-section, pain-led narrative arc (D-009), aimed at
 // the individual developer using an AI coding agent (D-008). Section 4 hosts
-// the animated pipeline centerpiece (T-008). Agent-tier + quickstart copy is
-// provisional here and gated for accuracy pre-launch by T-018 — the tiers are
-// phrased to convey honest degradation, never parity.
+// the animated pipeline centerpiece (T-008).
+//
+// Agent-tier + quickstart copy passed the T-018 accuracy gate: the tiers are
+// sourced from the product's authoritative support matrix (README "Per-agent
+// support tiers" / project R-004's degradation spike) — all three run the
+// complete pipeline; what differs is the interview surface. Phrased to convey
+// that honest, bounded degradation (Best vs Full), never parity and never
+// "partial/broken". The quickstart was run end-to-end on Claude Code
+// (detect → install → update) and confirmed to behave as described.
 
 const GITHUB_URL = 'https://github.com/AHP15/treenail';
 
@@ -28,24 +35,27 @@ const PROBLEMS = [
   },
 ];
 
+// Sourced from the product support matrix (README / project R-004); see the
+// T-018 note at the top of this file. All three run the complete pipeline —
+// the tier reflects the interview surface, not whether it works.
 const TIERS = [
   {
     agent: 'Claude Code',
-    badge: 'Full support',
+    badge: 'Best',
     full: true,
-    body: 'The interactive pipeline is built and tested against Claude Code first — skills, plugin install, and the shared runtime.',
+    body: 'The complete pipeline at its richest: structured selectable-option interviews and native skill-to-skill chaining — the environment Treenail is dogfooded in daily.',
   },
   {
-    agent: 'Codex',
-    badge: 'Partial',
+    agent: 'Codex CLI',
+    badge: 'Full',
     full: false,
-    body: 'Installs and runs, with a more limited interactive experience. Expect rougher edges around the conversational skills.',
+    body: 'Complete pipeline fidelity. Interview questions arrive as prose to answer in free text, rather than a selectable option list.',
   },
   {
     agent: 'opencode',
-    badge: 'Partial',
+    badge: 'Full',
     full: false,
-    body: 'Supported on a best-effort basis; the richer interactive flows degrade. Use the record files as the source of truth.',
+    body: 'Complete pipeline fidelity, verified even on the zero-config free model. Interviews arrive as prose; headless runs need --auto to approve file writes.',
   },
 ];
 
@@ -210,8 +220,10 @@ export default function HomePage() {
           <p className="tn-eyebrow">05 · Supported agents</p>
           <h2 className="tn-h2">Honest about where it shines.</h2>
           <p className="tn-lead">
-            Treenail installs for the AI coding agents you already use. Support is
-            deepest where it&rsquo;s been proven — and we say so plainly.
+            All three run the <strong>complete pipeline</strong> correctly —
+            validated end-to-end, not aspirational. What differs is the interview
+            surface: richest on Claude Code, prose-based on the others. Best on
+            Claude Code, fully functional on Codex CLI and opencode.
           </p>
           <div className="tn-grid-3">
             {TIERS.map((t) => (
@@ -247,6 +259,7 @@ export default function HomePage() {
             <CopyCommand command="npx treenail detect" />
             <CopyCommand command="npx treenail install" />
             <CopyCommand command="npx treenail update" />
+            <ReleaseNote />
           </div>
         </section>
 
@@ -285,7 +298,12 @@ export default function HomePage() {
           }}
         >
           <span>TREENAIL · PLANNING-SKILLS PACK</span>
-          <span>craft-meets-engineering · D-011</span>
+          <span style={{ display: 'flex', gap: '1rem' }}>
+            <Link href="/privacy" style={{ color: 'var(--tn-muted)' }}>
+              Privacy
+            </Link>
+            <span>craft-meets-engineering · D-011</span>
+          </span>
         </footer>
       </div>
     </main>

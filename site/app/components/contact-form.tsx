@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { TurnstileWidget } from './turnstile-widget';
+import { TurnstileWidget, type TurnstileStatus } from './turnstile-widget';
+import { contactFallback } from '@/lib/forms/fallback-config';
 
 type Status = 'idle' | 'submitting' | 'success' | 'error';
 
@@ -9,6 +10,10 @@ export function ContactForm() {
   const [status, setStatus] = useState<Status>('idle');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [message, setMessage] = useState('');
+  // R-013 / T-021: gate submit on the Turnstile widget's state and surface a
+  // non-Turnstile fallback if it is blocked.
+  const [turnstile, setTurnstile] = useState<TurnstileStatus>('loading');
+  const fallback = contactFallback();
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -73,10 +78,27 @@ export function ContactForm() {
         <textarea id="contact-message" name="message" required maxLength={5000} rows={6} />
         {errors.message && <span role="alert">{errors.message}</span>}
       </p>
-      <TurnstileWidget />
-      <button type="submit" disabled={status === 'submitting'}>
+      <TurnstileWidget onStatusChange={setTurnstile} />
+      <button
+        type="submit"
+        disabled={status === 'submitting' || turnstile !== 'ready'}
+        aria-describedby="contact-turnstile-note"
+      >
         {status === 'submitting' ? 'Sending…' : 'Send message'}
       </button>
+      {/* Explain a disabled submit, and never dead-end a blocked-widget user
+          (R-013 / T-021). */}
+      <p id="contact-turnstile-note" role="status" aria-live="polite">
+        {turnstile === 'loading' &&
+          'Checking your browser before you can send…'}
+        {turnstile === 'unavailable' && (
+          <>
+            Human verification couldn’t load — an ad or privacy blocker is the
+            usual cause. You can still{' '}
+            <a href={fallback.href}>{fallback.label}</a> instead.
+          </>
+        )}
+      </p>
       <p id="contact-status" role="status" aria-live="polite">
         {message}
       </p>
