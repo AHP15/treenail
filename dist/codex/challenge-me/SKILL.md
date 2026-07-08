@@ -32,8 +32,10 @@ Interview me systematically until ALL the important decisions are settled — in
 
 5. For each question:
    - Read the codebase to settle questions of fact — what's wired up, what the schema is, what test framework runs — and use what you find directly; don't make me confirm what the code already states. But reading code only ever tells you what is, not what should be: if what you find would resolve an open design choice rather than establish a fact, treat it as evidence, not a verdict. Surface it as your proposal ("the code currently does X here; I'd keep that because Y — does that work?") and record it like any other decision, noting the provenance (step 10). Reading the codebase replaces asking from ignorance; it never replaces surfacing for confirmation.
-   - Otherwise, state your recommended answer and reasoning in 1-2 sentences, then ask if it works. Never open-ended without a proposal.
+   - Otherwise, propose — never ask open-ended without a recommendation. The recommendation-plus-rationale that must accompany the question is a hard rule; see step 5b.
    - One question at a time.
+
+5b. Rationale-first — hard rule (never surface a choice without a visible "why"). Before or alongside **every** question, the recommended answer plus a 1-2 sentence rationale ("this over the alternatives because…") MUST appear in the chat as prose. This holds unchanged when the agent also renders a structured selectable-option list (e.g. Claude Code's `AskUserQuestion`): the prose recommendation and rationale still appear in the message — terse per-option descriptions do NOT count as the rationale, and the recommended option is marked as such. A question that reaches the user without a preceding or accompanying rationale line is a defect, not a stylistic choice. This is the empirical premise the equal-support reframe (D-028) leans on, so it is enforced here, not left to habit.
 
 6. Handling responses:
    - Confirmed → mark resolved, move on.

@@ -1,0 +1,21 @@
+---
+title: Supported agents
+description: What to expect running Treenail on Claude Code, Codex CLI, and opencode.
+---
+
+Treenail's flagship skills are built around structured interviews and agentic
+multi-step sessions. Every supported agent runs the complete pipeline
+correctly — the record formats, INDEX discipline, greenfield bootstrap,
+interview pushback, and drift detection all hold identically. What differs is
+the interview surface, not the fidelity. This matrix is validated end-to-end,
+not aspirational.
+
+Interview questions render as selectable options on Claude Code and as prose to
+answer in free text on Codex CLI and opencode — the same protocol underneath,
+only the presentation differs.
+
+| Agent | What to expect |
+| ----- | -------------- |
+| **Claude Code** | Structured selectable-option interviews and native skill-to-skill chaining — the environment Treenail is dogfooded in daily. |
+| **Codex CLI** | Complete pipeline fidelity. Interview questions arrive as prose to answer in free text, rather than a selectable option list. |
+| **opencode** | Complete pipeline fidelity, verified even on the zero-config free model. Interviews arrive as prose; headless runs need `--auto` to approve file writes. |

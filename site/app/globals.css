@@ -344,27 +344,24 @@
   border-color: var(--tn-accent);
 }
 
-/* Supported-agent tiers. */
-.tn-tier {
+/* Supported-agent chips (D-019/D-020): equal-styled, names only, in one
+   wrapping row so N agents stay tidy instead of becoming a card wall. Identical
+   styling is itself the equal-support signal. */
+.tn-agent-chips {
   display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.5rem;
 }
-.tn-tier-badge {
-  align-self: flex-start;
+.tn-agent-chip {
   font-family: var(--font-mono);
-  font-size: 0.66rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 0.15rem 0.45rem;
-  border-radius: 2px;
+  font-size: 0.85rem;
+  letter-spacing: 0.01em;
+  color: var(--tn-ink);
+  background: var(--tn-surface);
   border: 1px solid var(--tn-border);
-  color: var(--tn-muted);
-}
-.tn-tier-badge--full {
-  color: var(--tn-accent-fg);
-  background: var(--tn-accent);
-  border-color: var(--tn-accent-strong);
+  border-radius: 2px;
+  padding: 0.4rem 0.85rem;
 }
 
 /* --- Pipeline centerpiece (D-012, T-008) ------------------------------------

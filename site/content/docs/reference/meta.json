@@ -1,4 +1,4 @@
 {
   "title": "Reference",
-  "pages": ["index", "cli", "agent-tiers", "graphiti"]
+  "pages": ["index", "cli", "supported-agents", "graphiti"]
 }

@@ -54,8 +54,8 @@ TREENAIL_HOME_NOTE = (
 )
 
 # Per-provider preamble injected into every built skill body (T-026,
-# D-005, R-004). Content comes from the T-025 degradation spike
-# (docs/spike-agent-degradation.md): the interview protocol survives on
+# D-005, R-004). Content comes from the T-025 cross-agent parity validation
+# (docs/cross-agent-parity-validation.md): the interview protocol survives on
 # both providers, but there is no option-picker UI, and Evidence anchor
 # formatting drifted without an explicit rule.
 INTERVIEW_NOTE = (

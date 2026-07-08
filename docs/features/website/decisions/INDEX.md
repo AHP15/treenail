@@ -13,3 +13,7 @@ D-013 | accepted | Launch on a Vercel subdomain; adopt a custom domain later as 
 D-014 | accepted | Docs are single "latest", unversioned, tracking main
 D-015 | accepted | Ancillary v1 defaults — built-in search, cookieless analytics, English-only, dual theme
 D-017 | accepted | Spam protection is honeypot + Cloudflare Turnstile day-one, with no client-identifier store
+D-018 | accepted | Rename the agent-support doc to "Supported agents" and drop "tiers" from its URL
+D-019 | accepted | Landing page carries the parity claim as scalable agent chips; per-agent detail moves to the doc
+D-020 | accepted | List supported agents alphabetically, with no "not ranked" disclaimer
+D-021 | accepted | The neutral surface-note sentence rides with the parity claim on every surface that makes it

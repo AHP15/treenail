@@ -44,14 +44,14 @@ enforced on every push by CI's "old-name token gate" step:
 1. **Zero live old-name tokens** — a repo-wide case-insensitive grep for
    `keel` finds nothing outside the immutable planning records
    (docs/decisions, docs/risks, docs/tasks, docs/retrospectives), the
-   dated spike lore (docs/spike-agent-degradation.md), and this file
+   dated spike lore (docs/cross-agent-parity-validation.md), and this file
    (which must name the token to document the check):
 
    ```
    git grep -I -n -i -e keel -- . \
      ':(exclude)docs/decisions' ':(exclude)docs/risks' \
      ':(exclude)docs/tasks' ':(exclude)docs/retrospectives' \
-     ':(exclude)docs/spike-agent-degradation.md' \
+     ':(exclude)docs/cross-agent-parity-validation.md' \
      ':(exclude)docs/release-gate.md'
    ```
 

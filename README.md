@@ -11,7 +11,7 @@ The records live in your repo under `docs/` and are the source of truth. The
 skills read `O(active work)`, not `O(all history)`, so the planning record
 stays fast as the project grows.
 
-Supported agents: **Claude Code**, **opencode**, and **Codex CLI** (user-level
+Supported agents: **Claude Code**, **Codex CLI**, and **opencode** (user-level
 installs). Requires **Node ≥ 22** and **Python 3** for the scripted steps.
 
 ---
@@ -57,8 +57,8 @@ shared runtime into `~/.treenail`:
 | Agent        | Copy skills from        | Into                            |
 | ------------ | ----------------------- | ------------------------------- |
 | Claude Code  | `dist/claude/`          | `~/.claude/skills/`             |
-| opencode     | `dist/opencode/`        | `~/.config/opencode/skills/`    |
 | Codex CLI    | `dist/codex/`           | `~/.codex/skills/`              |
+| opencode     | `dist/opencode/`        | `~/.config/opencode/skills/`    |
 | *(all)*      | `dist/treenail-home/`   | `~/.treenail/`                  |
 
 The skill bodies read the shared scripts, templates, and conventions from
@@ -73,7 +73,7 @@ Treenail's flagship skills are built around structured interviews and
 agentic multi-step sessions. All three agents run the **complete pipeline
 correctly**; what differs is the interview surface. This matrix is honest
 about that — it is validated end-to-end, not aspirational (see the
-[degradation spike](docs/spike-agent-degradation.md)).
+[cross-agent parity validation](docs/cross-agent-parity-validation.md)).
 
 | Agent           | Tier     | What to expect                                                                 |
 | --------------- | -------- | ------------------------------------------------------------------------------ |

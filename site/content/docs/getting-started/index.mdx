@@ -11,7 +11,7 @@ small shared runtime that the skills read from.
 
 ## Prerequisites
 
-- **A supported agent** — Claude Code, opencode, or Codex CLI (user-level installs).
+- **A supported agent** — Claude Code, Codex CLI, or opencode (user-level installs).
 - **Node ≥ 22** — runs the `npx treenail` installer.
 - **Python 3** — runs the scripted steps the skills call (`mint_id.py`,
   `reindex.py`, `audit.py`, and friends).
@@ -57,8 +57,8 @@ runtime into `~/.treenail`:
 | Agent        | Copy skills from      | Into                         |
 | ------------ | --------------------- | ---------------------------- |
 | Claude Code  | `dist/claude/`        | `~/.claude/skills/`          |
-| opencode     | `dist/opencode/`      | `~/.config/opencode/skills/` |
 | Codex CLI    | `dist/codex/`         | `~/.codex/skills/`           |
+| opencode     | `dist/opencode/`      | `~/.config/opencode/skills/` |
 | *(all)*      | `dist/treenail-home/` | `~/.treenail/`               |
 
 The skill bodies read their scripts, templates, and conventions from
