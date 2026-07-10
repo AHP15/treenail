@@ -19,3 +19,7 @@ T-018 | done | M | R-005 | Pre-launch content-accuracy gate for agent tiers and 
 T-019 | done | S | D-013,R-007 | Launch on the Vercel subdomain without baking the throwaway URL into durable surfaces | 2026-07-07
 T-021 | done | S | R-013 | Give the forms a non-Turnstile fallback path when the widget is blocked or fails to load | 2026-07-06
 T-022 | done | M | R-016 | Cap metered-provider abuse with provider-side ceilings, volume alerting, and a pre-specified dormant global cap | 2026-07-06
+T-023 | done | M | D-018,D-019,D-020,D-021,R-018 | Rename and rebuild the reference doc as "Supported agents" | 2026-07-08
+T-024 | done | M | D-019,D-020,D-021,R-019 | Rebuild the landing "supported agents" section as scalable agent chips | 2026-07-08
+T-025 | done | S | D-020,R-021 | Align the agent-list order across the remaining prose surfaces | 2026-07-08
+T-026 | done | S | R-020 | Add a surface-note revalidation step to the per-agent validation checklist | 2026-07-08
