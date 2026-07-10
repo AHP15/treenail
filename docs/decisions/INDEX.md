@@ -26,3 +26,6 @@ D-029 | accepted | Repurpose the degradation spike as a cross-agent parity valid
 D-030 | accepted | Public claim is functional parity plus a neutral surface note — not identical experience
 D-031 | accepted | A new agent earns the "supported" label only by passing parity validation
 D-032 | accepted | Enforce visible recommendation + rationale in the interview, even when a structured option list is rendered
+D-033 | accepted | Experimental agent expansion starts as candidate runtime adapters, not supported agents
+D-034 | accepted | Experimental adapters are bundled and opt-in, with dossier plus packaged validation before graduation
+D-035 | accepted | Experimental project-level adapter config uses a managed-install substrate with pruning

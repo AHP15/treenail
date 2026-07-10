@@ -11,6 +11,7 @@ const repoDist = path.join(pkgRoot, '..', 'dist');
 const out = path.join(pkgRoot, 'dist');
 
 const BUNDLED = ['claude', 'opencode', 'codex', 'treenail-home'];
+const OPTIONAL_BUNDLED = ['experimental'];
 
 if (!fs.existsSync(path.join(repoDist, 'treenail-home', 'VERSION'))) {
   console.error(
@@ -25,4 +26,15 @@ for (const name of BUNDLED) {
     recursive: true,
   });
 }
-console.log(`prepack: bundled dist/{${BUNDLED.join(',')}} into the package`);
+const optional = [];
+for (const name of OPTIONAL_BUNDLED) {
+  if (fs.existsSync(path.join(repoDist, name))) {
+    fs.cpSync(path.join(repoDist, name), path.join(out, name), {
+      recursive: true,
+    });
+    optional.push(name);
+  }
+}
+console.log(
+  `prepack: bundled dist/{${[...BUNDLED, ...optional].join(',')}} into the package`
+);

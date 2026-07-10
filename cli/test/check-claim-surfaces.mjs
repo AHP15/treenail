@@ -11,6 +11,7 @@
 // new agent name without a record/link fails the build automatically.
 import fs from 'node:fs';
 import path from 'node:path';
+import { EXPERIMENTAL_ADAPTERS } from '../lib/providers.js';
 
 const repoRoot = path.join(import.meta.dirname, '..', '..');
 const read = (p) => fs.readFileSync(path.join(repoRoot, p), 'utf8');
@@ -63,6 +64,12 @@ if (!arrayMatch) {
 } else {
   const agents = [...arrayMatch[1].matchAll(/['"]([^'"]+)['"]/g)].map((m) => m[1]);
   if (agents.length === 0) fail(`${PAGE}: SUPPORTED_AGENTS is empty`);
+  const experimentalNames = new Set(EXPERIMENTAL_ADAPTERS.map((a) => a.name));
+  for (const agent of agents) {
+    if (experimentalNames.has(agent)) {
+      fail(`agent "${agent}": experimental runtime adapter leaked into SUPPORTED_AGENTS`);
+    }
+  }
   const recordDoc = read(RECORD_DOC);
   const readme = read(README);
   for (const agent of agents) {

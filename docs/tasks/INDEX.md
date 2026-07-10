@@ -1,8 +1,11 @@
-T-029 | done | S | D-001,D-014,D-015 | Cut v1: repo public under MIT, treenail published, release tagged | 2026-07-08
-T-043 | dropped | S | D-025 | Deprecate keel-skills on npm with a renamed-to-treenail pointer at v1 | 2026-07-08
-T-048 | done | M | D-029,R-033 | Repurpose the degradation spike as a cross-agent parity validation doc | 2026-07-08
-T-049 | done | L | D-028,D-030 | Restate the public support claim as functional parity plus a neutral surface note | 2026-07-08
-T-050 | done | M | R-032,R-034 | Add a CI guard over the claim + support surfaces | 2026-07-08
-T-051 | done | M | D-031,R-034 | Document the support bar and require a per-agent validation record | 2026-07-08
-T-052 | done | L | R-031 | Re-exercise the three-agent release-gate smoke against the parity claim | 2026-07-08
-T-053 | done | M | D-032,R-036 | Make the recommendation+rationale rule a standalone checkpoint in challenge-me | 2026-07-08
+T-054 | done | M | D-033,D-034,R-039 | Add an experimental adapter registry with runtime-qualified labels | 2026-07-10
+T-055 | done | M | D-034,R-041 | Write source-backed surface dossiers for the four candidate runtimes | 2026-07-10
+T-056 | done | M | D-033,D-034,R-038,R-041 | Add runtime-mapping and graduation validation checklists for experimental adapters | 2026-07-10
+T-057 | done | M | D-034,R-039,R-040 | Implement explicit `--experimental <agent>` install and update selection | 2026-07-10
+T-058 | done | M | D-034,R-040 | Guard packaging and smoke paths against experimental-adapter leakage | 2026-07-10
+T-059 | done | L | D-035,R-042,R-043 | Build the experimental managed-install manifest ownership core | 2026-07-10
+T-060 | done | M | D-035,R-042,R-043 | Add managed update pruning, backup, refusal, and divergence warnings | 2026-07-10
+T-061 | done | M | D-033,D-034,D-035,R-038,R-039,R-041 | Ship the Pi Coding Agent experimental adapter with packaged validation | 2026-07-10
+T-062 | done | M | D-033,D-034,D-035,R-038,R-039,R-041 | Ship the Kimi Code CLI experimental adapter with packaged validation | 2026-07-10
+T-063 | done | M | D-033,D-034,D-035,R-038,R-039,R-041 | Ship the Cursor experimental adapter with packaged validation | 2026-07-10
+T-064 | done | M | D-033,D-034,D-035,R-038,R-039,R-041 | Ship the Kiro experimental adapter with packaged validation | 2026-07-10

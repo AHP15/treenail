@@ -30,6 +30,52 @@ export const PROVIDERS = [
   },
 ];
 
+export const EXPERIMENTAL_ADAPTERS = [
+  {
+    id: 'pi',
+    aliases: ['pi-coding-agent'],
+    name: 'Pi Coding Agent',
+    bin: 'pi',
+    configDir: path.join(HOME, '.pi', 'agent'),
+    skillsDir: path.join(HOME, '.pi', 'agent', 'skills'),
+  },
+  {
+    id: 'cursor',
+    aliases: ['cursor-cli'],
+    name: 'Cursor',
+    bin: 'cursor-agent',
+    configDir: path.join(HOME, '.cursor'),
+    skillsDir: path.join(HOME, '.cursor', 'skills'),
+  },
+  {
+    id: 'kimi-code-cli',
+    aliases: ['kimi', 'kimi-code'],
+    name: 'Kimi Code CLI',
+    bin: 'kimi',
+    configDir: path.join(HOME, '.kimi-code'),
+    skillsDir: path.join(HOME, '.kimi-code', 'skills'),
+  },
+  {
+    id: 'kiro',
+    aliases: ['kiro-cli'],
+    name: 'Kiro',
+    bin: 'kiro-cli',
+    configDir: path.join(HOME, '.kiro'),
+    skillsDir: path.join(HOME, '.kiro', 'skills'),
+  },
+].map((adapter) => ({
+  ...adapter,
+  experimental: true,
+  unvalidated: true,
+}));
+
+const EXPERIMENTAL_BY_TOKEN = new Map(
+  EXPERIMENTAL_ADAPTERS.flatMap((adapter) => [
+    [adapter.id, adapter],
+    ...adapter.aliases.map((alias) => [alias, adapter]),
+  ])
+);
+
 // ~/.treenail — the agent-neutral shared runtime home (D-006), overridable
 // via TREENAIL_HOME.
 export function treenailHome(env = process.env) {
@@ -59,4 +105,56 @@ export function detectProviders() {
     present: onPath(p.bin) || fs.existsSync(p.configDir),
     skillsDirExists: fs.existsSync(p.skillsDir),
   }));
+}
+
+export function detectExperimentalAdapters() {
+  return EXPERIMENTAL_ADAPTERS.map((p) => ({
+    ...p,
+    present: onPath(p.bin) || fs.existsSync(p.configDir),
+    skillsDirExists: fs.existsSync(p.skillsDir),
+  }));
+}
+
+export function experimentalAdapterTokens() {
+  return [...EXPERIMENTAL_BY_TOKEN.keys()].sort();
+}
+
+export function normalizeExperimentalAdapter(token) {
+  return EXPERIMENTAL_BY_TOKEN.get(String(token || '').toLowerCase()) || null;
+}
+
+export function parseExperimentalSelections(args = []) {
+  const selections = [];
+  const errors = [];
+  for (let i = 0; i < args.length; i += 1) {
+    const arg = args[i];
+    if (arg === '--experimental') {
+      const value = args[i + 1];
+      if (!value || value.startsWith('-')) {
+        errors.push('--experimental requires an adapter id');
+      } else {
+        selections.push(...value.split(','));
+        i += 1;
+      }
+    } else if (arg.startsWith('--experimental=')) {
+      selections.push(...arg.slice('--experimental='.length).split(','));
+    }
+  }
+
+  const adapters = [];
+  const seen = new Set();
+  for (const raw of selections.map((s) => s.trim()).filter(Boolean)) {
+    const adapter = normalizeExperimentalAdapter(raw);
+    if (!adapter) {
+      errors.push(
+        `unknown experimental adapter '${raw}' (known: ${experimentalAdapterTokens().join(', ')})`
+      );
+      continue;
+    }
+    if (!seen.has(adapter.id)) {
+      adapters.push(adapter);
+      seen.add(adapter.id);
+    }
+  }
+  return { adapters, errors };
 }
