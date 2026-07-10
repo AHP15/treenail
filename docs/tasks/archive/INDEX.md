@@ -26,6 +26,7 @@ T-025 | done | M | R-004 | Spike: run the flagship interactive skills end-to-end
 T-026 | done | S | D-005,R-004 | Build injects per-provider notes adapting interview phrasing to each agent's capabilities | 2026-07-03
 T-027 | done | M | D-007,D-013,D-015,R-004 | README: quickstart, manual copy, per-agent support-tier matrix, optional Graphiti setup, pipeline guide | 2026-07-04
 T-028 | done | M | D-015,R-005 | Define and pass the three-agent release-gate smoke checklist | 2026-07-04
+T-029 | done | S | D-001,D-014,D-015 | Cut v1: repo public under MIT, treenail published, release tagged | 2026-07-08
 T-030 | done | S | D-016,D-018 | Convert cli/ to native ESM and fix the published files list | 2026-07-03
 T-031 | done | S | D-020 | Startup Node-version gate in the bin plus engines >=22 | 2026-07-03
 T-032 | done | S | D-019 | CI smoke step runs the CLI on Node 22 | 2026-07-03
@@ -39,7 +40,14 @@ T-039 | done | S | D-025 | Repoint or pin the seven done-task Evidence anchors p
 T-040 | done | S | D-025 | Anchor tooling resolves git:-pinned anchors against the named commit | 2026-07-04
 T-041 | done | S | D-025,R-024 | Encode D-025's anchor-maintenance rule in the conventions spec and audit guidance | 2026-07-04
 T-042 | done | S | D-022 | Rename the GitHub repo to treenail | 2026-07-04
+T-043 | dropped | S | D-025 | Deprecate keel-skills on npm with a renamed-to-treenail pointer at v1 | 2026-07-08
 T-044 | done | S | R-026 | Distinguish configured-but-unreachable Graphiti from unconfigured with a one-line stderr advisory | 2026-07-04
 T-045 | done | S | R-027 | Add a newer-Node lane to the CI matrix so the open-ended `>=22` engines range is exercised at the ceiling | 2026-07-04
 T-046 | done | S | D-026 | Remove the `skills/_templates/` scaffolds and their build/install/test coupling | 2026-07-04
 T-047 | done | S | D-027 | Remove `skills/guide.md` and fold a curated subset into the README | 2026-07-04
+T-048 | done | M | D-029,R-033 | Repurpose the degradation spike as a cross-agent parity validation doc | 2026-07-08
+T-049 | done | L | D-028,D-030 | Restate the public support claim as functional parity plus a neutral surface note | 2026-07-08
+T-050 | done | M | R-032,R-034 | Add a CI guard over the claim + support surfaces | 2026-07-08
+T-051 | done | M | D-031,R-034 | Document the support bar and require a per-agent validation record | 2026-07-08
+T-052 | done | L | R-031 | Re-exercise the three-agent release-gate smoke against the parity claim | 2026-07-08
+T-053 | done | M | D-032,R-036 | Make the recommendation+rationale rule a standalone checkpoint in challenge-me | 2026-07-08

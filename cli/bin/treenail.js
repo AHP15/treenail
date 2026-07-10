@@ -5,12 +5,16 @@ import { install, update } from '../lib/install.js';
 const USAGE = `treenail — installer for the Treenail planning-skills pack
 
 Usage:
-  npx treenail detect     report which supported agents are present
-  npx treenail install    install skills for detected agents + provision ~/.treenail
-  npx treenail update     overwrite Treenail-managed dirs with this version
-  npx treenail help       show this message
+  npx treenail detect [--experimental [agent]]
+                          report which supported agents are present
+  npx treenail install [--experimental <agent>]
+                          install skills for detected agents + provision ~/.treenail
+  npx treenail update [--experimental <agent>]
+                          overwrite Treenail-managed dirs with this version
+  npx treenail help        show this message
 
 Supported agents: Claude Code, opencode, Codex CLI (user-level installs).
+Experimental runtime adapters are unvalidated and never installed by default.
 Shared runtime home: ~/.treenail (override with TREENAIL_HOME).
 `;
 

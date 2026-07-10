@@ -78,6 +78,51 @@ PROVIDER_NOTES = {
     ),
 }
 
+EXPERIMENTAL_PROVIDER_NOTES = {
+    "cursor": (
+        "> Provider note (Cursor experimental runtime adapter): this adapter is "
+        "unvalidated and is installed only via `treenail install --experimental "
+        "cursor`. For interviews, ask each question in plain prose — state your "
+        "recommended answer, ask if it works, and wait for the reply; there is "
+        "no option-picker UI. When writing multiple Evidence anchors, "
+        "comma-separate them and backtick each one. Cursor's exact live skill "
+        "activation behavior remains experimental until a runtime parity pass "
+        "is recorded.\n\n"
+    ),
+    "pi": (
+        "> Provider note (Pi Coding Agent experimental runtime adapter): "
+        "this adapter is unvalidated and is installed only via "
+        "`treenail install --experimental pi`. For interviews, ask each "
+        "question in plain prose — state your recommended answer, ask if it "
+        "works, and wait for the reply; there is no option-picker UI. When "
+        "writing multiple Evidence anchors, comma-separate them and backtick "
+        "each one. Pi's published surface says it does not show "
+        "built-in permission popups, so scripted write steps depend on the "
+        "runtime environment's shell and sandbox controls.\n\n"
+    ),
+    "kimi-code-cli": (
+        "> Provider note (Kimi Code CLI experimental runtime adapter): "
+        "this adapter is unvalidated and is installed only via "
+        "`treenail install --experimental kimi-code-cli`. For interviews, ask "
+        "each question in plain prose — state your recommended answer, ask if "
+        "it works, and wait for the reply; there is no option-picker UI. When "
+        "writing multiple Evidence anchors, comma-separate them and backtick "
+        "each one. Kimi Code CLI exposes configurable permission modes "
+        "and rules; scripted write steps depend on the active Kimi permission "
+        "settings.\n\n"
+    ),
+    "kiro": (
+        "> Provider note (Kiro experimental runtime adapter): this adapter is "
+        "unvalidated and is installed only via `treenail install --experimental "
+        "kiro`. For interviews, ask each question in plain prose — state your "
+        "recommended answer, ask if it works, and wait for the reply; there is "
+        "no option-picker UI. When writing multiple Evidence anchors, "
+        "comma-separate them and backtick each one. Kiro supports Agent Skills "
+        "and configurable permissions; scripted write steps depend on the "
+        "active Kiro permission settings.\n\n"
+    ),
+}
+
 
 def rewrite_shared_refs(text):
     for old, new in TREENAIL_HOME_REWRITES:
@@ -237,6 +282,22 @@ def build_codex(out):
                      note=PROVIDER_NOTES["codex"])
 
 
+def build_experimental(out):
+    """Experimental runtime adapters (D-033/D-034): thin, opt-in adapter
+    payloads generated from the same canonical skill source. The installer
+    copies these only when a user passes --experimental <agent>."""
+    allowed = {"name", "description"}
+    _emit_skill_dirs(os.path.join(out, "cursor", "user"), discover_skills(),
+                     allowed, note=EXPERIMENTAL_PROVIDER_NOTES["cursor"])
+    _emit_skill_dirs(os.path.join(out, "pi", "user"), discover_skills(),
+                     allowed, note=EXPERIMENTAL_PROVIDER_NOTES["pi"])
+    _emit_skill_dirs(os.path.join(out, "kimi-code-cli", "user"),
+                     discover_skills(), allowed,
+                     note=EXPERIMENTAL_PROVIDER_NOTES["kimi-code-cli"])
+    _emit_skill_dirs(os.path.join(out, "kiro", "user"), discover_skills(),
+                     allowed, note=EXPERIMENTAL_PROVIDER_NOTES["kiro"])
+
+
 # The plugin channel installs skill text through Claude's plugin system,
 # bypassing the npx installer (R-007). The plugin therefore carries the
 # whole shared runtime in runtime/ and a SessionStart hook provisions
@@ -372,6 +433,7 @@ ADAPTERS = {
     "claude-plugin": build_claude_plugin,
     "opencode": build_opencode,
     "codex": build_codex,
+    "experimental": build_experimental,
     "treenail-home": build_treenail_home,
 }
 
