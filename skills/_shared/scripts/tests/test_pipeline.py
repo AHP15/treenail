@@ -743,6 +743,30 @@ class TestArchiveCycleReap(unittest.TestCase):
             self.assertIn("R-003 | fix | high |", fh.read())
 
 
+    def test_accept_risk_reaps_only_after_boundary_or_confirmation(self):
+        tmp = tempfile.mkdtemp()
+        docs = build_clean_scope(tmp)
+        write(f"{docs}/risks/R-004.md", """
+            ## R-004: Accepted residual
+            - **Severity**: low
+            - **Likelihood**: low
+            - **Disposition**: accept
+            - **Date**: 2099-01-01
+            - **Description**: x.
+            - **Disposition rationale**: y.
+            - **Action**: none
+            - **Related decisions**: D-001
+        """)
+        run("reindex.py", docs, "risks")
+        rc, out, _ = run("archive_cycle.py", docs, "--dry-run")
+        self.assertIn("skip  R-004  (accept awaiting retrospective boundary)", out)
+        rc, out, _ = run("archive_cycle.py", docs, "--confirm-risk", "R-004")
+        self.assertEqual(rc, 0, out)
+        self.assertIn("accept user-confirmed", out)
+        with open(f"{docs}/risks/archive/R-004.md", encoding="utf-8") as fh:
+            self.assertNotIn("Date resolved", fh.read())
+
+
 class TestMintId(unittest.TestCase):
     def mint(self, dirpath, prefix):
         rc, out, err = run("mint_id.py", dirpath, prefix)

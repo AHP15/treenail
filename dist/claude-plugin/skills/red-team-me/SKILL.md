@@ -8,39 +8,40 @@ description: Adversarially stress-test the decisions record by hunting for failu
 
 > Python 3 preflight: this skill runs Treenail scripts, which need Python 3 (there is no by-hand fallback). Before any interview or analysis work, confirm Python 3 runs (`python3 --version`, or `py -3 --version` on Windows). If it does not, stop immediately and tell the user "Python 3 required — see install docs"; do not begin the work, so nothing completed is lost to a script failure.
 
-Read the decisions in scope and produce per-risk files. Adversarial — find what breaks, don't validate.
+Hunt for what breaks in the accepted decisions, and record each concrete failure mode as a `pending` risk. Be adversarial: find failures, don't validate.
 
-1. Scope. Project-level (`/docs/decisions/INDEX.md`) or feature-level (`/docs/features/<feature>/decisions/INDEX.md`). Risks live in the same scope under `risks/`.
+**Reads:** latest `retrospectives/` entry, `decisions/INDEX.md`, bodies of the decisions under test, optionally the Graphiti graph; the spec is `docs/CONVENTIONS-SPEC.md`.
+**Writes:** `risks/R-NNN.md` + INDEX files (via script).
 
-2. Prior calibration. Read the latest retrospective for the scope (most recent file in `retrospectives/`). Its `Watch-for` is prior context — apply those failure-mode patterns first. Note past mis-calibrations to avoid (e.g. over-predicting contention without traffic evidence).
+## Steps
 
-3. Read `decisions/INDEX.md`. Load full D-NNN.md bodies only for the accepted decisions you're actively stress-testing. You don't need every decision's prose to think about failure modes — titles are usually enough to know what to load.
+1. **Scope.** Project or one feature. Risks live in the same scope.
 
-3b. Prior failures (advisory; optional). If the Graphiti graph is configured, query it per decision you're stress-testing for risks that materialized — or decisions that broke — elsewhere in the project, including other features:
+2. **Prior calibration.** Load the newest retrospective named in `retrospectives/INDEX.md`. Apply its `Watch-for` failure patterns first, and avoid its known mis-calibrations (e.g. predicting contention with no traffic evidence).
 
-   ```
-   python3 ~/.treenail/scripts/graph_query.py docs "<the decision being tested>" --scope all
-   ```
+3. **Pick targets.** From `decisions/INDEX.md`, load the bodies of the accepted decisions you are testing. Titles tell you which ones to load.
 
-   A hit on a related prior risk is a strong steer toward a concrete, evidence-backed failure mode rather than a speculative one (and it counters the over-prediction patterns the retrospective Watch-for warns about). Treat results as leads to investigate, not as risks to copy verbatim — re-derive the failure mode for *this* decision. If the script is silent (graph unavailable or no hits), continue with step 4 unchanged.
+4. **Prior failures (optional, advisory).** Per target: `python3 ~/.treenail/scripts/graph_query.py docs "<the decision being tested>" --scope all`. A related risk that materialized elsewhere points toward an evidence-backed failure mode. Re-derive it for this decision; don't copy it.
 
-4. Hunt failure modes per accepted decision. For each, ask:
+5. **Hunt.** For each decision, ask:
    - What hidden assumption makes this work?
-   - What does this implicitly forbid that might be needed later?
-   - What environment/dependency is it sensitive to?
+   - What does it implicitly forbid that may be needed later?
+   - What environment or dependency is it sensitive to?
    - What's the blast radius if it's wrong?
-   - What does it not cover that probably should be covered?
-   One risk per concrete failure mode — not abstract categories.
-   Where step 3b surfaced a real prior failure, prefer it over a speculative one.
+   - What does it fail to cover?
 
-5. For each risk:
-   - Mint the next R-NNN by running `python3 ~/.treenail/scripts/mint_id.py <risks-dir> R` (e.g. `docs/risks` or `docs/features/<feature>/risks`). The script executes the **ID reservation protocol** — filesystem-arbitrated max over active + archive, atomic no-clobber claim, retry on collision — and prints the claimed `R-NNN` and its (empty) file path. Don't take the max from INDEX; it may lag. (Fall back to the protocol by hand per CONVENTIONS-SPEC.md if `python3` is unavailable.)
-   - Write the body into the claimed `risks/R-NNN.md` per the RISKS section of `CONVENTIONS-SPEC.md`. Disposition: `pending`. Date, Disposition rationale, and Action stay empty — `triage-risks` fills them in.
-   - Set `Related decisions: D-NNN` linking to the source decision(s).
-   - Add its INDEX line: append `R-NNN | pending | <severity> | <title>` to `risks/INDEX.md`, or after writing all risks run `python3 ~/.treenail/scripts/reindex.py <scope-dir> risks` (preferred when you wrote several).
+   One risk per *concrete* failure mode, not abstract categories. Prefer evidence-backed failure modes over speculative ones.
 
-6. Don't propose fixes. Triage is the next skill's job. Stay in failure-mode-finding mode.
+6. **Write each risk.**
+   - `python3 ~/.treenail/scripts/bootstrap.py <scope-dir> risks` once.
+   - `python3 ~/.treenail/scripts/mint_id.py <scope-dir>/risks R` per risk; body per spec § RISKS. Set Severity and Likelihood and `Disposition: pending`; leave Date, Disposition rationale, and Action empty; `Related decisions` names the source decision(s).
+   - `python3 ~/.treenail/scripts/reindex.py <scope-dir> risks`.
 
-7. Don't pad. If you don't see a meaningful risk in an area, say so. A short honest list beats a long ceremonial one.
+## Never
 
-8. On first run, ensure `docs/CONVENTIONS-SPEC.md` exists; if not, copy [~/.treenail/conventions-spec.md](~/.treenail/conventions-spec.md) and [~/.treenail/conventions-examples.md](~/.treenail/conventions-examples.md) to `docs/`.
+- Propose fixes. That's `triage-risks`.
+- Pad. If an area has no meaningful risk, say so; a short honest list beats a long ceremonial one.
+
+## Next
+
+- `triage-risks`.

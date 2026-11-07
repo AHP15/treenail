@@ -11,9 +11,11 @@ Usage:
                      [--today YYYY-MM-DD]
 
   --dry-run       print what would move; write nothing.
-  --confirm-risk  comma-separated fix/defer risks the user has explicitly
-                  confirmed are spent. For these, Date resolved is filled
-                  before moving if absent.
+  --confirm-risk  comma-separated risks the user has explicitly confirmed
+                  are spent: fix/defer risks (which never reap without it;
+                  Date resolved is filled before moving if absent), or
+                  accept risks newer than the latest retrospective boundary
+                  (their Date already serves as the terminal date).
   --today         date used for Date resolved (default: UTC today).
 
 Exit codes: 0 success; 1 blocked move; 2 usage error.
@@ -164,6 +166,8 @@ def main(argv):
             d = parse_iso(fields.get("Date", ""))
             if boundary and d and d <= boundary:
                 to_move.append(("risks", rid, path, "accept reviewed"))
+            elif rid in confirmed:
+                to_move.append(("risks", rid, path, "accept user-confirmed"))
             else:
                 skipped.append((rid, "accept awaiting retrospective boundary"))
         elif disp in {"fix", "defer"}:
@@ -186,7 +190,7 @@ def main(argv):
     changed = set()
     blocked = []
     for artifact, rid, path, note in to_move:
-        if artifact == "risks" and "confirmed" in note:
+        if artifact == "risks" and note.endswith(" confirmed"):
             ensure_date_resolved(path, today)
         ok, dest = move_to_archive(path, artifact)
         if not ok:

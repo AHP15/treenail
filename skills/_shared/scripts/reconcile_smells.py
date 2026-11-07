@@ -13,7 +13,7 @@ output. The three smells are the missing symmetric halves of checks the
 pipeline already does the failure-half of:
 
   1. UN-RED-TEAMED DECISION — an accepted decision with zero risks pointing
-     at it. (audit already warns the inverse: a risk with no Related
+     at it. (audit already notes the inverse: a risk with no Related
      decisions.) A load-bearing decision that attracted no failure-mode
      hypothesis was either trivial or never adversarially examined.
 

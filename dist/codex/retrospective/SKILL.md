@@ -4,32 +4,50 @@ description: Harvest calibration signal from a completed planning cycle by walki
 ---
 > Provider note (Codex CLI): when a step calls for interviewing the user, ask each question in plain prose — state your recommended answer, ask if it works, and wait for the reply; there is no option-picker UI. When writing multiple Evidence anchors, comma-separate them and backtick each one.
 
-Read prior retrospective + current artifact state. Write a new retrospective file. Do not modify decisions/risks/tasks.
+> Treenail shared runtime: paths under `~/.treenail` are the installed Treenail runtime. If the `TREENAIL_HOME` environment variable is set, read every `~/.treenail/...` path as `$TREENAIL_HOME/...` instead. If a scripted step fails because that runtime is absent (a `~/.treenail/...` path does not exist), do not surface the raw path error — tell the user plainly that the Treenail runtime is missing and to run `npx treenail install`, then stop.
 
-1. Scope. Project- or feature-level. Retrospectives live in `retrospectives/` (project-level: `/docs/retrospectives/`; feature-level: `/docs/features/<feature>/retrospectives/`).
+> Treenail skill-pack version: 0.1.0. When you run a `~/.treenail/scripts/*.py` command, append `--skill-version 0.1.0` so the runtime can catch a skill-text / runtime version mismatch and tell you to run `npx treenail update` (T-018).
 
-2. Prior context. Read `retrospectives/INDEX.md`. If non-empty, load the most recent retrospective file — its `Watch-for` is what to grade in this retro's Prior watch-for review.
+> Python 3 preflight: this skill runs Treenail scripts, which need Python 3 (there is no by-hand fallback). Before any interview or analysis work, confirm Python 3 runs (`python3 --version`, or `py -3 --version` on Windows). If it does not, stop immediately and tell the user "Python 3 required — see install docs"; do not begin the work, so nothing completed is lost to a script failure.
 
-3. Cycle boundary. Confirm with the user what period this retro covers (date range, milestone, "since last retrospective"). Record it two ways: a human `Cycle` line, and a machine-readable **`Boundary-end: YYYY-MM-DD`** — the last day the cycle covers. `Boundary-end` is load-bearing: it is the frontier `archive-cycle` uses to decide which reaped records are safe to compact (everything terminal at or before it has now been harvested by this retro). For an open-ended "since last retrospective" cycle, set `Boundary-end` to today (the write date). Without a parseable `Boundary-end`, compaction will safely skip — so always emit it.
+Grade the plan against what happened this cycle, and write a dated retrospective whose `Watch-for` list steers the next `challenge-me` and `red-team-me` runs.
 
-4. Gather evidence. Walk both the active `<artifact>/INDEX.md` and the `<artifact>/archive/INDEX.md` files; load specific records when citing them or when a one-line INDEX entry isn't enough. Records that turned terminal this cycle may already have been reaped into `archive/` (continuous reaping keeps the active set bounded) — their lines now live in `archive/INDEX.md` and their bodies are **uncompacted there, full prose intact**, so resolve each cited ID against both `<artifact>/<ID>.md` and `<artifact>/archive/<ID>.md`. This is the read that must happen *before* compaction, which is exactly why `archive-cycle` compacts only records a retrospective has already covered.
-   - **Risks materialized**: dispositions that fired (`accept`s where the failure occurred, `defer`s whose triggers tripped, `mitigate`s that had to expand). Load the R-NNN.md to cite specifics.
-   - **Risks didn't**: `defer`s well outside trigger range; `mitigate`s where the guard was over-engineered.
-   - **Decisions held**: `accepted` still implemented with no related risks materialized.
-   - **Decisions broke**: `superseded` or `deprecated` this cycle. Load both old and new D-NNN.md to cite the trigger.
-   - **Silent reversals**: from `reconcile-status`'s last anomaly report.
-   - **Tasks dropped mid-cycle**: read INDEX, cite Notes lines from T-NNN.md (load only those).
-   - **Spikes**: did they resolve cleanly, or trigger cascades / re-splits?
-   - **Prior watch-for**: each item from prior retro — hit, partial, didn't, plus misses (things that hit without being on the list).
+**Reads:** the previous retrospective; `decisions/`, `risks/`, `tasks/` — both the active and the `archive/` INDEX files, plus the bodies you cite; the spec is `docs/CONVENTIONS-SPEC.md`.
+**Writes:** `retrospectives/YYYY-MM-DD.md` + `retrospectives/INDEX.md`.
 
-5. Patterns. 2-5 calibration claims, each backed by ≥2 evidence items. These describe how this team mis-calibrates.
+## Steps
 
-6. Watch-for. 3-7 concrete items for the next cycle, each tied to a pattern. These are the instructions for the next `challenge-me` and `red-team-me`.
+1. **Scope.** Project (`docs/retrospectives/`) or one feature (`docs/features/<name>/retrospectives/`).
 
-7. Prior watch-for review. Mandatory from the second retro onward. Empty section on first only.
+2. **Prior context.** Load the newest retrospective named in `retrospectives/INDEX.md`. Its `Watch-for` is what you will grade.
 
-8. Write the file. Filename: `YYYY-MM-DD.md` in `retrospectives/`. Include the `Boundary-end` field (step 3). Append one line to `retrospectives/INDEX.md`: `YYYY-MM-DD | <cycle name>`. Follow the RETROSPECTIVES section of CONVENTIONS-SPEC.md.
+3. **Cycle boundary.** Confirm with the user what period this covers. Record it twice:
+   - a human `Cycle` line;
+   - a machine-readable **`Boundary-end: YYYY-MM-DD`** (today, for "since last retro").
 
-9. Do not modify decisions/risks/tasks. Recommendations live in Watch-for; supersessions still flow through `challenge-me`, re-triages through `triage-risks`.
+   `Boundary-end` is load-bearing: `archive-cycle` compacts only records whose terminal date is on or before it, and does nothing without it.
 
-10. After writing, recommend running the `archive-cycle` skill — now that this retro has harvested them, it will compact the records that became terminal during this cycle (and reap any newly-terminal ones still in the active dir).
+4. **Gather evidence.** Records that went terminal this cycle may already be reaped into `archive/` with their full prose, so resolve every cited ID against both dirs. Load bodies only for what you cite.
+   - **Risks materialized** — accepts that occurred, defers whose triggers tripped, mitigations that had to expand.
+   - **Risks didn't** — defers far outside their trigger range, over-engineered guards.
+   - **Decisions held** — still accepted and implemented, with no related risk materialized.
+   - **Decisions broke** — superseded or deprecated this cycle. Cite the trigger from both bodies.
+   - **Silent reversals** — from `reconcile-status`.
+   - **Tasks dropped mid-cycle** — cite their Notes.
+   - **Spikes** — did each resolve cleanly, or trigger cascades and re-splits?
+   - **Prior watch-for** — each item marked hit, partial, or didn't, plus misses (things that hit but weren't on the list). Mandatory from the second retrospective on.
+
+5. **Patterns.** Write 2-5 calibration claims about how this team mis-calibrates, each backed by at least 2 evidence items.
+
+6. **Watch-for.** Write 3-7 concrete items for next cycle, each tied to a pattern.
+
+7. **Write** `retrospectives/YYYY-MM-DD.md` per spec § RETROSPECTIVES, then `python3 ~/.treenail/scripts/reindex.py <scope-dir> retrospectives`.
+
+## Never
+
+- Modify decisions, risks, or tasks; recommendations go in Watch-for.
+- Rewrite a prior retrospective. That would destroy calibration signal.
+
+## Next
+
+- `archive-cycle`, to compact the records this retrospective has now harvested.

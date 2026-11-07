@@ -10,120 +10,40 @@ description: Keep the active per-record set bounded to in-flight work. Reaps ter
 
 > Python 3 preflight: this skill runs Treenail scripts, which need Python 3 (there is no by-hand fallback). Before any interview or analysis work, confirm Python 3 runs (`python3 --version`, or `py -3 --version` on Windows). If it does not, stop immediately and tell the user "Python 3 required — see install docs"; do not begin the work, so nothing completed is lost to a script failure.
 
-Two decoupled operations, both safe to run any time (idempotent). The
-**reap** keeps the active read path bounded *within* a cycle; the
-**compact** shrinks records a retrospective has already harvested. See
-the ARCHIVAL section of CONVENTIONS-SPEC.md.
+Two decoupled, idempotent operations (spec § ARCHIVAL): **reap** moves terminal records out of the active dir so the hot read path stays bounded; **compact** shrinks archived records a retrospective has already harvested.
 
-1. Scope. Project- or feature-level. Process `decisions/`, `risks/`,
-   `tasks/` for the chosen scope. Do not cross scopes.
+**Reads:** `decisions/`, `risks/`, `tasks/` (active + archive), latest `retrospectives/*.md`; the spec is `docs/CONVENTIONS-SPEC.md`.
+**Writes:** record file *locations* and compacted bodies; `Date resolved` on confirmed `fix`/`defer` risks; INDEX files (via script).
 
-## Step 1 — Reap (run on cadence; keeps the active set bounded)
+## Steps
 
-2. Find terminal records in the **active** directory:
-   - **Decision**: Status ∈ {`superseded`, `deprecated`, `promoted`}.
-   - **Risk**: no disposition reaps purely on its own state — an
-     accepted, fixed, or deferred risk is still a standing concern that
-     `challenge-me`/`red-team-me` (which read only the active INDEX)
-     should keep seeing until it has been reviewed. So:
-     - `accept` reaps once a **retrospective has reviewed it** — its
-       `Date` is at or before the latest retrospective's `Boundary-end`
-       (the same frontier `compact-select.py` reports; read it from the
-       latest `retrospectives/*.md`) — or on explicit user confirmation.
-       An accepted risk newer than the last retro stays active; it is live
-       calibration signal the next cycle still wants.
-     - `fix` and `defer` reap **only after user confirmation** — their
-       eligibility turns on state the record does not carry. A `fix` is
-       spent only once its superseding decision is actually *implemented*,
-       and implementation status is **not stored** (it is derived by
-       `reconcile-status`), so do not infer it from the record — optionally
-       run/cite the `reconcile-status` skill for the fixing decision, then confirm.
-       A `defer` is spent only once its trigger has passed without firing,
-       which is a judgment.
-     List every accept/fix/defer that is eligible-but-unconfirmed and
-     confirm before reaping (accepts already past a retro boundary may be
-     reaped without re-asking).
-   - **Task**: Status ∈ {`done`, `dropped`}. No date gate.
+1. **Scope.** Project (`docs`) or one feature (`docs/features/<name>`). Never cross scopes.
 
-3. Run the mechanical reap:
+2. **Reap — dry run.** `python3 ~/.treenail/scripts/archive_cycle.py <scope-dir> --dry-run`. The script decides eligibility:
+   - decisions `superseded` / `deprecated` / `promoted`, and tasks `done` / `dropped` → reap;
+   - `accept` risks → reap once their `Date` ≤ the latest retrospective's `Boundary-end`;
+   - `fix` / `defer` risks → **never** without explicit confirmation. A `fix` is spent only when its superseding decision is *implemented* (derived, not stored — cite the `reconcile-status` skill); a `defer` only when its trigger passed without firing. Both are judgments.
 
-   ```
-   python3 ~/.treenail/scripts/archive_cycle.py <scope-dir> --dry-run
-   python3 ~/.treenail/scripts/archive_cycle.py <scope-dir> [--confirm-risk R-NNN,R-MMM]
-   ```
+3. **Confirm.** For every `skip` line (`fix`/`defer` awaiting confirmation, `accept` awaiting a boundary), ask the user which are spent. Then run for real: `python3 ~/.treenail/scripts/archive_cycle.py <scope-dir> [--confirm-risk R-NNN,R-MMM]`. It moves files with full prose, fills `Date resolved` on confirmed `fix`/`defer` risks, and rebuilds the affected indexes.
 
-   The script moves each eligible `<artifact>/<ID>.md` →
-   `<artifact>/archive/<ID>.md` with full body retained, then rebuilds the
-   affected active and archive indexes from the per-record files. Use
-   `--confirm-risk` only for `fix`/`defer` risks the user explicitly
-   confirmed are spent; the script fills `Date resolved` on those risks
-   before moving them so compaction has a truthful terminal date.
+4. **Compact — select.** `python3 ~/.treenail/scripts/compact-select.py <scope-dir>`. If it exits 1 (**NO BOUNDARY**), skip compaction entirely — prose must never collapse before a retrospective has read it. Otherwise it lists `COMPACT` / `hold` / `SKIP` per record (`SKIP` = no parseable terminal date: report it as a record to fix).
 
-## Step 2 — Compact (run at cycle boundary; shrinks consumed records)
+5. **Compact — rewrite.** For each `COMPACT` record, replace the body (keep the `## <ID>: <Title>` header) with only:
+   - terminal Status / Disposition (unchanged);
+   - projection-required fields, verbatim: **Size** (tasks), **Severity** and **Likelihood** (risks);
+   - its terminal date fields and **Date archived** (today);
+   - key links: `Supersedes` / `Superseded by` / `Promoted to` / `Promoted from` / `Implements` / `Mitigates` / `Action` / `Evidence` (keep `Evidence` so archived done tasks stay drift-checkable);
+   - **Summary**: 1-2 sentences condensing the prose. ≤5 meaningful lines total; full prose stays in git history.
 
-4. Determine the eligible set deterministically:
+   Compaction does not touch any INDEX line.
 
-   ```
-   python3 ~/.treenail/scripts/compact-select.py <scope-dir>
-   ```
+6. **Report** per artifact: IDs reaped, IDs compacted, and what was skipped awaiting confirmation or a boundary. A no-op run is the normal steady state — say so.
 
-   It finds the consumption frontier — the latest retrospective's
-   machine-readable `Boundary-end` (never fuzzy `Cycle` prose) — and
-   prints, per artifact, the uncompacted archive records eligible to
-   compact (`COMPACT`), those still too new (`hold`), and those it had to
-   `SKIP` (no parseable terminal date). **If it exits non-zero with NO
-   BOUNDARY** — no retrospective carries a parseable `Boundary-end` — then
-   skip compaction entirely: reaped records stay uncompacted in `archive/`
-   (already off the hot path) until a retrospective harvests them. This
-   fail-safe is what guarantees prose is never collapsed before a
-   retrospective could read it. (Hand fallback if `python3` is
-   unavailable: read the latest retro's `Boundary-end` field yourself and
-   apply the same date test.)
+## Never
 
-5. For each record the selector marked **COMPACT** (an uncompacted
-   `archive/` record — full body, no `Summary` — whose terminal date is
-   at or before the frontier), compact in place — replace the body with
-   these fields:
-   - ID
-   - Title
-   - Terminal Status / Disposition (unchanged)
-   - **Projection-required fields**, kept verbatim so the compacted record
-     still yields a complete INDEX line and `reindex` does not flag it
-     malformed: **Size** (tasks) and **Severity** (risks) — both appear in
-     their artifact's INDEX line. Keep **Likelihood** on risks too.
-     (Decisions need only Status, already above.)
-   - Date / Date superseded / Date deprecated / Date promoted /
-     Date resolved / Date done / Date dropped (unchanged)
-   - **Date archived**: today, YYYY-MM-DD
-   - Key links: `Superseded by` / `Supersedes` / `Promoted to` /
-     `Promoted from` / `Implements` / `Mitigates` / `Action` /
-     `Evidence` as applicable (preserve `Evidence` so `reconcile-status`
-     can still drift-check archived `done` tasks)
-   - **Summary**: 1-2 sentences condensing Context+Decision+Rationale
-     (decisions) / Description+Disposition+Action (risks) /
-     Acceptance+Notes (tasks). ≤5 lines of meaningful content total.
+- Change Status, Disposition, or supersession links — archival is never a state transition. The only field reap adds is `Date resolved`, and only on confirmed `fix`/`defer` risks.
+- Reap a `fix`/`defer` risk the user has not confirmed.
 
-   The INDEX line already lives in `<artifact>/archive/INDEX.md` from the
-   reap, and compaction does not touch it — an archive-index line is
-   identical whether the body is full or compacted. Full prose remains in
-   git history.
+## Next
 
-## Always
-
-6. Never change Status, Disposition, or supersession links. Reap may add
-   `Date resolved` only for explicitly confirmed `fix`/`defer` risks;
-   otherwise both steps are path-and-body operations, never state
-   transitions.
-
-7. ID resolution. Cross-references (`Implements: D-019`,
-   `Superseded by: D-023`, etc.) are by ID and must keep resolving.
-   Skills resolving a link check both `<artifact>/<ID>.md` and
-   `<artifact>/archive/<ID>.md` — `audit-artifacts` enforces this.
-
-8. Output. Per artifact: IDs reaped (active → archive), IDs compacted,
-   and a "skipped, awaiting confirmation" section for `fix`/`defer` risks
-   and for `accept` risks not yet past a retrospective boundary. If
-   nothing was eligible, say so — a no-op run is the normal steady state.
-
-9. After running, recommend the `audit-artifacts` skill to verify cross-references
-   still resolve, and the `reindex` skill on the scope if any INDEX line looks off.
+- `audit-artifacts` to confirm cross-references still resolve (IDs resolve against active and `archive/`).
