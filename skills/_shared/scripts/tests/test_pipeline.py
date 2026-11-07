@@ -21,6 +21,7 @@ Run:  python3 -m unittest discover -s _shared/scripts/tests
 """
 
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -227,6 +228,12 @@ class TestReindexProjection(unittest.TestCase):
             for ln in txt.splitlines():
                 self.assertEqual(ln, ln.rstrip(), f"trailing ws in {p}")
                 self.assertTrue(ln.strip(), f"blank line in {p}")
+
+
+    def test_ids_in_skips_scope_qualified_refs(self):
+        self.assertEqual(
+            reindex.ids_in("D-001, project:D-002, feature:billing/D-003 and D-004", "D"),
+            ["D-001", "D-004"])
 
 
 class TestReindexParser(unittest.TestCase):
@@ -568,6 +575,62 @@ class TestAuditCrossChecks(unittest.TestCase):
         self.assertEqual(rc, 0, out)
 
 
+    def _risk(self, path, header, extra=""):
+        write(path, f"""
+            ## {header}
+            - **Severity**: high
+            - **Likelihood**: medium
+            - **Disposition**: accept
+            - **Date**: 2025-01-01
+            - **Description**: x
+            - **Disposition rationale**: y
+            {extra}
+        """)
+
+    def _promoted_risk_pair(self, dest_related):
+        tmp = tempfile.mkdtemp()
+        docs = os.path.join(tmp, "docs")
+        feature = os.path.join(docs, "features", "billing")
+        self._dec(f"{feature}/decisions/D-003.md", "D-003: feature choice")
+        self._dec(f"{docs}/decisions/D-003.md", "D-003: unrelated project choice")
+        self._risk(f"{feature}/risks/R-001.md", "R-001: feature risk", """
+            - **Action**: none
+            - **Related decisions**: D-003
+            - **Promoted to**: project:R-001
+            """)
+        self._risk(f"{docs}/risks/R-001.md", "R-001: promoted risk", f"""
+            - **Action**: none
+            - **Related decisions**: {dest_related}
+            - **Promoted from**: feature:billing/R-001
+            """)
+        run("reindex.py", docs)
+        run("reindex.py", feature)
+        return docs, feature
+
+    def test_promoted_risk_with_verbatim_bare_link_warns(self):
+        docs, feature = self._promoted_risk_pair("D-003")
+        rc, out, _ = run("audit.py", feature, "--project", docs)
+        self.assertIn("copied from R-001", out)
+
+    def test_promoted_risk_with_qualified_link_is_clean(self):
+        docs, feature = self._promoted_risk_pair("feature:billing/D-003")
+        rc, out, _ = run("audit.py", feature, "--project", docs)
+        self.assertEqual(rc, 0, out)
+        self.assertNotIn("copied from", out)
+
+    def test_risk_without_related_decisions_is_info_not_warn(self):
+        tmp = tempfile.mkdtemp()
+        docs = os.path.join(tmp, "docs")
+        self._risk(f"{docs}/risks/R-001.md", "R-001: standalone risk",
+                   "- **Action**: none")
+        run("reindex.py", docs)
+        rc, out, _ = run("audit.py", docs)
+        self.assertEqual(rc, 0, out)
+        info = out.split("== INFO ==")[-1]
+        self.assertIn("no 'Related decisions'", info)
+        self.assertNotIn("== WARN ==", out)
+
+
 class TestCompactSelect(unittest.TestCase):
     def test_no_boundary_returns_1_and_skips(self):
         tmp = tempfile.mkdtemp()
@@ -679,6 +742,30 @@ class TestArchiveCycleReap(unittest.TestCase):
         self.assertIn("- **Date resolved**: 2025-12-02", body)
         with open(f"{docs}/risks/archive/INDEX.md", encoding="utf-8") as fh:
             self.assertIn("R-003 | fix | high |", fh.read())
+
+
+    def test_accept_risk_reaps_only_after_boundary_or_confirmation(self):
+        tmp = tempfile.mkdtemp()
+        docs = build_clean_scope(tmp)
+        write(f"{docs}/risks/R-004.md", """
+            ## R-004: Accepted residual
+            - **Severity**: low
+            - **Likelihood**: low
+            - **Disposition**: accept
+            - **Date**: 2099-01-01
+            - **Description**: x.
+            - **Disposition rationale**: y.
+            - **Action**: none
+            - **Related decisions**: D-001
+        """)
+        run("reindex.py", docs, "risks")
+        rc, out, _ = run("archive_cycle.py", docs, "--dry-run")
+        self.assertIn("skip  R-004  (accept awaiting retrospective boundary)", out)
+        rc, out, _ = run("archive_cycle.py", docs, "--confirm-risk", "R-004")
+        self.assertEqual(rc, 0, out)
+        self.assertIn("accept user-confirmed", out)
+        with open(f"{docs}/risks/archive/R-004.md", encoding="utf-8") as fh:
+            self.assertNotIn("Date resolved", fh.read())
 
 
 class TestMintId(unittest.TestCase):
@@ -923,6 +1010,277 @@ class TestReconcile(unittest.TestCase):
         rc, out, _ = run("reconcile.py", docs, "--root", root)
         self.assertIn("(verified)", out)
         self.assertEqual(rc, 0)
+
+
+class TestBootstrap(unittest.TestCase):
+    def test_fresh_feature_scope_bootstraps_project_root(self):
+        tmp = tempfile.mkdtemp()
+        docs = os.path.join(tmp, "docs")
+        feature = os.path.join(docs, "features", "billing")
+        rc, out, _ = run("bootstrap.py", feature)
+        self.assertEqual(rc, 0, out)
+        for rel in ("CONVENTIONS-SPEC.md", "CONVENTIONS-EXAMPLES.md"):
+            self.assertTrue(os.path.isfile(os.path.join(docs, rel)), rel)
+        with open(os.path.join(docs, ".treenail-version"), encoding="utf-8") as fh:
+            self.assertEqual(fh.read().strip(), "1")
+        for art in ("decisions", "risks", "tasks"):
+            self.assertTrue(os.path.isfile(os.path.join(feature, art, "INDEX.md")))
+        self.assertFalse(os.path.exists(os.path.join(feature, "CONVENTIONS-SPEC.md")))
+
+    def test_idempotent_and_never_clobbers(self):
+        tmp = tempfile.mkdtemp()
+        docs = os.path.join(tmp, "docs")
+        write(f"{docs}/decisions/INDEX.md", "D-001 | accepted | Keep me\n")
+        write(f"{docs}/CONVENTIONS-SPEC.md", "locally edited\n")
+        run("bootstrap.py", docs, "decisions")
+        rc, out, _ = run("bootstrap.py", docs, "decisions")
+        self.assertEqual(rc, 0)
+        self.assertIn("already set up", out)
+        with open(f"{docs}/decisions/INDEX.md", encoding="utf-8") as fh:
+            self.assertEqual(fh.read(), "D-001 | accepted | Keep me\n")
+        with open(f"{docs}/CONVENTIONS-SPEC.md", encoding="utf-8") as fh:
+            self.assertEqual(fh.read(), "locally edited\n")
+
+    def test_unknown_artifact_is_usage_error(self):
+        rc, _, err = run("bootstrap.py", tempfile.mkdtemp(), "widgets")
+        self.assertEqual(rc, 2)
+        self.assertIn("unknown artifact", err)
+
+
+class TestSettle(unittest.TestCase):
+    """Settled decisions: accepted, implemented with verified Evidence, no
+    open risk, and covered by a retrospective → out of the working set
+    (decisions/archive/, Status still accepted); reversible on drift."""
+
+    def _scope(self, boundary="2025-03-01", risk_disp=None):
+        root = tempfile.mkdtemp()
+        write(os.path.join(root, "src/auth/refresh.ts"),
+              "export function rotateRefreshToken() { return 1; }\n")
+        docs = os.path.join(root, "docs")
+        write(f"{docs}/decisions/D-001.md", """
+            ## D-001: Rotate refresh tokens
+            - **Status**: accepted
+            - **Date**: 2025-01-01
+            - **Context**: x
+            - **Decision**: y
+            - **Rationale**: z
+        """)
+        write(f"{docs}/tasks/archive/T-001.md", """
+            ## T-001: rotate
+            - **Status**: done
+            - **Size**: M
+            - **Implements**: D-001
+            - **Acceptance**: x.
+            - **Evidence**:
+              - `symbol:src/auth/refresh.ts:rotateRefreshToken`
+            - **Date done**: 2025-02-01
+        """)
+        if boundary:
+            write(f"{docs}/retrospectives/{boundary}.md", f"""
+                ## Retrospective: {boundary}
+                - **Cycle**: Q1
+                - **Boundary-end**: {boundary}
+                - **Date**: {boundary}
+            """)
+        if risk_disp:
+            write(f"{docs}/risks/R-001.md", f"""
+                ## R-001: Token replay
+                - **Severity**: high
+                - **Likelihood**: medium
+                - **Disposition**: {risk_disp}
+                - **Date**: 2025-01-02
+                - **Description**: x.
+                - **Disposition rationale**: y.
+                - **Action**: Guard it. Tracked as T-001.
+                - **Related decisions**: D-001
+            """)
+        run("reindex.py", docs)
+        return root, docs
+
+    def _cycle(self, root, docs, *extra):
+        return run("archive_cycle.py", docs, "--root", root, *extra)
+
+    def test_qualifying_decision_settles_and_stays_accepted(self):
+        root, docs = self._scope()
+        rc, out, _ = self._cycle(root, docs)
+        self.assertEqual(rc, 0, out)
+        self.assertIn("SETTLE  decisions/D-001", out)
+        self.assertTrue(os.path.exists(f"{docs}/decisions/archive/D-001.md"))
+        with open(f"{docs}/decisions/archive/INDEX.md", encoding="utf-8") as fh:
+            self.assertIn("D-001 | accepted | Rotate refresh tokens", fh.read())
+        with open(f"{docs}/decisions/INDEX.md", encoding="utf-8") as fh:
+            self.assertNotIn("D-001", fh.read())
+        # reconcile summarizes it instead of listing it; audit stays clean;
+        # compaction never touches it
+        rc, out, _ = run("reconcile.py", docs, "--root", root)
+        self.assertEqual(rc, 0, out)
+        self.assertIn("1 settled", out)
+        self.assertIn("== SETTLED (still verified; not listed) ==", out)
+        self.assertNotIn("D-001: implemented", out)
+        rc, out, _ = run("audit.py", docs)
+        self.assertEqual(rc, 0, out)
+        rc, out, _ = run("compact-select.py", docs)
+        self.assertNotIn("D-001", out)
+        # idempotent: a second run moves nothing
+        rc, out, _ = self._cycle(root, docs)
+        self.assertIn("no records eligible to move", out)
+
+    def test_waits_for_retrospective_boundary(self):
+        root, docs = self._scope(boundary="2025-01-15")  # before Date done
+        rc, out, _ = self._cycle(root, docs, "--dry-run")
+        self.assertIn("skip  D-001  (settle awaiting retrospective boundary)", out)
+        root, docs = self._scope(boundary=None)
+        rc, out, _ = self._cycle(root, docs, "--dry-run")
+        self.assertNotIn("SETTLE", out)
+
+    def test_open_risk_blocks_settling_but_accept_does_not(self):
+        root, docs = self._scope(risk_disp="mitigate")
+        rc, out, _ = self._cycle(root, docs, "--dry-run")
+        self.assertNotIn("SETTLE", out)
+        root, docs = self._scope(risk_disp="accept")
+        rc, out, _ = self._cycle(root, docs, "--dry-run")
+        self.assertIn("SETTLE  decisions/D-001", out)
+
+    def test_drift_unsettles(self):
+        root, docs = self._scope()
+        self._cycle(root, docs)
+        self.assertTrue(os.path.exists(f"{docs}/decisions/archive/D-001.md"))
+        os.remove(os.path.join(root, "src/auth/refresh.ts"))  # code ripped out
+        rc, out, _ = run("reconcile.py", docs, "--root", root)
+        self.assertEqual(rc, 1)  # drift
+        self.assertIn("SETTLED DECISION REOPENED: D-001", out)
+        rc, out, _ = self._cycle(root, docs)
+        self.assertEqual(rc, 0, out)
+        self.assertIn("UNSETTLE  decisions/D-001", out)
+        self.assertTrue(os.path.exists(f"{docs}/decisions/D-001.md"))
+        with open(f"{docs}/decisions/INDEX.md", encoding="utf-8") as fh:
+            self.assertIn("D-001 | accepted", fh.read())
+
+    def test_new_implementing_task_unsettles(self):
+        root, docs = self._scope()
+        self._cycle(root, docs)
+        write(f"{docs}/tasks/T-002.md", """
+            ## T-002: extend rotation to service tokens
+            - **Status**: todo
+            - **Size**: S
+            - **Implements**: D-001
+            - **Acceptance**: x.
+        """)
+        run("reindex.py", docs, "tasks")
+        rc, out, _ = self._cycle(root, docs)
+        self.assertIn("UNSETTLE  decisions/D-001  (no longer settled: in_progress)", out)
+
+
+class TestWaves(unittest.TestCase):
+    """Parallel-wave selection: dependency gating, conflict splitting by
+    shared decision or overlapping footprint, unscoped tasks alone, --max."""
+
+    def _task(self, docs, tid, implements, evidence="", status="todo",
+              depends="", mitigates=""):
+        extra = ""
+        if depends:
+            extra += f"\n- **Depends on**: {depends}"
+        if mitigates:
+            extra += f"\n- **Mitigates**: {mitigates}"
+        if evidence:
+            extra += f"\n- **Evidence**: {evidence}"
+        write(f"{docs}/tasks/{tid}.md", f"""
+## {tid}: task {tid}
+- **Status**: {status}
+- **Size**: S
+- **Implements**: {implements}{extra}
+- **Acceptance**: x.
+""")
+
+    def _docs(self):
+        return os.path.join(tempfile.mkdtemp(), "docs")
+
+    def _wave(self, out):
+        block = out.split("WAVE (", 1)[1].split("\n\n", 1)[0]
+        return re.findall(r"^  (T-\d+)", block, re.MULTILINE)
+
+    def test_disjoint_tasks_share_a_wave(self):
+        docs = self._docs()
+        self._task(docs, "T-001", "D-001", "`grep:login in src/auth/`")
+        self._task(docs, "T-002", "D-002", "`file:src/billing/invoice.ts`")
+        self._task(docs, "T-003", "D-003", "`symbol:cli/main.js:run`")
+        rc, out, _ = run("waves.py", docs)
+        self.assertEqual(rc, 0, out)
+        self.assertEqual(self._wave(out), ["T-001", "T-002", "T-003"])
+
+    def test_overlapping_footprint_and_shared_decision_split(self):
+        docs = self._docs()
+        self._task(docs, "T-001", "D-001", "`grep:login in src/auth/`")
+        self._task(docs, "T-002", "D-002", "`file:src/auth/session.ts`")
+        self._task(docs, "T-003", "D-001", "`file:docs/guide.md`")
+        rc, out, _ = run("waves.py", docs)
+        self.assertEqual(self._wave(out), ["T-001"])
+        self.assertIn("T-002  conflicts with T-001: overlapping footprint src/auth/session.ts", out)
+        self.assertIn("T-003  conflicts with T-001: both implement D-001", out)
+
+    def test_whole_tree_grep_conflicts_with_everything(self):
+        docs = self._docs()
+        self._task(docs, "T-001", "D-001", "`grep:featureFlag`")
+        self._task(docs, "T-002", "D-002", "`file:src/a.ts`")
+        rc, out, _ = run("waves.py", docs)
+        self.assertEqual(self._wave(out), ["T-001"])
+        self.assertIn("(whole tree)", out)
+
+    def test_dependencies_gate_eligibility(self):
+        docs = self._docs()
+        self._task(docs, "T-001", "D-001", "`file:src/a.ts`")
+        self._task(docs, "T-002", "D-002", "`file:src/b.ts`", depends="T-001")
+        self._task(docs, "T-003", "D-003", "`file:src/c.ts`", status="done")
+        self._task(docs, "T-004", "D-004", "`file:src/d.ts`", depends="T-003")
+        rc, out, _ = run("waves.py", docs)
+        self.assertEqual(self._wave(out), ["T-001", "T-004"])
+        self.assertIn("T-002  waiting on T-001:todo", out)
+
+    def test_unscoped_runs_alone_only_when_nothing_scoped_is_eligible(self):
+        docs = self._docs()
+        self._task(docs, "T-001", "D-001")  # no anchors
+        self._task(docs, "T-002", "D-002", "`file:src/b.ts`")
+        rc, out, _ = run("waves.py", docs)
+        self.assertEqual(self._wave(out), ["T-002"])
+        self.assertIn("T-001  unscoped", out)
+        docs = self._docs()
+        self._task(docs, "T-001", "D-001")
+        self._task(docs, "T-002", "D-002")
+        rc, out, _ = run("waves.py", docs)
+        self.assertEqual(self._wave(out), ["T-001"])
+
+    def test_max_caps_and_priority_orders_the_wave(self):
+        docs = self._docs()
+        write(f"{docs}/risks/R-001.md", """
+            ## R-001: Breach
+            - **Severity**: critical
+            - **Likelihood**: high
+            - **Disposition**: mitigate
+            - **Description**: x.
+        """)
+        for n in range(1, 8):
+            self._task(docs, f"T-00{n}", f"D-00{n}", f"`file:src/m{n}.ts`")
+        self._task(docs, "T-009", "D-009", "`file:src/m9.ts`", mitigates="R-001")
+        self._task(docs, "T-010", "D-010", "`file:src/m10.ts`", status="in_progress")
+        rc, out, _ = run("waves.py", docs)
+        self.assertEqual(self._wave(out),
+                         ["T-010", "T-009", "T-001", "T-002", "T-003"])
+        self.assertIn("wave is full (--max 5)", out)
+        rc, out, _ = run("waves.py", docs, "--max", "2")
+        self.assertEqual(self._wave(out), ["T-010", "T-009"])
+
+    def test_only_restricts_and_nothing_eligible_exits_1(self):
+        docs = self._docs()
+        self._task(docs, "T-001", "D-001", "`file:src/a.ts`")
+        self._task(docs, "T-002", "D-002", "`file:src/b.ts`")
+        rc, out, _ = run("waves.py", docs, "--only", "T-002")
+        self.assertEqual(self._wave(out), ["T-002"])
+        self._task(docs, "T-001", "D-001", "`file:src/a.ts`", status="done")
+        self._task(docs, "T-002", "D-002", "`file:src/b.ts`", status="done")
+        rc, out, _ = run("waves.py", docs)
+        self.assertEqual(rc, 1)
+        rc, _, err = run("waves.py", docs, "--max", "0")
+        self.assertEqual(rc, 2)
 
 
 if __name__ == "__main__":

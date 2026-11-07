@@ -3,81 +3,69 @@ name: extract-decisions
 description: Reverse-engineer planning artifacts from an existing, undocumented codebase by anchoring in what shipped — inventory the built capabilities as `done` tasks (real git dates, verified Evidence anchors), factor the load-bearing decisions those tasks embody (as `accepted`), surface the standing risks visible in the tree (as `pending`), and flag the built-but-not-decided code no decision explains. Use to bootstrap `docs/` for a brownfield project that has code but no decision/risk/task records, before running the normal pipeline (`audit-artifacts` → `reconcile-status` → `triage-risks`). The code-reading, tasks-first counterpart of `challenge-me`. Reach for this whenever you're staring at an undocumented codebase and need its planning record reconstructed, even if the user doesn't name the skill.
 ---
 
-Read an existing codebase and reconstruct the planning record it never wrote. `challenge-me` elicits decisions you are *about to* make by interviewing; this recovers decisions already *made and shipped* by reading the tree. It is the brownfield ingress: every other skill assumes `docs/` is seeded, and this is what seeds it.
+Reconstruct the planning record an existing codebase never wrote. This is the brownfield way in: `challenge-me` elicits decisions about to be made; this recovers decisions already made and shipped.
 
-**The certainty gradient inverts, so the spine inverts.** Greenfield flows from the most-certain artifact (the decision — a choice in someone's head) to the most-derived (the task). Brownfield's most-certain artifact is the shipped code, and code is *task-shaped*: "this was built" is the lowest-inference observation available. The decision is now the inferred layer and the rationale the most inferred. So this skill runs in two phases with **opposite orientations**: it *observes* tasks-first (anchor in what shipped), then *writes* decisions-first (a task's `Implements` and a risk's `Related decisions` are foreign keys that must resolve before they can be written). That opposition is the design, not an accident.
+In brownfield the most certain artifact is shipped code, and code is task-shaped. So **observe tasks-first** (what was built is the lowest-inference fact), then **write decisions-first** (tasks and risks hold foreign keys to decisions, so decisions must exist on disk first). The headline finding falls out of this: **built-but-not-decided** code that no decision explains.
 
-The headline brownfield finding falls out of anchoring on tasks: the gap between *everything built* and *everything a real decision explains* is **built-but-not-decided** code — the thing a decision-spine extraction is structurally blind to.
+**Reads:** the working tree, `git log` / `blame`, optionally the Graphiti graph; the spec is `docs/CONVENTIONS-SPEC.md`.
+**Writes:** `decisions/`, `tasks/`, `risks/` records + INDEX files, and the conventions bootstrap.
 
-Output feeds straight into the pipeline: `audit-artifacts` → `reconcile-status` → `triage-risks`. After that, go-forward work uses `challenge-me`/`red-team-me`.
+## Phase A — Observe (read-only)
 
----
+1. **Scope.** Project or one feature. Use only for undocumented code — if `decisions/` (active, or settled `| accepted |` lines in `decisions/archive/INDEX.md`) already covers the area, use `challenge-me` instead. Confirm scope with the user.
 
-## Phase A — Observe (read-only; anchor in what shipped)
+2. **Inventory built capabilities, git included.** Walk the tree by capability, not by file: manifests and lockfiles, entrypoints, config and environment, schema and migrations, module boundaries, trust boundaries (auth, validation, external calls), and the core abstractions everything imports. Each one becomes a provisional task with:
+   - Evidence anchors you have verified resolve;
+   - the **real landing date from git**;
+   - a provisional *why* from commit or PR messages.
 
-1. **Scope + when to use.** Project-level (`/docs/`) or feature-level (`/docs/features/<feature>/`). Use only for code that exists but is undocumented. If `decisions/` already covers this area, use `challenge-me` for new decisions instead — do not re-extract what is recorded. Confirm scope with the user before writing.
+3. **Factor decisions by leverage.** Pull the hard-to-reverse choices out of the inventory. The mapping is many-to-many: Postgres runs through many tasks, and one auth task embodies several choices. Recurse into load-bearing sub-choices. Tag each choice **deliberate** (a commit weighs the tradeoff) or **emergent** (a pattern that just appeared).
 
-2. **Conventions bootstrap.** Ensure `docs/CONVENTIONS-SPEC.md` exists; if not, copy [../_shared/conventions-spec.md](../_shared/conventions-spec.md) → `docs/CONVENTIONS-SPEC.md` and [../_shared/conventions-examples.md](../_shared/conventions-examples.md) → `docs/CONVENTIONS-EXAMPLES.md`, and write the spec version (the `Spec-version:` line from conventions-spec.md, e.g. `1`) into `docs/.treenail-version` so the scripts can dispatch on it later (T-022). Ensure `decisions/INDEX.md`, `risks/INDEX.md`, and `tasks/INDEX.md` exist for the scope (touch if not).
+4. **Prior art (optional, advisory).** `python3 ~/.claude/skills/_shared/scripts/graph_query.py docs "<area>" --scope all`. Hits are framing input only; this scope's code is the authority.
 
-3. **Inventory the built things — git included.** This is the primary step; everything else derives from it. Walk the tree for coherent built *capabilities*, not per-file: dependency manifests / lockfiles, entrypoints and bootstrapping, config and environment, data schema / migrations, module and package boundaries, trust boundaries (auth, input validation, external calls), and the core abstractions everything imports. **And read `git log` / `blame`** — the working tree shows *what*, git shows *when* and often *why*. Each capability becomes a *provisional task*: a built thing + Evidence anchors you have verified resolve + the **real date from git** (not today) + a provisional *why* lifted from the commit/PR message. Links left blank — they get backfilled in Phase B. Git is doing triple duty here: truthful dates, recovered rationale, and the single best signal for step 4's deliberate-vs-emergent split.
+5. **Observed vs inferred.** Decision and Context are observed, so anchor them to paths, symbols, and config keys. Rationale is usually inferred: write `Rationale (inferred): …` where it is a guess. A short honest record beats a confident fictional one.
 
-4. **Factor decisions by leverage — many-to-many, recursive.** Pull the hardest-to-reverse, most load-bearing choices *out of* the inventory rather than re-walking the code. Hold the mapping loosely — it is many-to-many, never one-decision-per-task: one choice (Postgres) smears across many tasks (connection, migrations, ORM config, queries); one task (auth) embodies several choices (auth model, session strategy, token lifetime, hashing). **Recurse:** each top-level choice contains embedded load-bearing sub-choices, and they are as hard-to-reverse and as present in the code as the parent — apply the same leverage test at each depth. Tag each choice **deliberate vs emergent** from the git signal: a commit that weighs the tradeoff ("switch to Postgres, SQLite locking dies under concurrent writes") *is* a decision and its rationale; a pattern that merely appeared with no reasoning is accretion. Nothing written yet.
+6. **Surface risks.** One per concrete failure mode visible in the tree (unbounded query, unauthenticated path, committed secret, single point of failure, untested critical path). Assess **Severity and Likelihood** now; the disposition is `triage-risks`' job. **An actively exploitable finding (a live secret, an open auth bypass) is an incident: tell the user immediately.**
 
-4b. **Prior art (advisory; optional).** If the Graphiti graph is configured, query it per major area so a decision recorded in another scope can inform how you frame this one:
+7. **Find the orphans.** Built things (step 2) minus built things a decision explains (step 3) = built-but-not-decided. Classify each:
+   - **Forgotten intent** → it deserves a decision; mint it in Phase B.
+   - **Genuine accretion** → report only (a task must `Implements`/`Mitigates` something). Exception: if its unknown intent is a hazard (fragile, or might be deleted wrongly), record a standalone `pending` risk with no `Related decisions`.
 
-   ```
-   python3 ~/.claude/skills/_shared/scripts/graph_query.py docs "<the area being reconstructed>" --scope all
-   ```
+## Phase B — Record (decisions → tasks → risks)
 
-   Treat hits as framing input, not constraints — this scope's code is the authority for what this scope decided. If the script is silent (graph unavailable, fresh project, or no hits), proceed unchanged.
+8. **Bootstrap.** `python3 ~/.claude/skills/_shared/scripts/bootstrap.py <scope-dir>`.
 
-5. **Observed vs. inferred — never fabricate.** Split every claim into what the code *shows* and what you are *guessing*. **Decision** and **Context** are observed: anchor them to concrete code (paths, symbols, config keys). **Rationale** is usually inferred — the code shows *what*, rarely *why*; git recovers some of it. Where rationale is a genuine guess, say so in the body (`Rationale (inferred): …`) and surface the uncertain ones to the user in step 8's gate rather than asserting intent the author never recorded. A short honest record beats a confident fictional one.
+9. **Gate, then mint decisions.** Before writing, confirm with the user every extraction where the rationale *or the decision-hood itself* is a guess. Decisions have no status weaker than `accepted`, so the gate is the only place for doubt to go. Record an emergent but load-bearing pattern as `accepted`, saying plainly in the body that it appears emergent.
+   - `python3 ~/.claude/skills/_shared/scripts/mint_id.py <scope-dir>/decisions D`, body per spec § DECISIONS.
+   - `Date:` today (the date it was accepted into the record). Context gives the git date since which the code has embodied it, and cites that code.
 
-6. **Surface risks (observe now, dispose later).** Hunt the concrete failure modes already visible in the tree — unbounded query, missing auth on a path, secret committed, no migration path, single point of failure, untested critical path. One per concrete mode, not abstract category, with a provisional link to the choice it threatens. **Assess Severity *and* Likelihood now** — both are required body fields and both are observed properties (a SPOF is high-severity regardless of what you later decide to do about it). The disposition is *not* yours to set; that is `triage-risks`' job. **Carve-out:** an actively-exploitable finding — a live committed secret, an open auth bypass — is an *incident*, not a backlog item. Flag it to the user immediately, don't just queue it.
+10. **Mint tasks.** `python3 ~/.claude/skills/_shared/scripts/mint_id.py <scope-dir>/tasks T`, body per spec § TASKS:
+    - `Status: done`; `Date done:` the **git landing date**;
+    - `Size:` the capability's rough magnitude; `Implements: D-NNN`;
+    - Acceptance checkable against the current tree; `Notes:` "brownfield-observed at extraction".
+    - **Evidence:** anchor the decision's *invariant* as a behavior-naming `grep:<term> in <dir>/`, not an incidental exact symbol, so a faithful refactor doesn't cause false drift. Verify that every anchor resolves (`rg -l` / path check) before writing it. Explanation goes in Notes, never in Evidence.
+    - Orphans get no task.
 
-7. **Find the orphans — the dual question.** Diff *all built things* (step 3) against *built things a factored decision explains* (step 4). The remainder is **built-but-not-decided**: dead code, cargo-culted patterns, accidental complexity that accreted. This only surfaces because you anchored on tasks. Per orphan, decide which it is:
-   - **Forgotten intent** — a real choice the author never recorded. It deserves a decision; mint it in Phase B and let its task implement it.
-   - **Genuine accretion** — no decision was ever made. Do not manufacture one. Within these conventions an orphan **cannot be its own task** (a task requires a resolving `Implements`/`Mitigates`), so accretion is **report-only** in step 11 — *unless* its unknown intent is a real standing hazard (could be deleted wrongly, could be load-bearing and fragile), in which case record a standalone `pending` risk (a risk's `Related decisions` is optional, so this is legal). Don't force a decision onto code that never had one.
+11. **Mint risks.** `python3 ~/.claude/skills/_shared/scripts/mint_id.py <scope-dir>/risks R`, body per spec § RISKS: Severity and Likelihood from step 6, `Disposition: pending` with Date/rationale/Action empty, and `Related decisions` where one applies.
 
----
+12. **Project.** `python3 ~/.claude/skills/_shared/scripts/reindex.py <scope-dir>`.
 
-## Phase B — Record (decision-rooted; backfill the links)
+13. **Report**, headline first:
+    - **Built-but-not-decided** — each orphan, marked forgotten intent (now a decision) or accretion (report-only, or escalated to a risk).
+    - **Decisions** — ID, title, deliberate/emergent, confidence, and whether confirmed at the gate.
+    - **Tasks** — ID, title, git date, and whether every anchor resolved.
+    - **Mappings** — any non-obvious task↔decision links.
+    - **Risks** — ID, severity, title.
+    - **Left out** — anything deliberately left unrecorded.
 
-Orientation flips: decisions must exist on disk before tasks and risks can point at them. Mint in the order **decisions → tasks → risks**, and claim each ID through the reservation protocol before writing the next so the just-claimed file counts in the next candidate.
+    Caveat to state: at extraction every anchor verifies *by construction*. Their value is as a tripwire for later drift: "verified" means the invariant is still in the tree, not that the decision is faithfully realized.
 
-8. **Mint decisions first — gate the uncertain *before* writing.** Confirm with the user any extraction where the rationale *or the decision-hood itself* is a real guess — before writing, not in the final summary, where you would be asking forgiveness for fiction already minted as `accepted`. The conventions give decisions **no status weaker than `accepted`** (`accepted | superseded | deprecated | promoted`), and INDEX is a deliberately minimal projection with no confidence column — so confidence cannot live in a status or an index field. The two mechanisms are the pre-write gate (so `accepted` genuinely means accepted) and an honest body. For an **emergent-but-load-bearing** pattern, record it `accepted` with the body stating plainly that it appears emergent rather than deliberately chosen: the constraint is real and binds the future regardless of whether anyone intended it, so recording it beats dropping it — the honesty lives in the prose, where the projection can't strip it. Mechanics:
-   - `python3 ~/.claude/skills/_shared/scripts/mint_id.py <decisions-dir> D` (the ID reservation protocol — filesystem-arbitrated max over active + archive, atomic no-clobber claim, retry on collision; never derive the max from INDEX). Hand fallback per `CONVENTIONS-SPEC.md` if no shell.
-   - Write `decisions/D-NNN.md` per the DECISIONS section. ID and Title go in the header `## D-NNN: <Title>` (a record without that header is flagged malformed), not as bullet fields. `Status: accepted`. `Date:` today — but Context notes this records a pre-existing decision embodied in code since the git date from step 3, and cites the code that embodies it. (`Date` = today is deliberate: it is the acceptance-into-the-record date; the real timeline lives in Context. Tasks use the git date — see step 9 — because their date measures something different.)
-   - Add the INDEX line, or run `python3 ~/.claude/skills/_shared/scripts/reindex.py <scope-dir> decisions` after writing all of them (preferred when you wrote several).
+## Never
 
-9. **Mint tasks — backfill `Implements`, durable anchors, git dates.** For each built capability a decision explains:
-   - `python3 ~/.claude/skills/_shared/scripts/mint_id.py <tasks-dir> T` (same protocol).
-   - Write `tasks/T-NNN.md` per the TASKS section. Header `## T-NNN: <Title>`. `Status: done`. `Size:` the rough magnitude of the built capability (required and projected to INDEX; here it's descriptive, not an estimate-to-plan). `Implements: D-NNN` — now resolvable. `Acceptance:` one sentence checkable against the current tree. `Date done:` the **git landing date**, not today (truthful, and safe at bootstrap: with no retrospective carrying a `Boundary-end` yet, `compact-select.py` reports no frontier, so an old date triggers no premature compaction). `Notes:` flag it brownfield-observed — completion recorded at extraction, not tracked through an implementation cycle.
-   - **Evidence — honor the spec's "specific beats bare `file:`", with one brownfield caveat.** The spec rightly prefers an anchor that *names the behavior* (`grep:` / `symbol:` / `test:`) over a bare `file:`, because a bare `file:` keeps resolving even after the relevant code inside is gutted — which is the drift detection is meant to catch. But you are anchoring code you *just read*, so the pull is to pin the exact current symbol name or line, and a later faithful refactor (a rename/move that preserves the decision) then breaks the anchor and sprays false drift that trains people to ignore `reconcile-status`. So key the anchor to the decision's **invariant**, expressed as a behavior-naming `grep` over a path glob — `grep:bcrypt in auth/` — rather than an incidental exact location — `symbol:auth/hash.py:hashWithBcryptRounds10`. Specific enough to notice the behavior being ripped out (satisfies the spec); durable across refactors that keep the decision (satisfies brownfield). **Verify every anchor resolves** read-only (`rg -l` / path check) before writing it — you just read this code, so a non-resolving anchor manufactures the exact plan-vs-code drift the pipeline exists to catch, and malformed Evidence on a `done` task is an `audit-artifacts` Blocker. Human explanation goes in `Notes`, never `Evidence`.
-   - Add the INDEX line (or reindex tasks at the end). **Orphans get no task** here — a blank `Implements`/`Mitigates` is illegal — they live in the step 11 output and, where warranted, a `pending` risk.
+- Assert intent nobody recorded, or mint an `accepted` decision that is really a guess without passing the gate.
+- Invent a decision for accretion, or a task without an `Implements`/`Mitigates`.
+- Record this pipeline's own modeling choices as decisions in the user's project. Those are tooling decisions, not decisions about their codebase.
 
-10. **Mint risks — backfill `Related decisions`.** For each concrete failure mode from step 6:
-   - `python3 ~/.claude/skills/_shared/scripts/mint_id.py <risks-dir> R`, write `risks/R-NNN.md` per the RISKS section. Header `## R-NNN: <Title>` (Title states what breaks, one line). **Severity** and **Likelihood** already assessed in step 6. `Disposition: pending`, with Date, Disposition rationale, and Action left empty for `triage-risks` (this mirrors how `red-team-me` creates risks — persistent `pending` is a bug, but it's the next skill's job to clear it). `Related decisions: D-NNN` linking the choice it threatens (optional, so a standalone orphan-risk from step 7 is legal).
-   - Add the INDEX line (or reindex risks at the end). The split is the whole point: severity and likelihood are observed *now*; disposition is deferred.
+## Next
 
-11. **Output + handoff.** A grouped summary with **built-but-not-decided as the headline**:
-   - Tasks inventoried — ID + title + real git date + whether all anchors resolved.
-   - Decisions factored — ID + title + deliberate/emergent + confidence (and whether confirmed in step 8's gate).
-   - The task↔decision mapping wherever it is non-obvious (the many-to-many cases).
-   - Risks raised — ID + severity + title.
-   - **Built-but-not-decided** — the orphans from step 7, the dual finding, each marked forgotten-intent (now a decision) or accretion (report-only / escalated to a risk).
-   - Anything deliberately left unrecorded (too speculative, out of scope).
-
-   Then recommend the handoff: the `audit-artifacts` → `reconcile-status` → `triage-risks` skills, in that order. State the honest caveat plainly: **at extraction every anchor verifies by construction** — you extracted each decision *from* the code its anchor points at, so there is no possible t0 failure. The verification's value is entirely the **t>0 drift tripwire**: a maintainer reading `implemented (verified)` should read it as "the invariant is still present in the tree," not "the decision is faithfully realized." Go-forward decisions use the `challenge-me` skill from here.
-
----
-
-## Two seams to know
-
-**Partial-run safety net.** The discover-blank / write-linked flow means a dead run leaves real records half-written. The reservation protocol guarantees no ID *collision* (a process that dies between claim and body-write leaves an empty record, which `audit-artifacts` flags and `reindex` reports — it never collides). And because Phase B writes decisions → tasks → risks and the very next skill is `audit-artifacts`, a partial run is *caught*: a decision with zero pointing tasks surfaces as a smell, a malformed/empty record as a Blocker. So the audit handoff doubles as resumption detection — re-run audit, see what's half-done, continue. No bespoke resume logic needed, but don't skip the audit.
-
-**The skill's own founding decision is deliberately not recorded here.** The modeling choice — *represent shipped work as `done` tasks and factor decisions over them* — is load-bearing and hard-to-reverse, but it is a *tooling* decision about this pipeline, not a decision about the codebase being documented. Recording it in the project's `docs/decisions/` would be a category error and a task-less audit smell. It belongs in the pipeline's own design notes, if anywhere — not in each bootstrapped project.
-
-## Conventions
-
-Reference `docs/CONVENTIONS-SPEC.md` for exact field order, header format (`## <ID>: <Title>`), anchor grammar, and INDEX line formats. The per-record body is authoritative; INDEX is a pure projection — when in doubt, run the `reindex` skill on the scope.
+- `audit-artifacts` → `reconcile-status` → `triage-risks`, in that order. The audit also catches a partial run (an empty claimed record, or a decision with no tasks): re-run it and continue from there. Go-forward decisions use `challenge-me`.

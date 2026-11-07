@@ -4,21 +4,39 @@ description: Order a task list into a phased plan that front-loads risk, ships v
 ---
 > Provider note (Codex CLI): when a step calls for interviewing the user, ask each question in plain prose — state your recommended answer, ask if it works, and wait for the reply; there is no option-picker UI. When writing multiple Evidence anchors, comma-separate them and backtick each one.
 
-Read `tasks/INDEX.md` and produce a phased plan. Output is ephemeral — does not write files.
+Order the open tasks into phases that retire risk first and reach a demo-able slice early. The plan is ephemeral, output in chat only; `tasks/` stays the durable state.
 
-1. Scope. Project- or feature-level matches the `tasks/INDEX.md` you're reading.
+**Reads:** `tasks/INDEX.md`, `risks/INDEX.md`, the bodies of high and critical risks, and task bodies only where ordering depends on nuance.
+**Writes:** nothing.
 
-2. Read `tasks/INDEX.md`. Identify all tasks with Status `todo` or `in_progress` (the open set — both are unfinished work that still needs ordering; an `in_progress` task is already started, so it sorts to the front of its phase). Load full T-NNN.md only when a sequencing decision turns on a task's nuance — specific dependency reasoning, ambiguous acceptance, unclear Mitigates linkage.
+## Steps
 
-3. Group into phases:
-   - **Phase 0 — risk front-loading.** Spike tasks first; tasks that mitigate `critical`/`high` risks; tasks unblocking later decisions. Read `risks/INDEX.md` to identify the high-severity set, then order *within* it by **Likelihood**: load the (few) high/critical risk bodies for their `Likelihood` field and front-load high-severity × high-likelihood mitigations first (the INDEX carries severity but not likelihood, so this is the one place the body is worth opening).
-   - **Phase 1 — thin demo-able slice.** Smallest set that ships something testable end-to-end.
-   - **Subsequent phases.** Layer in capabilities. Each phase ends on a demo-able milestone.
+1. **Scope.** The scope of the `tasks/INDEX.md` you read.
 
-4. Within a phase, order by dependency. Tasks with no `Depends on` go first; respect transitive deps.
+2. **Open set.** Every `todo` and `in_progress` task. `in_progress` ones lead their phase.
 
-5. Output: phased list with one line per task (`T-NNN | <size> | <title>`). Note rationale for each phase boundary — what's now demo-able, what risk has been retired.
+3. **Phase 0: retire risk.** Spikes, tasks that unblock later decisions, and tasks that mitigate `high`/`critical` risks. Order those by **Likelihood** (high first). INDEX carries severity but not likelihood, so load those few risk bodies.
 
-6. Phased plans are ephemeral. The user should copy anything durable into working notes before the session ends. `tasks/INDEX.md` is the durable state; the order over tasks is not.
+4. **Phase 1: thin slice.** The smallest set that ships something testable end to end.
 
-7. Do not modify TASKS, the INDEX, decisions, or risks. Do not assign owners or calendar dates.
+5. **Later phases.** Add capabilities, each phase ending on a demo-able milestone.
+
+6. **Dependencies.** Respect `Depends on`, transitively. Inside a phase, tasks with no dependencies go first. If a task depends on one in a later phase, pull the dependency forward. Never order a task before its dependency.
+
+7. **Output.**
+   ```
+   Phase 0 — <milestone / risk retired>
+   T-NNN | <size> | <title>
+   ...
+   Why this boundary: <what is now demo-able or de-risked>
+   ```
+   Then flag any task you could not place (blocked on an unfinished dependency, or with no clear phase).
+
+## Never
+
+- Modify any file.
+- Assign owners or calendar dates.
+
+## Next
+
+- `task-brief` to start building one task at a time, or `parallel-work` to build each phase in parallel waves (`--only` with the phase's IDs). Remind the user to copy the phasing into working notes if they want to keep it.

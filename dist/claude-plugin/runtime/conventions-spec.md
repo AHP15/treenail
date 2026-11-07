@@ -4,10 +4,11 @@ Spec-version: 1
 
 This is the schema. For exemplars, see `CONVENTIONS-EXAMPLES.md`.
 
-This spec version is frozen into a project at adoption time: the bootstrap
-writes it to `docs/.treenail-version`, and the record-parsing scripts refuse
+This spec version is frozen into a project at adoption time: `~/.treenail/scripts/bootstrap.py`
+writes it to `docs/.treenail-version` (alongside this spec and the
+examples), and the record-parsing scripts refuse
 loudly (rather than guess) on a project stamped with a spec version they do not
-support. Bump `Spec-version` on any breaking schema change (T-022, R-012).
+support. Bump `Spec-version` on any breaking schema change.
 
 ---
 
@@ -92,13 +93,11 @@ checked by the same code that rebuilds the index.
 
 ## ID reservation protocol
 
-Every skill that mints a new ID (`challenge-me`, `red-team-me`,
-`triage-risks`'s fix flow, `decompose-plan`, `promote`) MUST use this
-protocol, implemented by `~/.treenail/scripts/mint_id.py <artifact-dir>
-<PREFIX>` — the canonical executor (the steps below are what it does, and
-the hand fallback when no shell is available). It makes the filesystem —
-not the INDEX, and not the skill's
-in-memory count — the arbiter, so two skills, sessions, or branches
+Every skill that mints a new ID MUST use this protocol, implemented by
+`~/.treenail/scripts/mint_id.py <artifact-dir> <PREFIX>` — the canonical and
+only executor (Python 3 is a required dependency; the steps below document
+what the script does). It makes the filesystem — not the INDEX, and not
+the skill's in-memory count — the arbiter, so two skills, sessions, or branches
 minting at the same time cannot collide.
 
 INDEX may lag (it is only a projection and a writer may not have
@@ -186,6 +185,10 @@ marker; the index file they live in is the archived signal.
 - **Implementation status** is not stored. It is derived on demand by
   `reconcile-status` from current task states; see that skill for the
   view rule.
+- **Settled**: an `accepted` decision whose implementation is done and
+  verified is moved out of the active dir by `archive-cycle` while keeping
+  `Status: accepted` — it is still in effect, just no longer in flight.
+  See ARCHIVAL, "Settle".
 
 ---
 
@@ -207,7 +210,9 @@ the header, in order:
 - **Disposition rationale**: 1-2 sentences on why this disposition
 - **Action**: links to decision changes, mitigation T-NNN IDs, defer
   triggers, or "none"
-- **Related decisions**: optional D-NNN links
+- **Related decisions**: optional D-NNN links. Usually present; a
+  standalone risk on code no decision explains (e.g. from
+  `extract-decisions`) legitimately has none
 - **Promoted to** / **Promoted from**: optional cross-scope link
 
 ### `risks/INDEX.md` line format
@@ -339,9 +344,8 @@ tasks project into `tasks/archive/INDEX.md` with the identical line format
   rule — repointed if the fact moved, pinned at the last resolving
   commit if it was abolished — not merely reported.
 - On a `done` task, every `Evidence` entry MUST be a machine-resolvable
-  anchor (`file:<path>` / `grep:<regex>[ in <pathglob>]` /
-  `symbol:<path>:<regex>` / `test:<id-or-path>`), not prose or a malformed
-  placeholder — `audit-artifacts` treats malformed Evidence on a done task
+  anchor in one of the five forms above (`file:` / `grep:` / `symbol:` /
+  `test:` / `git:`), not prose or a malformed placeholder — `audit-artifacts` treats malformed Evidence on a done task
   as a Blocker, because it cannot be resolved against the tree. Human
   explanation belongs in `Notes` (or, post-archival, `Summary`).
 - Every task carries `Implements` and/or `Mitigates`; every reference
@@ -410,7 +414,8 @@ YYYY-MM-DD | <cycle name>
 
 Archival is **two decoupled steps with different cadences**, both
 performed by `archive-cycle`, which is idempotent and safe to run any
-time. Separating them is what bounds the active read path to in-flight
+time, plus a **settle** pass for accepted decisions that runs with the
+reap. Separating them is what bounds the active read path to in-flight
 work *within* a cycle, not just at its boundary.
 
 **Step 1 — Reap (continuous; keeps the active set bounded).** The moment
@@ -443,6 +448,30 @@ boundaries. Eligibility:
     so later compaction has a machine-readable terminal date.
 - **Tasks**: Status ∈ {`done`, `dropped`}. No date gate — full prose is
   preserved in `archive/`, so the retrospective can still read it.
+
+**Settle (runs with the reap; keeps the active *decision* set bounded).**
+`accepted` is not a terminal status, so without settling every decision
+ever accepted would stay on the hot path and decision reads would grow
+with project history rather than with active work. An accepted decision
+**settles** — `archive_cycle.py` moves it to `decisions/archive/` with
+full prose and `Status: accepted` unchanged — when all of these hold, as
+derived by `reconcile.py` (the same code that reports drift):
+
+- its view is `implemented` or `partial`;
+- every contributing `done` task has Evidence and every anchor resolves
+  (`verified`) — a decision whose drift cannot be detected never settles;
+- no active risk with an open disposition (`pending` / `fix` /
+  `mitigate` / `defer`) lists it in `Related decisions`;
+- a retrospective has covered it: its last contributing `Date done` is at
+  or before the latest `Boundary-end`.
+
+Settling is **reversible and re-checked on every run**: a settled decision
+that stops qualifying — drift, a new implementing task, a new open risk —
+moves straight back to the active dir (the retrospective gate is not
+re-applied). Its location is therefore a cache of derived state, rebuilt
+on each `archive-cycle`, never an authored fact. Settled decisions are
+never compacted: their Context and Rationale are what future work builds
+on.
 
 **Step 2 — Compact (at cycle boundary; shrinks consumed records).** Once
 a retrospective has covered a record's terminal date, its prose has been
@@ -477,28 +506,34 @@ superseded` / `Date deprecated` / `Date promoted` for terminal decisions,
 SKIP flags a record whose terminal date field was left empty — that is the
 thing to fix, not a permanent state.
 
-So `archive/` holds two states:
+So `archive/` holds three states:
 
 - **archived, uncompacted** — full body, terminal, not yet consumed by a
   retrospective. No `Date archived`/`Summary`. Out of the active read
   path but fully readable (the retrospective reads these).
 - **archived, compacted** — ≤5-line summary, post-retrospective; has
   `Date archived` + `Summary`.
+- **settled** (decisions only) — `Status: accepted`, full body, never
+  compacted. Identified by its status line in `decisions/archive/INDEX.md`.
 
 Compaction never moves the INDEX line — the reap already moved it to
 `<artifact>/archive/INDEX.md`, and a record's archive-index line is
 identical whether its body is still full or compacted (location, not
 compaction state, is what the line encodes). Status, Disposition, and
 supersession links never change at either step — archival is never a state
-transition. The only field archive-cycle may add during reap is `Date
-resolved` on explicitly confirmed `fix`/`defer` risks.
+transition — settling included. The only field archive-cycle may add
+during reap is `Date resolved` on explicitly confirmed `fix`/`defer` risks.
 
 Skills resolving an ID reference must check both `<artifact>/<ID>.md`
 and `<artifact>/archive/<ID>.md`. Likewise, skills that need the full
 record set — `reconcile-status` (because `done` tasks are reaped),
 `retrospective`, and `audit-artifacts`' cross-link pass — read both
 `<artifact>/INDEX.md` and `<artifact>/archive/INDEX.md`; day-to-day
-skills read only the active `<artifact>/INDEX.md`.
+skills read only the active `<artifact>/INDEX.md`. The one exception is
+reading **standing constraints** ("what is already decided?"): settled
+decisions are still in effect, so a skill that needs that view reads the
+`| accepted |` lines of `decisions/archive/INDEX.md` too — one line each,
+never their bodies unless a question depends on one.
 
 ---
 
@@ -513,6 +548,14 @@ the project's D-001.
 Cross-scope linking only via `Promoted to` / `Promoted from`, in the
 form `project:D-NNN` or `feature:<name>/D-NNN`. The `promote` skill
 executes the mechanics.
+
+**Qualified references.** A bare ID in a link field (`Related
+decisions`, `Supersedes`, `Implements`, `Action`, …) always means *this*
+scope. When `promote` copies a record up, every bare intra-scope ID in
+the copy is rewritten to qualified form (`feature:<name>/D-003`), because
+left bare it would silently resolve to an unrelated project record.
+Qualified references are provenance pointers: scripts never resolve or
+project them in the local scope.
 
 Phased plans (from `sequence-work`) are ephemeral and do not follow
 these conventions. `tasks/` is durable; the ordering over tasks is

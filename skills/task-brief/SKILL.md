@@ -3,41 +3,46 @@ name: task-brief
 description: 'Drive implementation of the sequenced plan — work tasks one at a time, but continuously across a user-bounded batch (one task, a phase, or "until you need me"), instead of cold-reinvoking per task. For each task it assembles a build-ready brief from the full decision + risk + conventions context, then enforces the per-task status hygiene the rest of the pipeline depends on: flip to `in_progress` at start, and at completion fill `Date done` plus machine-resolvable `Evidence` anchors verified to resolve before they are written. Use to start building, get a brief for what to build next, work through a phase, or correctly close out a finished task.'
 ---
 
-This is the executor for the `[implementation]` seam — where `sequence-work`'s order stops being a plan and someone builds it. `sequence-work` produces the order (ephemeral, read-only); this skill *runs* it: pick the next eligible task → brief → build → land with verified evidence → continue to the next, staying in warm context across the batch rather than re-deriving scope on every task. It does not mint, supersede, triage, or promote — it implements already-planned tasks and records each one correctly.
+Execute the plan task by task in warm context. Pick the next task, brief it, build it, land it with verified evidence, and continue. The loop is a convenience. The per-task write-backs are what correctness rests on, because `reconcile-status` reads them, so never skip them to go faster.
 
-Two things are non-negotiable per task, because they are what `reconcile-status` reads: the status transition and **verified** Evidence anchors. The continuous loop is the convenience; the per-task bookkeeping inside it is the correctness. Never let a fast batch skip the write-backs — that is exactly how drift detection rots.
+**Reads:** `tasks/`, the decisions and risks each task links to (active + archive), `risks/INDEX.md`, the codebase; the spec is `docs/CONVENTIONS-SPEC.md`.
+**Writes:** code, plus each worked task's Status, `Date done` / `Date dropped`, Evidence, Notes, and its INDEX line (via script).
 
-1. **Scope + batch size.** Project- or feature-level, matching the `tasks/` you read. Establish up front **how much of the plan this run covers**, from the user's phrasing — one named `T-NNN`; a phase from `sequence-work`; "the next N"; or "work the plan until you need me." That bound is the loop's stop condition (step 8). Default, if unstated, to a single task and offer to continue.
+## Steps
 
-2. **Pick the next eligible task.** From `tasks/INDEX.md`, the open set is `in_progress` then `todo` (in_progress first — already started). Exclude any task whose `Depends on` are not all `done`. Among the rest, honor an existing `sequence-work` phasing if the user has one in working notes; otherwise prefer tasks that unblock others or mitigate `high`/`critical` risks (read `risks/INDEX.md`), mirroring `sequence-work`'s risk-front-loading. State which task you picked and why before briefing it.
+1. **Scope and batch.** Settle how much this run covers from the user's phrasing: one `T-NNN`, a phase, "the next N", or "until you need me". The default is one task, then offer to continue.
 
-3. **Assemble the brief (read-only).** Load full bodies — the one time titles are not enough:
-   - `tasks/T-NNN.md` — the Acceptance is the bar; any pre-seeded Evidence anchor is your target.
-   - each `Implements: D-NNN` — **Decision and Rationale** tell you *what* to build and *why this way*; do not re-litigate a decided choice.
-   - each `Mitigates: R-NNN` — **Description** is the failure mode you must not reintroduce; **Action** is the guard.
-   - relevant `CONVENTIONS-SPEC.md` sections and any house conventions the codebase enforces.
-   Resolve IDs against both `<artifact>/<ID>.md` and `<artifact>/archive/<ID>.md` (linked records may have been reaped). Then grep the codebase for the files/symbols the Acceptance and anchors name, so the brief points at real locations.
+2. **Pick.** The open set is `in_progress`, then `todo`, excluding tasks whose `Depends on` aren't all `done`. Follow the user's `sequence-work` phasing if they have one; otherwise prefer tasks that unblock others or mitigate `high`/`critical` risks. Say which task you picked and why.
 
-4. **Emit the brief.** A tight block to build against:
-   - **Goal** — the task, declarative.
-   - **Why** — the decision's rationale in one line (the load-bearing constraint).
-   - **Guard** — the risk being mitigated and how *not* to reintroduce it (omit if the task only `Implements`).
-   - **Acceptance** — verbatim from the task; the done bar, checkable against a diff.
-   - **Target anchors** — the concrete `file:` / `grep:` / `symbol:<path>:<regex>` / `test:` the finished work should make resolve. If the task has none and its Acceptance names a concrete file/symbol/test, pre-seed the anticipated anchor now.
-   - **Out of scope** — decided questions not to reopen, and adjacent work owned by other tasks.
+3. **Brief.** Load the full bodies: the task (its Acceptance is the bar), each `Implements` decision (Decision and Rationale: what to build and why, which you don't re-litigate), and each `Mitigates` risk (Description is the failure not to reintroduce; Action is the guard). Grep the code for what the Acceptance names. Then emit:
+   - **Goal** — the task, in one declarative line.
+   - **Why** — the decision's load-bearing constraint.
+   - **Guard** — the risk not to reintroduce (omit if the task only implements).
+   - **Acceptance** — verbatim from the task.
+   - **Target anchors** — the Evidence the finished work should make resolve; pre-seed them if the task has none.
+   - **Out of scope** — settled questions and work that belongs to other tasks.
 
-5. **Start.** Flip the task `todo` → `in_progress` in `tasks/T-NNN.md` and update its `tasks/INDEX.md` status column. This skill is the designated writer of `in_progress` — the signal `reconcile-status` reads to derive a decision as `in_progress` rather than `not_started`. A trivially small task may go straight to `done` in step 7 (the spec allows skipping `in_progress`); a larger one flips here first so an interruption mid-build leaves correct state.
+4. **Start.** Set the task to `Status: in_progress` and run `python3 ~/.claude/skills/_shared/scripts/reindex.py <scope-dir> tasks`, so an interrupted build leaves state that is correct and audit-clean. A trivially small task may jump straight to `done` at step 6.
 
-6. **Build to Acceptance.** Implement with the normal coding tools, scoped to this task's Acceptance — nothing more. If the work surfaces a **new decision** (a genuine choice the recorded ones don't cover), **stop the loop** and route to the `challenge-me` skill; do not invent a decision inside a task. A **new risk** → note it for the `red-team-me` or `triage-risks` skill and continue. The task implements the plan; it does not amend it.
+5. **Build** to the Acceptance and nothing more. If the work exposes a **new decision**, stop the loop and route it to `challenge-me`; never decide inside a task. A **new risk**: note it for `red-team-me` and continue.
 
-7. **Land — the evidence hygiene the pipeline rests on.** When Acceptance is met:
-   - Status → `done`; fill **Date done** (today, ISO). `done ⇔ non-empty Date done`.
-   - Fill **Evidence** with machine-resolvable anchors (`file:<path>` / `grep:<regex>[ in <pathglob>]` / `symbol:<path>:<regex>` / `test:<id-or-path>`) for the code that landed, and **verify each resolves before writing it** — read-only `rg -l` / path check, exactly as `reconcile-status` will. Never write an anchor you have not just resolved: a non-resolving anchor manufactures the precise plan-vs-code drift the pipeline exists to catch, and prose or malformed anchors in `Evidence` on a `done` task are `audit-artifacts` Blockers. Human explanation goes in **Notes**, never `Evidence`.
-   - Update the `tasks/INDEX.md` line (status + Date done). If you are minting several lines across a batch, you may instead run `python3 ~/.claude/skills/_shared/scripts/reindex.py <scope-dir> tasks` once at the end.
-   - **Can't land?** Infeasible or redundant → Status `dropped`; fill **Date dropped** (today, ISO) and a **Notes** line saying why; update INDEX. Never silently leave it `in_progress`; a dropped task is evidence for the next `retrospective`. (Date dropped is the terminal date the INDEX projects and `archive-cycle` reads, so don't leave the drop date only in prose.)
+6. **Land.**
+   - **Done:** set `Status: done` and `Date done: <today>`. Write Evidence anchors (spec § TASKS) for the code that landed, and **resolve each one (`rg -l` / path check) before writing it**. An unresolved or prose anchor on a done task is an `audit-artifacts` Blocker and fakes drift. Explanation goes in Notes.
+   - **Can't land** (infeasible or redundant): set `Status: dropped`, `Date dropped: <today>`, and a Notes line saying why. Never leave a task stranded in `in_progress`.
+   - Then run `python3 ~/.claude/skills/_shared/scripts/reindex.py <scope-dir> tasks`.
 
-8. **Loop or stop.** After landing, check the batch bound from step 1. **Continue** — return to step 2 for the next eligible task, in warm context — until any of these, then **stop and hand back**: the batch is exhausted; no eligible task remains (all open tasks blocked on unfinished deps); a new decision surfaced (step 6); an Evidence anchor would not resolve; or the user asked to go task-by-task. Report what you completed and what stopped you.
+7. **Loop or stop.** Return to step 2 unless the batch is done, nothing is eligible, a new decision came up, an anchor wouldn't resolve, or the user wants to go task by task. Report what you completed and what stopped you.
 
-9. **Recommend next.** When the run ends, recommend the `reconcile-status` skill — it re-resolves the anchors you wrote and recomputes each implementing decision's view, closing the loop from code back to plan. Reaping the finished tasks is `archive-cycle`'s job on its normal cadence.
+**Worker mode.** When `parallel-work` runs you as a worker for one task in its own worktree, do steps 5-6 for exactly that task, with three changes:
+- write only `tasks/T-NNN.md` and skip both `reindex.py` calls (the orchestrator projects INDEX after merging);
+- commit on your branch;
+- report instead of looping (step 7).
 
-10. **Stay in lane + conventions.** Do not triage risks, mint or supersede decisions, promote, or re-order the whole task list (that is `sequence-work`). This skill writes only each task's Status, Date done, Evidence, Notes, and that task's INDEX line. Reference `docs/CONVENTIONS-SPEC.md` for the TASKS field order, the Evidence anchor grammar, and the INDEX line format.
+## Never
+
+- Triage, mint or supersede decisions, promote, or reorder the whole plan. This skill implements tasks already planned; it does not amend the plan.
+
+## Next
+
+- `parallel-work` to build many independent tasks at once instead.
+- `reconcile-status`, to re-resolve the anchors you wrote and recompute each decision's status. Reaping is `archive-cycle`'s job.

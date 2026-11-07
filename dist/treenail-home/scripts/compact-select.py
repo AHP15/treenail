@@ -140,6 +140,12 @@ def main(argv):
                 continue
             if fields.get("Summary", "").strip():
                 continue  # already compacted
+            if artifact == "decisions" and \
+                    fields.get("Status", "").strip() == "accepted":
+                # A settled decision is still in effect: its Context and
+                # Rationale are what future work builds on, so it is never
+                # compacted (and is not a malformed SKIP either).
+                continue
             td = terminal_date(artifact, fields)
             if td is None:
                 no_date.append(rid)

@@ -1,20 +1,35 @@
 #!/usr/bin/env python3
-"""archive_cycle.py — mechanically reap terminal records into archive/.
+"""archive_cycle.py — mechanically reap terminal records into archive/
+and settle/unsettle accepted decisions.
 
 This script implements the deterministic half of the archive-cycle skill:
-move terminal active records into `<artifact>/archive/` and rebuild the
-affected INDEX files from the per-record sources. It does not compact
-record prose; compaction remains a judgment step driven by compact-select.py.
+move terminal active records into `<artifact>/archive/`, move *settled*
+accepted decisions there too (and move any settled decision that no longer
+qualifies back), then rebuild the affected INDEX files from the per-record
+sources. It does not compact record prose; compaction remains a judgment
+step driven by compact-select.py.
+
+Settling (spec § ARCHIVAL) keeps the active decision set bounded: an
+accepted decision leaves the working set once reconcile.py derives it as
+implemented with verified Evidence, no open risk names it, and a
+retrospective has covered its last task's Date done. Its Status stays
+`accepted` — it is still in effect, just no longer in flight. The check
+is re-run every time, so drift, a new implementing task, or a new open
+risk moves it straight back.
 
 Usage:
     archive_cycle.py <scope-dir> [--dry-run] [--confirm-risk R-001,R-002]
-                     [--today YYYY-MM-DD]
+                     [--today YYYY-MM-DD] [--root <repo-root>]
 
   --dry-run       print what would move; write nothing.
-  --confirm-risk  comma-separated fix/defer risks the user has explicitly
-                  confirmed are spent. For these, Date resolved is filled
-                  before moving if absent.
+  --confirm-risk  comma-separated risks the user has explicitly confirmed
+                  are spent: fix/defer risks (which never reap without it;
+                  Date resolved is filled before moving if absent), or
+                  accept risks newer than the latest retrospective boundary
+                  (their Date already serves as the terminal date).
   --today         date used for Date resolved (default: UTC today).
+  --root          repo root that Evidence anchors resolve against, for the
+                  settle check (default: the current directory).
 
 Exit codes: 0 success; 1 blocked move; 2 usage error.
 """
@@ -24,18 +39,20 @@ import os
 import re
 import sys
 
+import reconcile
 import reindex
 
 ISO_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 def parse_args(argv):
-    if len(argv) < 2:
-        return None, False, set(), date.today().isoformat(), "missing scope"
+    today = datetime.now(timezone.utc).date().isoformat()
+    if len(argv) < 2 or argv[1].startswith("-"):
+        return None, False, set(), today, ".", "missing scope"
     scope = os.path.expanduser(argv[1])
     dry = False
     confirmed = set()
-    today = datetime.now(timezone.utc).date().isoformat()
+    root = "."
     i = 2
     while i < len(argv):
         arg = argv[i]
@@ -51,10 +68,14 @@ def parse_args(argv):
             today = argv[i + 1]
             i += 2
             continue
-        return None, False, set(), today, f"unknown or incomplete option {arg}"
+        if arg == "--root" and i + 1 < len(argv):
+            root = argv[i + 1]
+            i += 2
+            continue
+        return None, False, set(), today, root, f"unknown or incomplete option {arg}"
     if not ISO_RE.match(today):
-        return None, False, set(), today, "--today must be YYYY-MM-DD"
-    return scope, dry, confirmed, today, None
+        return None, False, set(), today, root, "--today must be YYYY-MM-DD"
+    return scope, dry, confirmed, today, root, None
 
 
 def parse_iso(value):
@@ -126,6 +147,37 @@ def move_to_archive(path, artifact):
     return True, dest
 
 
+def move_to_active(path):
+    base = os.path.dirname(os.path.dirname(path))
+    dest = os.path.join(base, os.path.basename(path))
+    if os.path.exists(dest):
+        return False, dest
+    os.rename(path, dest)
+    return True, dest
+
+
+def settle_moves(scope, root, boundary):
+    """(to_settle, to_unsettle, waiting) for accepted decisions.
+    to_settle / to_unsettle: [(rid, path, note)]; waiting: [(rid, reason)]
+    for decisions that qualify except for the retrospective boundary."""
+    decs, risks, tasks, drift, no_anchor, views = reconcile.derive(scope, root)
+    ddir = os.path.join(scope, "decisions")
+    to_settle, to_unsettle, waiting = [], [], []
+    for did, (view, _why, _impl, _promoted, active) in sorted(views.items()):
+        ok, info = reconcile.settle_check(did, views, risks, tasks,
+                                          drift, no_anchor)
+        if active and ok:
+            if boundary and info and info <= boundary:
+                to_settle.append((did, os.path.join(ddir, f"{did}.md"),
+                                  f"{view}, verified, last done {info}"))
+            else:
+                waiting.append((did, "settle awaiting retrospective boundary"))
+        elif not active and not ok:
+            to_unsettle.append((did, os.path.join(ddir, "archive", f"{did}.md"),
+                                f"no longer settled: {info}"))
+    return to_settle, to_unsettle, waiting
+
+
 def reindex_changed(scope, changed_artifacts):
     malformed = []
     reports = []
@@ -135,7 +187,7 @@ def reindex_changed(scope, changed_artifacts):
 
 
 def main(argv):
-    scope, dry, confirmed, today, err = parse_args(argv)
+    scope, dry, confirmed, today, root, err = parse_args(argv)
     if err:
         print(__doc__.strip().splitlines()[0], file=sys.stderr)
         print(f"archive_cycle.py: {err}", file=sys.stderr)
@@ -164,6 +216,8 @@ def main(argv):
             d = parse_iso(fields.get("Date", ""))
             if boundary and d and d <= boundary:
                 to_move.append(("risks", rid, path, "accept reviewed"))
+            elif rid in confirmed:
+                to_move.append(("risks", rid, path, "accept user-confirmed"))
             else:
                 skipped.append((rid, "accept awaiting retrospective boundary"))
         elif disp in {"fix", "defer"}:
@@ -172,11 +226,18 @@ def main(argv):
             else:
                 skipped.append((rid, f"{disp} awaiting explicit confirmation"))
 
+    to_settle, to_unsettle, waiting = settle_moves(scope, root, boundary)
+    skipped.extend(waiting)
+
     print(f"archive-cycle reap {scope}{' (dry-run)' if dry else ''}")
-    if not to_move:
-        print("  no records eligible to reap")
+    if not (to_move or to_settle or to_unsettle):
+        print("  no records eligible to move")
     for artifact, rid, path, note in to_move:
         print(f"  REAP  {artifact}/{rid}  ({note})")
+    for rid, _path, note in to_settle:
+        print(f"  SETTLE  decisions/{rid}  ({note})")
+    for rid, _path, note in to_unsettle:
+        print(f"  UNSETTLE  decisions/{rid}  ({note})")
     for rid, reason in skipped:
         print(f"  skip  {rid}  ({reason})")
 
@@ -186,18 +247,30 @@ def main(argv):
     changed = set()
     blocked = []
     for artifact, rid, path, note in to_move:
-        if artifact == "risks" and "confirmed" in note:
+        if artifact == "risks" and note.endswith(" confirmed"):
             ensure_date_resolved(path, today)
         ok, dest = move_to_archive(path, artifact)
         if not ok:
             blocked.append((rid, dest))
             continue
         changed.add(artifact)
+    for rid, path, _note in to_settle:
+        ok, dest = move_to_archive(path, "decisions")
+        if not ok:
+            blocked.append((rid, dest))
+            continue
+        changed.add("decisions")
+    for rid, path, _note in to_unsettle:
+        ok, dest = move_to_active(path)
+        if not ok:
+            blocked.append((rid, dest))
+            continue
+        changed.add("decisions")
 
     if blocked:
         print("\nBLOCKED moves:")
         for rid, dest in blocked:
-            print(f"  {rid}: archive destination already exists: {dest}")
+            print(f"  {rid}: destination already exists: {dest}")
         return 1
 
     if changed:

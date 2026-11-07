@@ -80,9 +80,14 @@ def parse_record(path):
 
 
 def ids_in(value, prefix):
-    """IDs of the given prefix in textual order, de-duplicated."""
+    """Scope-local IDs of the given prefix in textual order, de-duplicated.
+
+    Scope-qualified references (`project:D-001`, `feature:<name>/D-001`)
+    are skipped: they point into another scope, so they must never be
+    resolved — or projected — as if they were links in this one.
+    """
     seen, out = set(), []
-    for tok in re.findall(r"\b" + prefix + r"-\d+\b", value or ""):
+    for tok in re.findall(r"(?<![/:])\b" + prefix + r"-\d+\b", value or ""):
         if tok not in seen:
             seen.add(tok)
             out.append(tok)

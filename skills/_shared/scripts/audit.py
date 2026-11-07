@@ -246,7 +246,9 @@ def check_risks(scope, risks, decs, tasks, f, decompose_ran):
         # Related decisions
         rel = reindex.ids_in(fields.get("Related decisions", ""), "D")
         if active and not rel:
-            f.warn(f"{rid}: no 'Related decisions' — every risk should tie to ≥1 decision")
+            # Optional per spec (a standalone risk on undecided code is
+            # legal), so its absence is a coverage note, not a smell.
+            f.info(f"{rid}: no 'Related decisions' (optional; standalone risk)")
         for d in rel:
             if d not in decs:
                 f.blocker(f"{rid}: 'Related decisions: {d}' does not resolve in scope")
@@ -433,6 +435,26 @@ def promoted_from_ref(value, prefix):
     return m.group(1), m.group(2)
 
 
+# Scope-local link fields on a risk. When promote copies a risk up, a bare
+# ID left in these still names a *feature* record but would be resolved
+# against the project scope. promote rewrites them to qualified
+# `feature:<name>/X-NNN` form; a bare ID matching the source is a copy slip.
+# (Decisions need no equivalent: a promoted decision may not carry
+# Supersedes/Superseded by at all.)
+RISK_SCOPE_LOCAL_LINKS = (("Related decisions", "D"), ("Action", "D"), ("Action", "T"))
+
+
+def check_copied_links(src_id, src_fields, dest_label, dest_fields, f):
+    for field, prefix in RISK_SCOPE_LOCAL_LINKS:
+        src_ids = set(reindex.ids_in(src_fields.get(field, ""), prefix))
+        dest_ids = reindex.ids_in(dest_fields.get(field, ""), prefix)
+        copied = [i for i in dest_ids if i in src_ids]
+        if copied:
+            f.warn(f"{dest_label}: '{field}' has bare {','.join(copied)} copied "
+                   f"from {src_id} — feature-scope IDs resolve against the "
+                   f"project here; qualify them as feature:<name>/<ID>")
+
+
 def check_feature_promotions(feature_scope, feature_name, project_scope, f):
     if not project_scope or not os.path.isdir(project_scope):
         return
@@ -507,6 +529,7 @@ def check_feature_promotions(feature_scope, feature_name, project_scope, f):
             f.blocker(f"project:{rid}: Promoted from feature:{feat}/{src} "
                       f"but source risk does not exist")
             continue
+        check_copied_links(src, frisks[src][1], f"project:{rid}", fields, f)
         expected = f"project:{rid}"
         actual = frisks[src][1].get("Promoted to", "").strip()
         if actual != expected:
