@@ -7,7 +7,7 @@ This is the schema. For exemplars, see `CONVENTIONS-EXAMPLES.md`.
 This spec version is frozen into a project at adoption time: the bootstrap
 writes it to `docs/.treenail-version`, and the record-parsing scripts refuse
 loudly (rather than guess) on a project stamped with a spec version they do not
-support. Bump `Spec-version` on any breaking schema change (T-022, R-012).
+support. Bump `Spec-version` on any breaking schema change.
 
 ---
 
@@ -207,7 +207,9 @@ the header, in order:
 - **Disposition rationale**: 1-2 sentences on why this disposition
 - **Action**: links to decision changes, mitigation T-NNN IDs, defer
   triggers, or "none"
-- **Related decisions**: optional D-NNN links
+- **Related decisions**: optional D-NNN links. Usually present; a
+  standalone risk on code no decision explains (e.g. from
+  `extract-decisions`) legitimately has none
 - **Promoted to** / **Promoted from**: optional cross-scope link
 
 ### `risks/INDEX.md` line format
@@ -339,9 +341,8 @@ tasks project into `tasks/archive/INDEX.md` with the identical line format
   rule — repointed if the fact moved, pinned at the last resolving
   commit if it was abolished — not merely reported.
 - On a `done` task, every `Evidence` entry MUST be a machine-resolvable
-  anchor (`file:<path>` / `grep:<regex>[ in <pathglob>]` /
-  `symbol:<path>:<regex>` / `test:<id-or-path>`), not prose or a malformed
-  placeholder — `audit-artifacts` treats malformed Evidence on a done task
+  anchor in one of the five forms above (`file:` / `grep:` / `symbol:` /
+  `test:` / `git:`), not prose or a malformed placeholder — `audit-artifacts` treats malformed Evidence on a done task
   as a Blocker, because it cannot be resolved against the tree. Human
   explanation belongs in `Notes` (or, post-archival, `Summary`).
 - Every task carries `Implements` and/or `Mitigates`; every reference
@@ -513,6 +514,14 @@ the project's D-001.
 Cross-scope linking only via `Promoted to` / `Promoted from`, in the
 form `project:D-NNN` or `feature:<name>/D-NNN`. The `promote` skill
 executes the mechanics.
+
+**Qualified references.** A bare ID in a link field (`Related
+decisions`, `Supersedes`, `Implements`, `Action`, …) always means *this*
+scope. When `promote` copies a record up, every bare intra-scope ID in
+the copy is rewritten to qualified form (`feature:<name>/D-003`), because
+left bare it would silently resolve to an unrelated project record.
+Qualified references are provenance pointers: scripts never resolve or
+project them in the local scope.
 
 Phased plans (from `sequence-work`) are ephemeral and do not follow
 these conventions. `tasks/` is durable; the ordering over tasks is

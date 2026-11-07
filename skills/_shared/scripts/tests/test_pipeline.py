@@ -229,6 +229,12 @@ class TestReindexProjection(unittest.TestCase):
                 self.assertTrue(ln.strip(), f"blank line in {p}")
 
 
+    def test_ids_in_skips_scope_qualified_refs(self):
+        self.assertEqual(
+            reindex.ids_in("D-001, project:D-002, feature:billing/D-003 and D-004", "D"),
+            ["D-001", "D-004"])
+
+
 class TestReindexParser(unittest.TestCase):
     """Direct unit tests of the authoritative parser/projector."""
 
@@ -566,6 +572,62 @@ class TestAuditCrossChecks(unittest.TestCase):
         run("reindex.py", feature, "decisions")
         rc, out, _ = run("audit.py", feature, "--project", docs)
         self.assertEqual(rc, 0, out)
+
+
+    def _risk(self, path, header, extra=""):
+        write(path, f"""
+            ## {header}
+            - **Severity**: high
+            - **Likelihood**: medium
+            - **Disposition**: accept
+            - **Date**: 2025-01-01
+            - **Description**: x
+            - **Disposition rationale**: y
+            {extra}
+        """)
+
+    def _promoted_risk_pair(self, dest_related):
+        tmp = tempfile.mkdtemp()
+        docs = os.path.join(tmp, "docs")
+        feature = os.path.join(docs, "features", "billing")
+        self._dec(f"{feature}/decisions/D-003.md", "D-003: feature choice")
+        self._dec(f"{docs}/decisions/D-003.md", "D-003: unrelated project choice")
+        self._risk(f"{feature}/risks/R-001.md", "R-001: feature risk", """
+            - **Action**: none
+            - **Related decisions**: D-003
+            - **Promoted to**: project:R-001
+            """)
+        self._risk(f"{docs}/risks/R-001.md", "R-001: promoted risk", f"""
+            - **Action**: none
+            - **Related decisions**: {dest_related}
+            - **Promoted from**: feature:billing/R-001
+            """)
+        run("reindex.py", docs)
+        run("reindex.py", feature)
+        return docs, feature
+
+    def test_promoted_risk_with_verbatim_bare_link_warns(self):
+        docs, feature = self._promoted_risk_pair("D-003")
+        rc, out, _ = run("audit.py", feature, "--project", docs)
+        self.assertIn("copied from R-001", out)
+
+    def test_promoted_risk_with_qualified_link_is_clean(self):
+        docs, feature = self._promoted_risk_pair("feature:billing/D-003")
+        rc, out, _ = run("audit.py", feature, "--project", docs)
+        self.assertEqual(rc, 0, out)
+        self.assertNotIn("copied from", out)
+
+    def test_risk_without_related_decisions_is_info_not_warn(self):
+        tmp = tempfile.mkdtemp()
+        docs = os.path.join(tmp, "docs")
+        self._risk(f"{docs}/risks/R-001.md", "R-001: standalone risk",
+                   "- **Action**: none")
+        run("reindex.py", docs)
+        rc, out, _ = run("audit.py", docs)
+        self.assertEqual(rc, 0, out)
+        info = out.split("== INFO ==")[-1]
+        self.assertIn("no 'Related decisions'", info)
+        self.assertNotIn("== WARN ==", out)
 
 
 class TestCompactSelect(unittest.TestCase):

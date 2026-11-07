@@ -96,14 +96,14 @@ layer; it remains authoritative.
    - Every `defer` has Action with an observable trigger (threshold, date, event). "When it becomes a problem" is not a trigger.
    - Every `mitigate` Action that names a `T-NNN` must reference one that exists in tasks/ (active or archive); a named-but-missing task is a dangling ref (Blocker). A `mitigate` risk with a narrative Action and **no** task IDs yet is **expected before `decompose-plan` has run** — report it as Warn (a coverage gap that `decompose-plan` will close), not a Blocker. It only becomes a Blocker once `decompose-plan` has run for the scope and still left a mitigate risk taskless.
    - Every `fix` has Action referencing an existing decision supersession.
-   - Every risk has ≥1 `Related decisions: D-NNN` whose ID exists.
+   - Every `Related decisions: D-NNN` resolves. The field itself is optional (a standalone risk on undecided code is legal); its absence is Info.
    - `Promoted to` only at feature scope.
 
 5. TASKS invariants:
    - IDs unique, no duplicates. Gaps are allowed (lost mint races — Info only, see step 7); never renumber to close one.
    - Every task has ≥1 of `Implements`/`Mitigates`; references resolve in same scope (active or archive).
    - `done` ⇔ non-empty `Date done`.
-   - `Evidence` anchors, if present, are well-formed: each is a non-empty `file:`, `grep:`, `symbol:<path>:<regex>`, or `test:` anchor per CONVENTIONS-SPEC.md. Check shape only — whether an anchor *resolves* against the tree is `reconcile-status`'s job, not this skill's. A malformed anchor on a `done` task is a Blocker; on unfinished tasks it is a Warn. Empty `Evidence` on a `done` task is Info (coverage gap), not a violation.
+   - `Evidence` anchors, if present, are well-formed: each is a valid anchor per CONVENTIONS-SPEC.md § TASKS → Evidence (including `git:` history pins). Check shape only — whether an anchor *resolves* against the tree is `reconcile-status`'s job, not this skill's. A malformed anchor on a `done` task is a Blocker; on unfinished tasks it is a Warn. Empty `Evidence` on a `done` task is Info (coverage gap), not a violation.
    - Every `dropped` has a Notes line.
    - Every `Depends on: T-NNN` resolves; no cycles.
    - Size ∈ {S, M, L}.

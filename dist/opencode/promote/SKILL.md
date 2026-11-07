@@ -19,13 +19,13 @@ Take a feature-level D-NNN or R-NNN and execute the cross-scope promotion. One r
 3. Mint the destination ID by running `python3 ~/.treenail/scripts/mint_id.py docs/decisions D` (or `docs/risks R`) — the **project-level** dir, since promotion targets project scope. The script executes the **ID reservation protocol** (filesystem-arbitrated max over the project-level active + archive files, atomic no-clobber claim, retry on collision) and prints the claimed destination ID and path. Do not derive the max from INDEX; it may lag. (Fall back to the protocol by hand if `python3` is unavailable.)
 
 4. **Decisions**:
-   - Write `docs/decisions/D-MMM.md` with the source's body content. Status: `accepted`. Add `Promoted from: feature:<feature>/D-NNN`.
+   - Write `docs/decisions/D-MMM.md` with the source's body content. Status: `accepted`. Add `Promoted from: feature:<feature>/D-NNN`. Rewrite every bare intra-scope ID in the copy to qualified form (`feature:<feature>/D-003`) — left bare it would resolve to an unrelated project record (spec § SCOPE, qualified references).
    - Append to project-level `decisions/INDEX.md`: `D-MMM | accepted | <title>`.
    - Edit feature-level D-NNN.md: Status → `promoted`, add `Date promoted: <today>` and `Promoted to: project:D-MMM`. Body otherwise frozen.
    - Update feature-level `decisions/INDEX.md` line: status `promoted`, append `(→ project:D-MMM)` to title.
 
 5. **Risks**:
-   - Write `docs/risks/R-MMM.md` with body, add `Promoted from: feature:<feature>/R-NNN`. Disposition unchanged.
+   - Write `docs/risks/R-MMM.md` with body, add `Promoted from: feature:<feature>/R-NNN`. Disposition unchanged. Qualify every bare ID in `Related decisions` and `Action` (`feature:<feature>/D-003`, `feature:<feature>/T-007`); `audit-artifacts` warns on any that were copied bare.
    - Append to project-level `risks/INDEX.md` line.
    - Edit feature-level R-NNN.md: add `Promoted to: project:R-MMM`. Body otherwise frozen.
    - Update feature-level `risks/INDEX.md` line (no status change — risks have no Status field; the `Promoted to` field is the marker).
