@@ -19,7 +19,7 @@ Interview me systematically until all the important decisions are settled, inclu
 
 2. **Prior calibration.** Load the newest retrospective named in `retrospectives/INDEX.md`. Its `Watch-for` items are where this project has mis-calibrated before — carry them into the ordering and your recommendations. No retrospective = greenfield, not an error.
 
-3. **Existing constraints.** Read `decisions/INDEX.md`; titles are usually enough. Load a `D-NNN.md` body only when a question depends on it.
+3. **Existing constraints.** Read `decisions/INDEX.md` plus the `| accepted |` lines of `decisions/archive/INDEX.md`. Those are *settled* decisions: implemented and out of the working set, but still binding. Titles are usually enough; load a `D-NNN.md` body (from either dir) only when a question depends on it.
 
 4. **Prior art (optional, advisory).** Per major branch: `python3 ~/.treenail/scripts/graph_query.py docs "<the design problem in a sentence>" --scope all`. Hits from other scopes inform ordering and recommendations, never settle anything. Silence (no graph, no hits) changes nothing.
 

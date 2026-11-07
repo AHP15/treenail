@@ -1046,5 +1046,129 @@ class TestBootstrap(unittest.TestCase):
         self.assertIn("unknown artifact", err)
 
 
+class TestSettle(unittest.TestCase):
+    """Settled decisions: accepted, implemented with verified Evidence, no
+    open risk, and covered by a retrospective → out of the working set
+    (decisions/archive/, Status still accepted); reversible on drift."""
+
+    def _scope(self, boundary="2025-03-01", risk_disp=None):
+        root = tempfile.mkdtemp()
+        write(os.path.join(root, "src/auth/refresh.ts"),
+              "export function rotateRefreshToken() { return 1; }\n")
+        docs = os.path.join(root, "docs")
+        write(f"{docs}/decisions/D-001.md", """
+            ## D-001: Rotate refresh tokens
+            - **Status**: accepted
+            - **Date**: 2025-01-01
+            - **Context**: x
+            - **Decision**: y
+            - **Rationale**: z
+        """)
+        write(f"{docs}/tasks/archive/T-001.md", """
+            ## T-001: rotate
+            - **Status**: done
+            - **Size**: M
+            - **Implements**: D-001
+            - **Acceptance**: x.
+            - **Evidence**:
+              - `symbol:src/auth/refresh.ts:rotateRefreshToken`
+            - **Date done**: 2025-02-01
+        """)
+        if boundary:
+            write(f"{docs}/retrospectives/{boundary}.md", f"""
+                ## Retrospective: {boundary}
+                - **Cycle**: Q1
+                - **Boundary-end**: {boundary}
+                - **Date**: {boundary}
+            """)
+        if risk_disp:
+            write(f"{docs}/risks/R-001.md", f"""
+                ## R-001: Token replay
+                - **Severity**: high
+                - **Likelihood**: medium
+                - **Disposition**: {risk_disp}
+                - **Date**: 2025-01-02
+                - **Description**: x.
+                - **Disposition rationale**: y.
+                - **Action**: Guard it. Tracked as T-001.
+                - **Related decisions**: D-001
+            """)
+        run("reindex.py", docs)
+        return root, docs
+
+    def _cycle(self, root, docs, *extra):
+        return run("archive_cycle.py", docs, "--root", root, *extra)
+
+    def test_qualifying_decision_settles_and_stays_accepted(self):
+        root, docs = self._scope()
+        rc, out, _ = self._cycle(root, docs)
+        self.assertEqual(rc, 0, out)
+        self.assertIn("SETTLE  decisions/D-001", out)
+        self.assertTrue(os.path.exists(f"{docs}/decisions/archive/D-001.md"))
+        with open(f"{docs}/decisions/archive/INDEX.md", encoding="utf-8") as fh:
+            self.assertIn("D-001 | accepted | Rotate refresh tokens", fh.read())
+        with open(f"{docs}/decisions/INDEX.md", encoding="utf-8") as fh:
+            self.assertNotIn("D-001", fh.read())
+        # reconcile summarizes it instead of listing it; audit stays clean;
+        # compaction never touches it
+        rc, out, _ = run("reconcile.py", docs, "--root", root)
+        self.assertEqual(rc, 0, out)
+        self.assertIn("1 settled", out)
+        self.assertIn("== SETTLED (still verified; not listed) ==", out)
+        self.assertNotIn("D-001: implemented", out)
+        rc, out, _ = run("audit.py", docs)
+        self.assertEqual(rc, 0, out)
+        rc, out, _ = run("compact-select.py", docs)
+        self.assertNotIn("D-001", out)
+        # idempotent: a second run moves nothing
+        rc, out, _ = self._cycle(root, docs)
+        self.assertIn("no records eligible to move", out)
+
+    def test_waits_for_retrospective_boundary(self):
+        root, docs = self._scope(boundary="2025-01-15")  # before Date done
+        rc, out, _ = self._cycle(root, docs, "--dry-run")
+        self.assertIn("skip  D-001  (settle awaiting retrospective boundary)", out)
+        root, docs = self._scope(boundary=None)
+        rc, out, _ = self._cycle(root, docs, "--dry-run")
+        self.assertNotIn("SETTLE", out)
+
+    def test_open_risk_blocks_settling_but_accept_does_not(self):
+        root, docs = self._scope(risk_disp="mitigate")
+        rc, out, _ = self._cycle(root, docs, "--dry-run")
+        self.assertNotIn("SETTLE", out)
+        root, docs = self._scope(risk_disp="accept")
+        rc, out, _ = self._cycle(root, docs, "--dry-run")
+        self.assertIn("SETTLE  decisions/D-001", out)
+
+    def test_drift_unsettles(self):
+        root, docs = self._scope()
+        self._cycle(root, docs)
+        self.assertTrue(os.path.exists(f"{docs}/decisions/archive/D-001.md"))
+        os.remove(os.path.join(root, "src/auth/refresh.ts"))  # code ripped out
+        rc, out, _ = run("reconcile.py", docs, "--root", root)
+        self.assertEqual(rc, 1)  # drift
+        self.assertIn("SETTLED DECISION REOPENED: D-001", out)
+        rc, out, _ = self._cycle(root, docs)
+        self.assertEqual(rc, 0, out)
+        self.assertIn("UNSETTLE  decisions/D-001", out)
+        self.assertTrue(os.path.exists(f"{docs}/decisions/D-001.md"))
+        with open(f"{docs}/decisions/INDEX.md", encoding="utf-8") as fh:
+            self.assertIn("D-001 | accepted", fh.read())
+
+    def test_new_implementing_task_unsettles(self):
+        root, docs = self._scope()
+        self._cycle(root, docs)
+        write(f"{docs}/tasks/T-002.md", """
+            ## T-002: extend rotation to service tokens
+            - **Status**: todo
+            - **Size**: S
+            - **Implements**: D-001
+            - **Acceptance**: x.
+        """)
+        run("reindex.py", docs, "tasks")
+        rc, out, _ = self._cycle(root, docs)
+        self.assertIn("UNSETTLE  decisions/D-001  (no longer settled: in_progress)", out)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

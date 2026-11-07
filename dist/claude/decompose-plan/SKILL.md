@@ -17,7 +17,7 @@ Turn every accepted decision and every `mitigate` risk into atomic, shippable ta
 
 1. **Scope.** Same scope as the source decisions and risks — never cross.
 
-2. **Coverage.** Every `accepted` decision and every `mitigate` risk maps to ≥1 task. If something produces none, say which: already built (existing `done` tasks cover it — `reconcile-status` will derive it as implemented), environmental, or a planning gap.
+2. **Coverage.** Every active `accepted` decision and every `mitigate` risk maps to ≥1 task. Settled decisions (in `decisions/archive/`) are already covered. A new task that `Implements` one moves it back to the active set on the next `archive-cycle`. If something produces none, say which: already built (existing `done` tasks cover it — `reconcile-status` will derive it as implemented), environmental, or a planning gap.
 
 3. **Atomicity.** Split until every task:
    - has an Acceptance that is one sentence, checkable against a diff;

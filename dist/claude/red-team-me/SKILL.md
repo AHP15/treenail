@@ -19,7 +19,7 @@ Hunt for what breaks in the accepted decisions, and record each concrete failure
 
 2. **Prior calibration.** Load the newest retrospective named in `retrospectives/INDEX.md`. Apply its `Watch-for` failure patterns first, and avoid its known mis-calibrations (e.g. predicting contention with no traffic evidence).
 
-3. **Pick targets.** From `decisions/INDEX.md`, load the bodies of the accepted decisions you are testing. Titles tell you which ones to load.
+3. **Pick targets.** From `decisions/INDEX.md`, load the bodies of the accepted decisions you are testing. Titles tell you which ones to load. Settled decisions (in `decisions/archive/`) are implemented, verified, and retrospective-reviewed, so skip them unless the user names one.
 
 4. **Prior failures (optional, advisory).** Per target: `python3 ~/.treenail/scripts/graph_query.py docs "<the decision being tested>" --scope all`. A related risk that materialized elsewhere points toward an evidence-backed failure mode. Re-derive it for this decision; don't copy it.
 

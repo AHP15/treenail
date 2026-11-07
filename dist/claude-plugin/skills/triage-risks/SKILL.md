@@ -37,7 +37,7 @@ Give every `pending` risk a disposition and write it back, superseding decisions
 
 4. **Fix flow: supersede.**
    - Mint the new decision: `python3 ~/.treenail/scripts/mint_id.py <scope-dir>/decisions D`. Write it per spec § DECISIONS with `Supersedes: D-NNN`.
-   - On the old decision, set `Status: superseded`, `Date superseded: <today>`, and `Superseded by: D-MMM`. Don't touch its Context, Decision, or Rationale.
+   - On the old decision (it may be settled, in `decisions/archive/`; edit it where it lives), set `Status: superseded`, `Date superseded: <today>`, and `Superseded by: D-MMM`. Don't touch its Context, Decision, or Rationale.
    - Set the risk's Action to "Superseded by D-MMM".
    - The new decision hasn't been examined. Recommend `red-team-me` on it before it ships.
 

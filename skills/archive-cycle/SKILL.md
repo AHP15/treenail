@@ -1,9 +1,9 @@
 ---
 name: archive-cycle
-description: Keep the active per-record set bounded to in-flight work. Reaps terminal decisions, risks, and tasks out of the active directory into archive/ with full prose kept — run this on cadence, e.g. session start. Also compacts archived records the latest retrospective has already consumed into 3-5 line summaries. Idempotent and safe to run any time. Never changes status, dispositions, or supersession links.
+description: Keep the active per-record set bounded to in-flight work. Reaps terminal decisions, risks, and tasks out of the active directory into archive/ with full prose kept — run this on cadence, e.g. session start. Also settles accepted decisions that are implemented, verified, and retrospective-reviewed out of the active set (reversibly), and compacts archived records the latest retrospective has already consumed into 3-5 line summaries. Idempotent and safe to run any time. Never changes status, dispositions, or supersession links.
 ---
 
-Two decoupled, idempotent operations (spec § ARCHIVAL): **reap** moves terminal records out of the active dir so the hot read path stays bounded; **compact** shrinks archived records a retrospective has already harvested.
+Idempotent operations (spec § ARCHIVAL): **reap** moves terminal records out of the active dir, and **settle** moves accepted decisions that are done and verified out with them, so the hot read path stays bounded. **Compact** shrinks archived records a retrospective has already harvested.
 
 **Reads:** `decisions/`, `risks/`, `tasks/` (active + archive), latest `retrospectives/*.md`; the spec is `docs/CONVENTIONS-SPEC.md`.
 **Writes:** record file *locations* and compacted bodies; `Date resolved` on confirmed `fix`/`defer` risks; INDEX files (via script).
@@ -12,12 +12,13 @@ Two decoupled, idempotent operations (spec § ARCHIVAL): **reap** moves terminal
 
 1. **Scope.** Project (`docs`) or one feature (`docs/features/<name>`). Never cross scopes.
 
-2. **Reap — dry run.** `python3 ~/.claude/skills/_shared/scripts/archive_cycle.py <scope-dir> --dry-run`. The script decides eligibility:
+2. **Reap and settle — dry run.** From the repo root: `python3 ~/.claude/skills/_shared/scripts/archive_cycle.py <scope-dir> --dry-run [--root <repo-root>]`. The script decides eligibility:
    - decisions `superseded` / `deprecated` / `promoted`, and tasks `done` / `dropped` → reap;
+   - `accepted` decisions → `SETTLE` once implemented, Evidence verified, no open risk names them, and a retrospective covers their last `Date done`. `UNSETTLE` moves a settled decision back the moment it stops qualifying (drift, a new task, a new open risk). Both are automatic, need no confirmation, and leave `Status: accepted` unchanged;
    - `accept` risks → reap once their `Date` ≤ the latest retrospective's `Boundary-end`;
    - `fix` / `defer` risks → **never** without explicit confirmation. A `fix` is spent only when its superseding decision is *implemented* (derived, not stored — cite the `reconcile-status` skill); a `defer` only when its trigger passed without firing. Both are judgments.
 
-3. **Confirm.** For every `skip` line (`fix`/`defer` awaiting confirmation, `accept` awaiting a boundary), ask the user which are spent. Then run for real: `python3 ~/.claude/skills/_shared/scripts/archive_cycle.py <scope-dir> [--confirm-risk R-NNN,R-MMM]`. It moves files with full prose, fills `Date resolved` on confirmed `fix`/`defer` risks, and rebuilds the affected indexes.
+3. **Confirm.** For every risk `skip` line (`fix`/`defer` awaiting confirmation, `accept` awaiting a boundary), ask the user which are spent. A decision's "settle awaiting retrospective boundary" needs no answer. Then run for real: `python3 ~/.claude/skills/_shared/scripts/archive_cycle.py <scope-dir> [--root <repo-root>] [--confirm-risk R-NNN,R-MMM]`. It moves files with full prose, fills `Date resolved` on confirmed `fix`/`defer` risks, and rebuilds the affected indexes.
 
 4. **Compact — select.** `python3 ~/.claude/skills/_shared/scripts/compact-select.py <scope-dir>`. If it exits 1 (**NO BOUNDARY**), skip compaction entirely — prose must never collapse before a retrospective has read it. Otherwise it lists `COMPACT` / `hold` / `SKIP` per record (`SKIP` = no parseable terminal date: report it as a record to fix).
 
@@ -30,7 +31,7 @@ Two decoupled, idempotent operations (spec § ARCHIVAL): **reap** moves terminal
 
    Compaction does not touch any INDEX line.
 
-6. **Report** per artifact: IDs reaped, IDs compacted, and what was skipped awaiting confirmation or a boundary. A no-op run is the normal steady state — say so.
+6. **Report** per artifact: IDs reaped, decisions settled or unsettled, IDs compacted, and what was skipped awaiting confirmation or a boundary. A no-op run is the normal steady state — say so.
 
 ## Never
 

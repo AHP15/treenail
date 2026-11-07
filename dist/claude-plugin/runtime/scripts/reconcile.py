@@ -221,6 +221,90 @@ def resolve_anchor(anchor, root):
 # main
 # --------------------------------------------------------------------------
 
+# --------------------------------------------------------------------------
+# derivation (shared with archive_cycle.py's settle/unsettle pass)
+# --------------------------------------------------------------------------
+
+# Dispositions that mean a risk is still an open concern about a decision.
+# `accept` is a closed concern: the residual was judged acceptable.
+OPEN_RISK = {"pending", "fix", "mitigate", "defer"}
+
+
+def derive(scope, root):
+    """Load the scope and derive everything the view needs. Returns
+    (decs, risks, tasks, drift, no_anchor, views) where views maps every
+    accepted decision — active AND settled (archived while accepted) — to
+    (view, why, impl, promoted, active)."""
+    decs = load(scope, "decisions")
+    risks = load(scope, "risks")
+    tasks = load(scope, "tasks")
+
+    by_impl = {}
+    for tid, (_t, fields, _a) in tasks.items():
+        status = fields.get("Status", "").strip()
+        for did in reindex.ids_in(fields.get("Implements", ""), "D"):
+            by_impl.setdefault(did, []).append((tid, status))
+
+    # resolve every done task's anchors once (dedup), record failures
+    drift = {}         # tid -> [failed anchors]
+    no_anchor = set()  # done tasks with no Evidence anchor at all
+    for tid, (_t, fields, _a) in tasks.items():
+        if fields.get("Status", "").strip() != "done":
+            continue
+        found = extract_anchors(fields.get("Evidence", ""))
+        if not found:
+            no_anchor.add(tid)
+            continue
+        failed = [a for a in found if not resolve_anchor(a, root)]
+        if failed:
+            drift[tid] = failed
+
+    views = {}
+    for did, (title, fields, active) in decs.items():
+        if fields.get("Status", "").strip() != "accepted":
+            continue
+        impl = by_impl.get(did, [])
+        view, why = view_for(impl)
+        promoted = fields.get("Promoted from", "").strip() != ""
+        views[did] = (view, why, impl, promoted, active)
+    return decs, risks, tasks, drift, no_anchor, views
+
+
+def verification(impl, drift, no_anchor):
+    """'verified' | 'drift' | 'no anchor' | None for a decision's tasks."""
+    done = [t for t, s in impl if s == "done"]
+    if not done:
+        return None
+    if any(t in drift for t in done):
+        return "drift"
+    if any(t in no_anchor for t in done):
+        return "no anchor"
+    return "verified"
+
+
+def settle_check(did, views, risks, tasks, drift, no_anchor):
+    """Is an accepted decision *settled* — out of the working set? Returns
+    (True, last_done_date) or (False, reason). Settled means: implemented
+    (or partial), every contributing done task's anchors verified, and no
+    open risk about it in the active set. The retrospective-boundary gate
+    on settling is archive_cycle's (it does not apply to staying settled)."""
+    view, _why, impl, _promoted, _active = views[did]
+    if view not in ("implemented", "partial"):
+        return False, view
+    ver = verification(impl, drift, no_anchor)
+    if ver != "verified":
+        return False, f"unverified: {ver or 'no done task'}"
+    open_risks = sorted(
+        rid for rid, (_t, f, active) in risks.items()
+        if active and f.get("Disposition", "").strip() in OPEN_RISK
+        and did in reindex.ids_in(f.get("Related decisions", ""), "D"))
+    if open_risks:
+        return False, f"open risk(s) {','.join(open_risks)}"
+    dates = [tasks[t][1].get("Date done", "").strip()
+             for t, s in impl if s == "done" and t in tasks]
+    return True, max(dates) if all(dates) else None
+
+
 def main(argv):
     args = [a for a in argv[1:] if not a.startswith("--")]
     root = "."
@@ -236,48 +320,34 @@ def main(argv):
         print(f"reconcile.py: no such scope dir: {scope}", file=sys.stderr)
         return 2
 
-    decs = load(scope, "decisions")
-    risks = load(scope, "risks")
-    tasks = load(scope, "tasks")
+    decs, risks, tasks, drift, no_anchor, views = derive(scope, root)
 
-    # tasks grouped by the decision they implement
-    by_impl = {}
-    for tid, (_t, fields, _a) in tasks.items():
-        status = fields.get("Status", "").strip()
-        for did in reindex.ids_in(fields.get("Implements", ""), "D"):
-            by_impl.setdefault(did, []).append((tid, status))
-
-    # resolve every done task's anchors once (dedup), record failures
-    drift = {}        # tid -> [failed anchors]
-    no_anchor = set()  # done tasks with no Evidence anchor at all
-    for tid, (_t, fields, _a) in tasks.items():
-        if fields.get("Status", "").strip() != "done":
+    # A settled decision that still passes settle_check is reported as one
+    # ID in a summary line — it is out of the working set, and listing it
+    # in full every run is exactly the O(history) cost settling removes.
+    # One that no longer passes is reported in full, like an active one.
+    quiet_settled = []
+    reopened = {}
+    for did, (_v, _w, _i, _p, active) in views.items():
+        if active:
             continue
-        anchors = extract_anchors(fields.get("Evidence", ""))
-        if not anchors:
-            no_anchor.add(tid)
-            continue
-        failed = [a for a in anchors if not resolve_anchor(a, root)]
-        if failed:
-            drift[tid] = failed
-
-    # per accepted decision view
-    views = {}        # did -> (view, why, contributing)
-    for did, (title, fields, active) in decs.items():
-        if not active or fields.get("Status", "").strip() != "accepted":
-            continue
-        impl = by_impl.get(did, [])
-        view, why = view_for(impl)
-        views[did] = (view, why, impl, "Promoted from" in fields and
-                      fields.get("Promoted from", "").strip() != "")
+        ok, why = settle_check(did, views, risks, tasks, drift, no_anchor)
+        if ok:
+            quiet_settled.append(did)
+        else:
+            reopened[did] = why
 
     # ---- report -----------------------------------------------------------
-    print(f"reconcile {scope}: {len(views)} accepted decision(s)\n")
+    n_settled = sum(1 for v in views.values() if not v[4])
+    print(f"reconcile {scope}: {len(views)} accepted decision(s) "
+          f"({len(views) - n_settled} active, {n_settled} settled)\n")
 
     order = ["implemented", "partial", "in_progress", "not_started",
              "reversed", "uncovered"]
     by_view = {}
-    for did, (view, why, impl, promoted) in views.items():
+    for did, (view, why, impl, promoted, _active) in views.items():
+        if did in quiet_settled:
+            continue
         by_view.setdefault(view, []).append((did, why, impl, promoted))
 
     for view in order:
@@ -287,23 +357,30 @@ def main(argv):
         print(f"== {view.upper()} ==")
         for did, why, impl, promoted in sorted(rows):
             tag = ""
-            contributing_done = [t for t, s in impl if s == "done"]
             if view in ("implemented", "partial"):
-                if any(t in drift for t in contributing_done):
-                    tag = "  [UNVERIFIED: drift]"
-                elif any(t in no_anchor for t in contributing_done):
-                    tag = "  (unverified: no anchor)"
-                else:
-                    tag = "  (verified)" if contributing_done else ""
+                tag = {"drift": "  [UNVERIFIED: drift]",
+                       "no anchor": "  (unverified: no anchor)",
+                       "verified": "  (verified)",
+                       None: ""}[verification(impl, drift, no_anchor)]
+            if did in reopened:
+                tag += "  [SETTLED — reopens on next archive-cycle]"
             tlist = ",".join(f"{t}:{s}" for t, s in sorted(impl)) or "—"
             promo = "  [promoted-from; project tasks accrue over time]" if (
                 promoted and view == "uncovered") else ""
             print(f"  {decs[did][0]}")
             print(f"    {did}: {view}{tag} — {why} [{tlist}]{promo}")
         print()
+    if quiet_settled:
+        print(f"== SETTLED (still verified; not listed) ==\n  "
+              f"{len(quiet_settled)}: {', '.join(sorted(quiet_settled))}\n")
 
     # ---- anomalies --------------------------------------------------------
     anomalies = []
+
+    for d in sorted(reopened):
+        anomalies.append(
+            f"SETTLED DECISION REOPENED: {d} is settled but no longer qualifies "
+            f"({reopened[d]}) — archive-cycle will move it back to the active set.")
 
     if drift:
         for tid in sorted(drift):
@@ -313,13 +390,13 @@ def main(argv):
                 f"done but anchor(s) do not resolve: {', '.join(drift[tid])}. "
                 f"Re-open the task or update its Evidence if the code moved.")
 
-    reversed_ds = [d for d, (v, *_ ) in views.items() if v == "reversed"]
+    reversed_ds = [d for d, (v, *_) in views.items() if v == "reversed"]
     for d in sorted(reversed_ds):
         anomalies.append(
             f"SILENT REVERSAL: {d} is accepted but every implementing task is "
             f"dropped — it likely wants superseded/deprecated (via /challenge-me).")
 
-    uncovered = [d for d, (v, _w, _i, promo) in views.items()
+    uncovered = [d for d, (v, _w, _i, promo, _a) in views.items()
                  if v == "uncovered" and not promo]
     for d in sorted(uncovered):
         anomalies.append(

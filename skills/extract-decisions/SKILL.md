@@ -12,7 +12,7 @@ In brownfield the most certain artifact is shipped code, and code is task-shaped
 
 ## Phase A — Observe (read-only)
 
-1. **Scope.** Project or one feature. Use only for undocumented code — if `decisions/` already covers the area, use `challenge-me` instead. Confirm scope with the user.
+1. **Scope.** Project or one feature. Use only for undocumented code — if `decisions/` (active, or settled `| accepted |` lines in `decisions/archive/INDEX.md`) already covers the area, use `challenge-me` instead. Confirm scope with the user.
 
 2. **Inventory built capabilities, git included.** Walk the tree by capability, not by file: manifests and lockfiles, entrypoints, config and environment, schema and migrations, module boundaries, trust boundaries (auth, validation, external calls), and the core abstractions everything imports. Each one becomes a provisional task with:
    - Evidence anchors you have verified resolve;

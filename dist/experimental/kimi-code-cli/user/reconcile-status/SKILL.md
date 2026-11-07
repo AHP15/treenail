@@ -26,6 +26,8 @@ Derive each accepted decision's implementation status from its tasks, check ever
    - **not_started** — all live tasks todo;
    - **in_progress** — anything else.
 
+   Settled decisions (accepted, in `decisions/archive/`) are drift-checked too. Ones still verified collapse to a single `SETTLED` summary line; one that no longer qualifies is listed in full with a `SETTLED DECISION REOPENED` anomaly.
+
    It also resolves every `done` task's Evidence anchors read-only (presence, never test runs), qualifies each implemented or partial decision as `(verified)`, `(UNVERIFIED: drift)` or `(unverified: no anchor)`, and lists ANOMALIES. It exits 1 if and only if drift was found, so it can gate CI. A decision with `Promoted from` derives its view from project-level tasks, and the script handles that.
 
 3. **Smell pass.** `python3 ~/.treenail/scripts/reconcile_smells.py <scope-dir>` reports, advisory only:
@@ -41,6 +43,7 @@ Derive each accepted decision's implementation status from its tasks, check ever
    | **Silent reversal**: all implementing tasks dropped | `challenge-me`, to supersede or deprecate the decision |
    | **Uncovered**: no implementing tasks | Ask: already built, environmental, or a planning gap? → `decompose-plan` |
    | **Mitigation notional**: all mitigating tasks dropped | `triage-risks` |
+   | **Settled decision reopened** | `archive-cycle` moves it back to the active set; then handle the underlying drift, task, or risk as above |
    | **Un-red-teamed** | `red-team-me` |
    | **Thin defer** / **mitigation complete** | `triage-risks` |
 
