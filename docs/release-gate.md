@@ -12,7 +12,7 @@ For each of Claude Code, opencode, and Codex CLI:
 1. **Install via the real channel** — the channel a user would actually
    use (npx installer for all three; additionally the plugin marketplace
    for Claude Code), not a repo-checkout shortcut.
-2. **Verify skill discovery** — the agent lists/loads the 14 Treenail skills.
+2. **Verify skill discovery** — the agent lists/loads the 15 Treenail skills.
 3. **Run one scripted-runtime skill** — a skill that shells out to the
    ~/.treenail runtime (mint-id path), proving the provisioned runtime works.
 4. **Run one interactive skill end-to-end** — e.g. challenge-me, proving
@@ -32,7 +32,7 @@ node cli/test/smoke-tarball.mjs
 The script packs `cli/`, installs the tarball into a clean temp project,
 and runs the full installer smoke (`cli/test/smoke-install.mjs`) against
 the *installed* bin: `treenail install` must provision ~/.treenail and
-all 14 skills end to end from package-bundled assets only.
+all 15 skills end to end from package-bundled assets only.
 
 Pass bar: the script exits 0 (`smoke-tarball: passed`).
 
