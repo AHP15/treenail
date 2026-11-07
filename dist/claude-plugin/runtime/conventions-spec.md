@@ -4,8 +4,9 @@ Spec-version: 1
 
 This is the schema. For exemplars, see `CONVENTIONS-EXAMPLES.md`.
 
-This spec version is frozen into a project at adoption time: the bootstrap
-writes it to `docs/.treenail-version`, and the record-parsing scripts refuse
+This spec version is frozen into a project at adoption time: `~/.treenail/scripts/bootstrap.py`
+writes it to `docs/.treenail-version` (alongside this spec and the
+examples), and the record-parsing scripts refuse
 loudly (rather than guess) on a project stamped with a spec version they do not
 support. Bump `Spec-version` on any breaking schema change.
 
@@ -92,13 +93,11 @@ checked by the same code that rebuilds the index.
 
 ## ID reservation protocol
 
-Every skill that mints a new ID (`challenge-me`, `red-team-me`,
-`triage-risks`'s fix flow, `decompose-plan`, `promote`) MUST use this
-protocol, implemented by `~/.treenail/scripts/mint_id.py <artifact-dir>
-<PREFIX>` — the canonical executor (the steps below are what it does, and
-the hand fallback when no shell is available). It makes the filesystem —
-not the INDEX, and not the skill's
-in-memory count — the arbiter, so two skills, sessions, or branches
+Every skill that mints a new ID MUST use this protocol, implemented by
+`~/.treenail/scripts/mint_id.py <artifact-dir> <PREFIX>` — the canonical and
+only executor (Python 3 is a required dependency; the steps below document
+what the script does). It makes the filesystem — not the INDEX, and not
+the skill's in-memory count — the arbiter, so two skills, sessions, or branches
 minting at the same time cannot collide.
 
 INDEX may lag (it is only a projection and a writer may not have

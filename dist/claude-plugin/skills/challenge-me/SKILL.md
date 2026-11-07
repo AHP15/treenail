@@ -6,7 +6,7 @@ description: Thoroughly interview the user about a plan or design, surfacing the
 
 > Treenail skill-pack version: 0.1.0. When you run a `~/.treenail/scripts/*.py` command, append `--skill-version 0.1.0` so the runtime can catch a skill-text / runtime version mismatch and tell you to run `npx treenail update` (T-018).
 
-> Python 3 preflight: this skill ends in a scripted write (mint-id / reindex) that needs Python 3. Before any interview or analysis work, confirm Python 3 runs (`python3 --version`, or `py -3 --version` on Windows). If it does not, stop immediately and tell the user "Python 3 required — see install docs"; do not begin the interview, so no completed work is lost to a mint-time failure.
+> Python 3 preflight: this skill runs Treenail scripts, which need Python 3 (there is no by-hand fallback). Before any interview or analysis work, confirm Python 3 runs (`python3 --version`, or `py -3 --version` on Windows). If it does not, stop immediately and tell the user "Python 3 required — see install docs"; do not begin the work, so nothing completed is lost to a script failure.
 
 Interview me systematically until ALL the important decisions are settled — including the ones I haven't noticed I'm making. Work through the decision tree in priority order, grow it as resolved decisions spawn new branches, and produce per-decision records at the end.
 

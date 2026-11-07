@@ -987,5 +987,40 @@ class TestReconcile(unittest.TestCase):
         self.assertEqual(rc, 0)
 
 
+class TestBootstrap(unittest.TestCase):
+    def test_fresh_feature_scope_bootstraps_project_root(self):
+        tmp = tempfile.mkdtemp()
+        docs = os.path.join(tmp, "docs")
+        feature = os.path.join(docs, "features", "billing")
+        rc, out, _ = run("bootstrap.py", feature)
+        self.assertEqual(rc, 0, out)
+        for rel in ("CONVENTIONS-SPEC.md", "CONVENTIONS-EXAMPLES.md"):
+            self.assertTrue(os.path.isfile(os.path.join(docs, rel)), rel)
+        with open(os.path.join(docs, ".treenail-version"), encoding="utf-8") as fh:
+            self.assertEqual(fh.read().strip(), "1")
+        for art in ("decisions", "risks", "tasks"):
+            self.assertTrue(os.path.isfile(os.path.join(feature, art, "INDEX.md")))
+        self.assertFalse(os.path.exists(os.path.join(feature, "CONVENTIONS-SPEC.md")))
+
+    def test_idempotent_and_never_clobbers(self):
+        tmp = tempfile.mkdtemp()
+        docs = os.path.join(tmp, "docs")
+        write(f"{docs}/decisions/INDEX.md", "D-001 | accepted | Keep me\n")
+        write(f"{docs}/CONVENTIONS-SPEC.md", "locally edited\n")
+        run("bootstrap.py", docs, "decisions")
+        rc, out, _ = run("bootstrap.py", docs, "decisions")
+        self.assertEqual(rc, 0)
+        self.assertIn("already set up", out)
+        with open(f"{docs}/decisions/INDEX.md", encoding="utf-8") as fh:
+            self.assertEqual(fh.read(), "D-001 | accepted | Keep me\n")
+        with open(f"{docs}/CONVENTIONS-SPEC.md", encoding="utf-8") as fh:
+            self.assertEqual(fh.read(), "locally edited\n")
+
+    def test_unknown_artifact_is_usage_error(self):
+        rc, _, err = run("bootstrap.py", tempfile.mkdtemp(), "widgets")
+        self.assertEqual(rc, 2)
+        self.assertIn("unknown artifact", err)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

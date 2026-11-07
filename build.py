@@ -130,25 +130,25 @@ def rewrite_shared_refs(text):
     return text
 
 
+# Python 3 is the one required scripted runtime (D-009); there is no
+# by-hand fallback for the scripts. Injected at the top of every skill that
+# runs a ~/.treenail script, so the agent preflights Python 3 before any
+# interview or analysis work (T-021, R-015) — a script failure must never
+# discard completed work.
+PYTHON_PREFLIGHT_NOTE = (
+    "> Python 3 preflight: this skill runs Treenail scripts, which need "
+    "Python 3 (there is no by-hand fallback). Before any interview or "
+    "analysis work, confirm Python 3 runs (`python3 --version`, or "
+    "`py -3 --version` on Windows). If it does not, stop immediately and "
+    "tell the user \"Python 3 required — see install docs\"; do not begin "
+    "the work, so nothing completed is lost to a script failure.\n\n"
+)
+
+
 # Lockstep version stamp injected into every scripted skill body (T-017,
 # D-014). The one semver source is cli/package.json; the build stamps it here,
 # the installer writes the same value to ~/.treenail/VERSION, so skill text and
 # runtime always match on a clean install. T-018's handshake reads this stamp.
-# Injected at the top of every skill that ends in a scripted write (mint-id /
-# reindex) so the agent preflights Python 3 before any interview work (T-021,
-# D-009, R-015) — a mint-time traceback must never discard a completed
-# interview. Read-only scripted skills fail fast on their own; this guards the
-# ones with prior work to lose.
-PYTHON_PREFLIGHT_NOTE = (
-    "> Python 3 preflight: this skill ends in a scripted write (mint-id / "
-    "reindex) that needs Python 3. Before any interview or analysis work, "
-    "confirm Python 3 runs (`python3 --version`, or `py -3 --version` on "
-    "Windows). If it does not, stop immediately and tell the user "
-    "\"Python 3 required — see install docs\"; do not begin the interview, so no "
-    "completed work is lost to a mint-time failure.\n\n"
-)
-
-
 def version_stamp(version):
     return (
         f"> Treenail skill-pack version: {version}. When you run a "
@@ -248,7 +248,7 @@ def _emit_skill_dirs(out, skills, allowed, note=""):
         body = rewrite_shared_refs(skill.body)
         if "~/.treenail" in body:
             prefix = TREENAIL_HOME_NOTE + version_stamp(version)
-            if "mint_id.py" in body or "reindex.py" in body:
+            if "~/.treenail/scripts/" in body:
                 prefix += PYTHON_PREFLIGHT_NOTE
             body = prefix + body.lstrip("\n")
         if note:
