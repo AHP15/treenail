@@ -33,10 +33,16 @@ Execute the plan task by task in warm context. Pick the next task, brief it, bui
 
 7. **Loop or stop.** Return to step 2 unless the batch is done, nothing is eligible, a new decision came up, an anchor wouldn't resolve, or the user wants to go task by task. Report what you completed and what stopped you.
 
+**Worker mode.** When `parallel-work` runs you as a worker for one task in its own worktree, do steps 5-6 for exactly that task, with three changes:
+- write only `tasks/T-NNN.md` and skip both `reindex.py` calls (the orchestrator projects INDEX after merging);
+- commit on your branch;
+- report instead of looping (step 7).
+
 ## Never
 
 - Triage, mint or supersede decisions, promote, or reorder the whole plan. This skill implements tasks already planned; it does not amend the plan.
 
 ## Next
 
+- `parallel-work` to build many independent tasks at once instead.
 - `reconcile-status`, to re-resolve the anchors you wrote and recompute each decision's status. Reaping is `archive-cycle`'s job.

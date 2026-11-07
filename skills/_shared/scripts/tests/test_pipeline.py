@@ -21,6 +21,7 @@ Run:  python3 -m unittest discover -s _shared/scripts/tests
 """
 
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -1168,6 +1169,118 @@ class TestSettle(unittest.TestCase):
         run("reindex.py", docs, "tasks")
         rc, out, _ = self._cycle(root, docs)
         self.assertIn("UNSETTLE  decisions/D-001  (no longer settled: in_progress)", out)
+
+
+class TestWaves(unittest.TestCase):
+    """Parallel-wave selection: dependency gating, conflict splitting by
+    shared decision or overlapping footprint, unscoped tasks alone, --max."""
+
+    def _task(self, docs, tid, implements, evidence="", status="todo",
+              depends="", mitigates=""):
+        extra = ""
+        if depends:
+            extra += f"\n- **Depends on**: {depends}"
+        if mitigates:
+            extra += f"\n- **Mitigates**: {mitigates}"
+        if evidence:
+            extra += f"\n- **Evidence**: {evidence}"
+        write(f"{docs}/tasks/{tid}.md", f"""
+## {tid}: task {tid}
+- **Status**: {status}
+- **Size**: S
+- **Implements**: {implements}{extra}
+- **Acceptance**: x.
+""")
+
+    def _docs(self):
+        return os.path.join(tempfile.mkdtemp(), "docs")
+
+    def _wave(self, out):
+        block = out.split("WAVE (", 1)[1].split("\n\n", 1)[0]
+        return re.findall(r"^  (T-\d+)", block, re.MULTILINE)
+
+    def test_disjoint_tasks_share_a_wave(self):
+        docs = self._docs()
+        self._task(docs, "T-001", "D-001", "`grep:login in src/auth/`")
+        self._task(docs, "T-002", "D-002", "`file:src/billing/invoice.ts`")
+        self._task(docs, "T-003", "D-003", "`symbol:cli/main.js:run`")
+        rc, out, _ = run("waves.py", docs)
+        self.assertEqual(rc, 0, out)
+        self.assertEqual(self._wave(out), ["T-001", "T-002", "T-003"])
+
+    def test_overlapping_footprint_and_shared_decision_split(self):
+        docs = self._docs()
+        self._task(docs, "T-001", "D-001", "`grep:login in src/auth/`")
+        self._task(docs, "T-002", "D-002", "`file:src/auth/session.ts`")
+        self._task(docs, "T-003", "D-001", "`file:docs/guide.md`")
+        rc, out, _ = run("waves.py", docs)
+        self.assertEqual(self._wave(out), ["T-001"])
+        self.assertIn("T-002  conflicts with T-001: overlapping footprint src/auth/session.ts", out)
+        self.assertIn("T-003  conflicts with T-001: both implement D-001", out)
+
+    def test_whole_tree_grep_conflicts_with_everything(self):
+        docs = self._docs()
+        self._task(docs, "T-001", "D-001", "`grep:featureFlag`")
+        self._task(docs, "T-002", "D-002", "`file:src/a.ts`")
+        rc, out, _ = run("waves.py", docs)
+        self.assertEqual(self._wave(out), ["T-001"])
+        self.assertIn("(whole tree)", out)
+
+    def test_dependencies_gate_eligibility(self):
+        docs = self._docs()
+        self._task(docs, "T-001", "D-001", "`file:src/a.ts`")
+        self._task(docs, "T-002", "D-002", "`file:src/b.ts`", depends="T-001")
+        self._task(docs, "T-003", "D-003", "`file:src/c.ts`", status="done")
+        self._task(docs, "T-004", "D-004", "`file:src/d.ts`", depends="T-003")
+        rc, out, _ = run("waves.py", docs)
+        self.assertEqual(self._wave(out), ["T-001", "T-004"])
+        self.assertIn("T-002  waiting on T-001:todo", out)
+
+    def test_unscoped_runs_alone_only_when_nothing_scoped_is_eligible(self):
+        docs = self._docs()
+        self._task(docs, "T-001", "D-001")  # no anchors
+        self._task(docs, "T-002", "D-002", "`file:src/b.ts`")
+        rc, out, _ = run("waves.py", docs)
+        self.assertEqual(self._wave(out), ["T-002"])
+        self.assertIn("T-001  unscoped", out)
+        docs = self._docs()
+        self._task(docs, "T-001", "D-001")
+        self._task(docs, "T-002", "D-002")
+        rc, out, _ = run("waves.py", docs)
+        self.assertEqual(self._wave(out), ["T-001"])
+
+    def test_max_caps_and_priority_orders_the_wave(self):
+        docs = self._docs()
+        write(f"{docs}/risks/R-001.md", """
+            ## R-001: Breach
+            - **Severity**: critical
+            - **Likelihood**: high
+            - **Disposition**: mitigate
+            - **Description**: x.
+        """)
+        for n in range(1, 8):
+            self._task(docs, f"T-00{n}", f"D-00{n}", f"`file:src/m{n}.ts`")
+        self._task(docs, "T-009", "D-009", "`file:src/m9.ts`", mitigates="R-001")
+        self._task(docs, "T-010", "D-010", "`file:src/m10.ts`", status="in_progress")
+        rc, out, _ = run("waves.py", docs)
+        self.assertEqual(self._wave(out),
+                         ["T-010", "T-009", "T-001", "T-002", "T-003"])
+        self.assertIn("wave is full (--max 5)", out)
+        rc, out, _ = run("waves.py", docs, "--max", "2")
+        self.assertEqual(self._wave(out), ["T-010", "T-009"])
+
+    def test_only_restricts_and_nothing_eligible_exits_1(self):
+        docs = self._docs()
+        self._task(docs, "T-001", "D-001", "`file:src/a.ts`")
+        self._task(docs, "T-002", "D-002", "`file:src/b.ts`")
+        rc, out, _ = run("waves.py", docs, "--only", "T-002")
+        self.assertEqual(self._wave(out), ["T-002"])
+        self._task(docs, "T-001", "D-001", "`file:src/a.ts`", status="done")
+        self._task(docs, "T-002", "D-002", "`file:src/b.ts`", status="done")
+        rc, out, _ = run("waves.py", docs)
+        self.assertEqual(rc, 1)
+        rc, _, err = run("waves.py", docs, "--max", "0")
+        self.assertEqual(rc, 2)
 
 
 if __name__ == "__main__":

@@ -137,6 +137,10 @@ wrote and writing the ones the next step reads:
 - **`task-brief`** — drives implementation one task at a time, assembling each
   task's brief and writing back its status plus the code **Evidence** anchors
   that prove it landed.
+- **`parallel-work`** — the parallel alternative to `task-brief`: builds waves
+  of up to `--max` (default 5) independent tasks at once, each in its own git
+  worktree, merges them behind the tests, and pauses for review after each
+  wave. On agents without subagents it runs the same waves sequentially.
 - **`reconcile-status`** — derives which decisions are *actually* implemented
   from task state and resolves their Evidence anchors against the working tree,
   flagging drift between "tasks done" and "decision built."

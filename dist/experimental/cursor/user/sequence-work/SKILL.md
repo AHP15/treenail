@@ -39,4 +39,4 @@ Order the open tasks into phases that retire risk first and reach a demo-able sl
 
 ## Next
 
-- `task-brief` to start building. Remind the user to copy the phasing into working notes if they want to keep it.
+- `task-brief` to start building one task at a time, or `parallel-work` to build each phase in parallel waves (`--only` with the phase's IDs). Remind the user to copy the phasing into working notes if they want to keep it.

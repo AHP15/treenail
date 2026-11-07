@@ -33,13 +33,15 @@ decision, risk, and task records.
 | [decompose-plan](/docs/pipeline/skills/decompose-plan) | Decisions + Risks → **Tasks** |
 | [sequence-work](/docs/pipeline/skills/sequence-work) | Tasks + Risks → a phased order (ephemeral) |
 | [task-brief](/docs/pipeline/skills/task-brief) | Tasks + Decisions + Risks → code + task status & Evidence |
+| [parallel-work](/docs/pipeline/skills/parallel-work) | Tasks + Decisions + Risks → code + task status & Evidence, in parallel waves |
 | [reconcile-status](/docs/pipeline/skills/reconcile-status) | Tasks → the implementation view (read-only) |
 | [retrospective](/docs/pipeline/skills/retrospective) | a completed cycle of records → a dated retrospective entry |
 | [archive-cycle](/docs/pipeline/skills/archive-cycle) | terminal records → the same records, moved to `archive/` |
 | [extract-decisions](/docs/pipeline/skills/extract-decisions) | an existing codebase → reverse-engineered Decisions / Risks / Tasks |
 
-The first seven are the core flow: **challenge → red-team → triage → decompose →
-sequence → build → reconcile**. The last three attach to the lifecycle around it
+The first eight are the core flow: **challenge → red-team → triage → decompose →
+sequence → build → reconcile**, where the build step is `task-brief` (one task at
+a time) or `parallel-work` (parallel waves). The last three attach to the lifecycle around it
 — `retrospective` harvests a finished cycle, `archive-cycle` keeps the active
 read path bounded, and `extract-decisions` bootstraps the record from a codebase
 that has none.
